@@ -76,6 +76,18 @@ export const DEFAULT_INCOME_SOURCES: IncomeSource[] = [
 
 export const DEFAULT_RATE = 48
 
+// Butce_Can/Butce_Tugce sayfalarindaki B kolonlari (plan) bu workbook'ta
+// henuz doldurulmamis, hepsi bos/0. Kullanici Kisisel Butce ekranindan
+// doldurur.
+function emptyPersonalPlan(): Settings['personalPlans']['Can'] {
+  return {
+    incomePlan: {},
+    sharedContributionPlanEUR: 0,
+    categoryPlan: {},
+    savingsPlanEUR: 0,
+  }
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   accounts: DEFAULT_ACCOUNTS,
   categories: DEFAULT_CATEGORIES,
@@ -83,6 +95,10 @@ export const DEFAULT_SETTINGS: Settings = {
   rates: {},
   defaultRate: DEFAULT_RATE,
   sperrkonto: { totalEUR: null, monthlyReleaseEUR: 992 },
+  personalPlans: {
+    Can: emptyPersonalPlan(),
+    Tuğçe: emptyPersonalPlan(),
+  },
 }
 
 export const TRANSFER_TYPES = ['Ortak Kasa Katkısı', 'Kişiden Kişiye', 'Tasarruf'] as const

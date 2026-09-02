@@ -791,3 +791,105 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
+/* Hedefler */
+
+.goals-page {
+  min-height: 100dvh;
+  padding-bottom: 2rem;
+}
+
+.goals-list {
+  list-style: none;
+  max-width: 720px;
+  margin: 0 auto 1rem;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.goal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.goal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goal-card-name {
+  font-weight: 600;
+}
+
+.goal-card-owner {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.goal-progress-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.goal-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.goals-page .expense-form {
+  max-width: 720px;
+}
+
+/* Kisisel butce */
+
+.personal-budget-page {
+  min-height: 100dvh;
+  padding-bottom: 2rem;
+}
+
+.personal-budget-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto 1rem;
+  padding: 0 1rem;
+}
+
+.person-toggle {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.person-toggle-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+}
+
+.person-toggle-btn--active {
+  background: var(--accent);
+  color: #0f172a;
+  border-color: var(--accent);
+}

@@ -9,12 +9,8 @@ const AVAILABLE_MODULES = [
   { title: 'Hesaplar', phase: 'Faz 3', to: '/hesaplar' },
   { title: 'Ay Panosu', phase: 'Faz 4', to: '/pano' },
   { title: 'Sabit Giderler', phase: 'Faz 5', to: '/sabit-giderler' },
-]
-
-const SOON_MODULES = [
-  { title: 'Kişisel Bütçeler', phase: 'Faz 6' },
-  { title: 'Hedefler', phase: 'Faz 6' },
-  { title: 'Katkı Özeti', phase: 'Faz 6' },
+  { title: 'Kişisel Bütçe', phase: 'Faz 6', to: '/kisisel-butce' },
+  { title: 'Hedefler', phase: 'Faz 6', to: '/hedefler' },
 ]
 
 export function HomePage() {
@@ -31,8 +27,9 @@ export function HomePage() {
       </header>
 
       <p className="home-note">
-        Faz 5: sabit giderler ve otomatik taslak üretimi hazır. Diğer
-        modüller yol haritasındaki sıraya göre eklenecek.
+        Faz 6: kişisel bütçeler, hedefler ve katkı özeti (Hesap Bakiyeleri
+        sayfasında) hazır. Excel'in ana iş akışları burada; Faz 7 (içe/dışa
+        aktarma, offline) ve Faz 8 (hızlı giriş, hatırlatmalar) sırada.
       </p>
 
       <div className="module-grid">
@@ -41,12 +38,6 @@ export function HomePage() {
             <span className="module-title">{m.title}</span>
             <span className="module-phase">{m.phase}</span>
           </Link>
-        ))}
-        {SOON_MODULES.map((m) => (
-          <div className="module-card module-card--soon" key={m.title}>
-            <span className="module-title">{m.title}</span>
-            <span className="module-phase">{m.phase} · yakında</span>
-          </div>
         ))}
       </div>
     </div>

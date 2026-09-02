@@ -10,6 +10,8 @@ import { TransfersPage } from './pages/TransfersPage'
 import { BalancesPage } from './pages/BalancesPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { RecurringPage } from './pages/RecurringPage'
+import { GoalsPage } from './pages/GoalsPage'
+import { PersonalBudgetPage } from './pages/PersonalBudgetPage'
 
 export function App() {
   return (
@@ -77,6 +79,22 @@ export function App() {
           element={
             <RequireAuth>
               <RecurringPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/hedefler"
+          element={
+            <RequireAuth>
+              <GoalsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/kisisel-butce"
+          element={
+            <RequireAuth>
+              <PersonalBudgetPage />
             </RequireAuth>
           }
         />

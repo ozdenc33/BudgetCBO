@@ -5,42 +5,48 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 5
+## Durum: Faz 6
 
-**Faz 1** (iskelet, Auth, Firestore kuralları), **Faz 2** (ayarlar, harcama
-girişi, doğrulama), **Faz 3** (gelirler, transferler, hesap bakiyeleri) ve
-**Faz 4** (ay panosu, kategori kırılımı) tamamlandı.
+**Faz 1-5** tamamlandı: iskelet/Auth/kurallar, ayarlar/harcama girişi,
+gelirler/transferler/hesap bakiyeleri, ay panosu/kategori kırılımı, sabit
+giderler/otomatik taslak üretimi.
 
-**Faz 5** bu asamada eklendi — Sabit Giderler (`/sabit-giderler`),
-Sabit_Giderler sayfasının karşılığı:
+**Faz 6** bu asamada eklendi — kişisel bütçeler, hedefler, katkı özeti:
 
-- Sabit gider listesi: kalem, bütçe tipi, kategori, plan tutarı
-  (opsiyonel), sıklık (1/3/6/12 ay), hesap, ilk ödeme tarihi, aktif.
-  Aylık eşdeğer, sonraki ödeme tarihi (bugüne göre), kalan gün ve seçili
-  ay durumu (Girildi/EKSIK/—) `src/domain/recurring.ts` içinde
-  hesaplanır — Sabit_Giderler!I,J,K,M formüllerinin birebir karşılığı.
-  "Bu ay girildi mi" kontrolü Excel'deki gibi kalem bazında değil,
-  Bütçe+Kategori ikilisi bazında eşleşir (aynı ikiliyi paylaşan iki
-  kalem birlikte "Girildi" sayılır, bkz. Kilavuz!B24).
-- **Otomatik taslak üretimi** (Excel'in yapamadığı, elle kopyala-yapıştır
-  yerine): o ay vadesi gelmiş ve girilmemiş her kalem için bir taslak
-  işlem kartı gösterilir (tutar düzenlenebilir). Kullanıcı **Onayla**
-  derse gerçek bir harcama olarak `transactions`'a yazılır; **Atla**
-  derse `recurringSkips` koleksiyonunda o kalem+ay için işaretlenir ve
-  bir daha taslak olarak çıkmaz (idempotent — sayfa her açıldığında
-  aynı kalem tekrar üretilmez, onaylanmadan hiçbir kayıt gerçekleşen
-  sayılmaz).
-- `src/domain/recurring.test.ts` (14 test): Sabit_Giderler sayfasındaki
-  16 gerçek kalemle ve gerçek "bugün" tarihiyle (2026-09-02, bu depoyu
-  hazırladığımız gün) birebir karşılaştırma yapar — sonraki ödeme
-  tarihleri, kalan gün sayıları ve seçili ay durumları dahil.
-- Uçtan uca akış (16 kalemi yükleyip taslak listesini görüntüleme, tutar
-  girip onaylama, atlama ve geri alma) Firebase emülatörlerinde
+- **Kişisel Bütçe** (`/kisisel-butce`): Butce_Can / Butce_Tugce
+  sayfalarının karşılığı, kişi seçmeli tek sayfa. Gelir (kaynak bazında
+  plan/gerçekleşen), ortak harcamalardaki pay, kişisel kategori
+  harcamaları, tasarruf ve "Sonuç" özeti (net, atanmamış para durumu, bu
+  ay harcanabilir kalan, günlük harcanabilir, tasarruf oranı). Plan
+  hücreleri (sarı/elle girilen) `settings.personalPlans` içinde saklanır
+  — Excel'de olduğu gibi aya göre değişmez, kullanıcı ay başında üzerine
+  yazar. `src/domain/personalBudget.ts` içinde hesaplanır.
+  **Not:** Excel'in kendi formülleri bölüm 2/3'te (Ortak payı/Kişisel
+  harcama satırları) "Kalan" = plan−gerçekleşen, ama bölüm 5 SONUÇ
+  tablosunda AYNI değerler için "Fark" = gerçekleşen−plan kullanır
+  (işaret ters). Bu, Excel'in kendi iç tutarsızlığı; sadeleştirmeden
+  birebir korundu, her iki alan da ayrı adlarla mevcut.
+- **Hedefler** (`/hedefler`): hedef tutar/tarih, biriken (Transferler'den
+  otomatik), kalan, ilerleme %, kalan ay, aylık gereken, Can/Tuğçe
+  katkısı. `src/domain/goals.ts` içinde hesaplanır.
+- **Katkı Özeti**: Hesap Bakiyeleri (`/hesaplar`) sayfasına eklendi
+  (Excel'de de Hesaplar sayfasının bir bölümü). Kim doğrudan ödedi, kim
+  Ortak Kasa'ya koydu, toplam katkı, kendi payı, fark — "borç" dili
+  kullanılmadan, sadece "toplamda kim önde" bilgisi. `src/domain/
+  contributions.ts` içinde hesaplanır.
+- `src/domain/goals.test.ts`, `personalBudget.test.ts`,
+  `contributions.test.ts`: Hedefler/Butce_Can/Butce_Tugce/Hesaplar
+  sayfalarındaki gerçek rakamlarla (ör. Can net gerçekleşen 319,15 €,
+  Tuğçe -103,94 €, katkı farkı Can +27,45 €/Tuğçe -27,45 €, kontrol
+  toplamı 0) birebir karşılaştırma yapar. Toplam **115/115 test**
+  geçiyor.
+- Uçtan uca akış (hedef listesi, kişi değiştirme, plan girip
+  kalıcılığını doğrulama, katkı özeti) Firebase emülatörlerinde
   tarayıcıda test edildi.
 
-Sonraki modüller (kişisel bütçeler, hedefler, katkı özeti) henüz yok;
-her biri kendi fazında, önceki fazın gerçek veriyle test edilmesinden
-sonra eklenecek.
+Sonraki adımlar Faz 7 (Excel içe/dışa aktarma, offline, PWA) ve Faz 8
+(hızlı giriş ekranı, hatırlatmalar); roadmap'teki ana modüller (Faz 1-6)
+artık tamamlandı.
 
 ## Kurulum
 

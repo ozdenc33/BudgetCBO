@@ -63,6 +63,8 @@ export type Settings = {
     /** Aylik serbest birakilan tutar (EUR). Bilinmiyorsa null. */
     monthlyReleaseEUR: number | null
   }
+  /** Butce_Can / Butce_Tugce plan hucreleri, bkz. PersonalBudgetPlan. */
+  personalPlans: Record<Person, PersonalBudgetPlan>
 }
 
 // Islemler sayfasinda A-H arasi elle doldurulan alanlar. Firestore'da
@@ -209,4 +211,127 @@ export type RecurringSkip = {
   id: string
   recurringId: string
   monthKey: string
+}
+
+export type GoalOwner = Person | 'Ortak'
+
+// Hedefler sayfasinda elle doldurulan alanlar.
+export type Goal = {
+  id: string
+  name: string
+  owner: GoalOwner
+  targetAmount?: number
+  targetDate?: string // YYYY-MM-DD
+  note?: string
+}
+
+export type GoalDraft = Omit<Goal, 'id'>
+
+export type ComputedGoal = Goal & {
+  /** Transferler!Tip=Tasarruf, Alici=hedef adi olan tum transferlerin toplami. */
+  accumulatedEUR: number
+  remainingEUR: number | undefined
+  progressPct: number | undefined
+  /** TODAY() bazli, hedef tarihe kalan ay (30.4 gun/ay varsayimiyla). */
+  remainingMonths: number | undefined
+  monthlyRequiredEUR: number | undefined
+  canContributionEUR: number
+  tugceContributionEUR: number
+}
+
+/**
+ * Butce_Can / Butce_Tugce sayfalarindaki sari (elle girilen) plan
+ * hucreleri. Excel'de aya gore degismez (tek sayfa, tek deger); ay
+ * basi rutininde kullanici uzerine yazar. Bkz. src/domain/personalBudget.ts.
+ */
+export type PersonalBudgetPlan = {
+  /** Gelir kaynagi adi -> planlanan EUR (Ayarlar!Gelir Kaynaklari listesiyle esler). */
+  incomePlan: Record<string, number>
+  /** Butce_Can!B19 — ortak harcamalardaki plan pay. */
+  sharedContributionPlanEUR: number
+  /** Kisisel kategori adi -> planlanan EUR (budgetType='Kişisel' kategorilerle esler). */
+  categoryPlan: Record<string, number>
+  /** Butce_Can!B43 — hedeflere aktarilmasi planlanan. */
+  savingsPlanEUR: number
+}
+
+export type PersonalBudgetIncomeRow = {
+  source: string
+  plannedEUR: number
+  actualEUR: number
+  /** actualEUR - plannedEUR (Butce_Can!D7 tarzi, fazlalik pozitif). */
+  diffEUR: number
+  usagePct: number | undefined
+}
+
+export type PersonalCategoryRow = {
+  category: string
+  /** Plan girilmemisse 0 (Excel'de bos hucre; Kalan/Kullanim% bu satirda tanimsiz kalir). */
+  plannedEUR: number
+  actualEUR: number
+  /** plannedEUR - actualEUR (Butce_Can!D25 "Kalan" tarzi). Plan girilmemisse tanimsiz. */
+  remainingEUR: number | undefined
+  usagePct: number | undefined
+}
+
+export type ComputedPersonalBudget = {
+  person: Person
+  monthKey: string
+  /** Sadece secili ay gercek "bugunku" ay ise dolu (Butce_Can!B3). */
+  remainingDaysInMonth: number | undefined
+  income: {
+    rows: PersonalBudgetIncomeRow[]
+    plannedEUR: number
+    actualEUR: number
+    diffEUR: number
+    usagePct: number | undefined
+  }
+  sharedContribution: {
+    plannedEUR: number
+    actualEUR: number
+    /** plannedEUR - actualEUR (Butce_Can!D19 "Fark" — burada Kalan anlaminda). */
+    remainingEUR: number
+    usagePct: number | undefined
+    suggestionHalfFixedEUR: number
+    suggestionHalfCategoryLimitEUR: number
+  }
+  personalCategories: {
+    rows: PersonalCategoryRow[]
+    plannedEUR: number
+    actualEUR: number
+    remainingEUR: number
+    usagePct: number | undefined
+  }
+  personalFixedMonthlyEquivalentEUR: number
+  savings: {
+    plannedEUR: number
+    actualEUR: number
+    diffEUR: number
+    usagePct: number | undefined
+  }
+  summary: {
+    incomeDiffEUR: number
+    /** actualEUR - plannedEUR (Butce_Can!D48 — bolum 5 burada isaret Fark2'in tersidir). */
+    sharedContributionDiffEUR: number
+    personalCategoriesDiffEUR: number
+    savingsDiffEUR: number
+    netPlannedEUR: number
+    netActualEUR: number
+    netDiffEUR: number
+  }
+  /** Butce_Can!C53 mesaji. */
+  unassignedStatus: 'dagitilmadi' | 'asildi' | 'tamam'
+  spendableThisMonthEUR: number | undefined
+  dailySpendableEUR: number | undefined
+  savingsRatePct: number | undefined
+}
+
+export type ContributionRow = {
+  person: Person
+  directlyPaidEUR: number
+  paidIntoSharedAccountEUR: number
+  totalContributionEUR: number
+  ownShareEUR: number
+  /** totalContributionEUR - ownShareEUR - sharedAccountBalanceEUR/2. */
+  diffEUR: number
 }
