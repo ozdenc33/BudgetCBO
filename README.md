@@ -5,37 +5,43 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 3
+## Durum: Faz 4
 
-**Faz 1** (proje iskeleti, Firebase Auth, Firestore kuralları) ve **Faz 2**
-(ayarlar, harcama girişi, doğrulama kuralları) tamamlandı.
+**Faz 1** (iskelet, Auth, Firestore kuralları), **Faz 2** (ayarlar, harcama
+girişi, doğrulama) ve **Faz 3** (gelirler, transferler, hesap bakiyeleri)
+tamamlandı.
 
-**Faz 3** bu asamada eklendi:
+**Faz 4** bu asamada eklendi — Ay Panosu (`/pano`), Ozet sayfasının
+karşılığı:
 
-- Gelirler (`/gelirler`): Gelirler sayfasının alanları (tarih, kaynak,
-  kişi, tutar, para birimi, hesap, not). Kişi zorunlu. Kur çevirisi ve
-  doğrulama `src/domain/incomes.ts` içinde hesaplanır. Excel'deki gibi
-  kaynak/hesap listeye karşı doğrulanmaz, sadece zorunlu alanlar kontrol
-  edilir.
-- Transferler (`/transferler`): Ortak Kasa Katkısı / Kişiden Kişiye /
-  Tasarruf tipleri, `src/domain/transfers.ts` içinde Transferler!M
-  formülünün birebir karşılığı olan doğrulama (ör. "Alıcı Ortak Kasa
-  olmalı"). Transfer harcama sayılmaz, harcama toplamlarına girmez.
-- Hesap Bakiyeleri (`/hesaplar`): her hesap için
-  Başlangıç + Gelir − Harcama − Transfer Çıkış + Transfer Giriş,
-  `src/domain/balances.ts` içinde hesaplanır; Hesaplar sayfasındaki gibi
-  tüm zamanların toplamıdır (aya göre filtrelenmez). Hesap ayarlarına
-  "Başlangıç bakiyesi (EUR)" alanı eklendi (Faz 2'de eksikti).
-- `src/domain/incomes.test.ts`, `transfers.test.ts`, `balances.test.ts`:
-  Gelirler/Transferler sayfalarındaki gerçek satırlarla ve Hesaplar
-  sayfasındaki gerçek bakiye rakamlarıyla (ör. Can-DE Girokonto 290,70 €,
-  net varlık 265,21 €) birebir karşılaştırma yapar (`npm run test`).
-- Uçtan uca akış (gelir/transfer ekle, geçersiz transfer engellenmesi,
-  hesap bakiyeleri raporu) Firebase emülatörlerinde tarayıcıda test edildi.
+- Ay Özeti: toplam gelir, toplam harcama, tasarrufa aktarılan, net,
+  taşınma harici harcama, tasarruf oranı.
+- Bütçe Tipi Bazında: her bütçe tipi için harcama, limit, kalan, kullanım
+  %, önceki ay, pay %. Kategori limitleri Ayarlar > Kategoriler'e eklendi
+  (`monthlyLimitEUR`, sadece Ortak-Ev/Ortak-Dışarı/Mike'ta anlamlı).
+  **Not:** Excel'in Ortak_Butce sayfası limitleri aya göre değişmeyen tek
+  bir sabit tablodur; talimatlar bölüm 4'teki `budgets` koleksiyonu
+  aylık planlanmış olsa da, Excel'e birebir sadakat için limitler burada
+  da aya göre değişmeyen tek bir değer olarak tutuluyor (kategori
+  ayarının bir parçası, ayrı bir `budgets` koleksiyonu değil).
+- Kategori Kırılımı: seçili ayda harcaması olan her kategori, harcama
+  büyüklüğüne göre sıralı (en büyükler en üstte — Excel'deki "En Büyük 5
+  Kategori" ve "Kategori Kırılımı" blokları tek tabloda birleştirildi).
+- Kontroller: hatalı işlem/transfer satırı, kuru girilmemiş TL ayı, Ortak
+  Kasa bakiye farkı. (Katkı kontrolü ve hedef farkı Faz 6'ya, sabit gider
+  eksikliği Faz 5'e ertelendi çünkü kaynak veri henüz yok.)
+- Aylık Gelişim: bütçe tipi bazında ve toplam, veri girilen her ay için
+  (Excel'deki gibi 18 ay önceden sabit liste değil, veriden türetilir).
+- `src/domain/dashboard.test.ts`: Ozet sayfasındaki gerçek Ekim 2026
+  rakamlarıyla (Ortak-Ev 1012,40 €, toplam harcama 1196,79 €, net
+  215,21 €, tasarruf oranı %20,85 dahil) birebir karşılaştırma yapar.
+- Uçtan uca akış (panoyu gerçek veriyle görüntüleme, kategori limiti
+  girip bütçe tipine yansıması) Firebase emülatörlerinde tarayıcıda test
+  edildi.
 
-Sonraki modüller (ay panosu, sabit giderler, kişisel bütçeler, hedefler,
-katkı özeti) henüz yok; her biri kendi fazında, önceki fazın gerçek
-veriyle test edilmesinden sonra eklenecek.
+Sonraki modüller (sabit giderler, kişisel bütçeler, hedefler, katkı
+özeti) henüz yok; her biri kendi fazında, önceki fazın gerçek veriyle
+test edilmesinden sonra eklenecek.
 
 ## Kurulum
 

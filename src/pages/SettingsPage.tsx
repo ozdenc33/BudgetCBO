@@ -178,6 +178,17 @@ function CategoriesSection({ draft, onSave }: SectionProps) {
     onSave({ ...draft, categories: draft.categories.filter((c) => c.id !== id) })
   }
 
+  function setCategoryLimit(id: string, value: number) {
+    onSave({
+      ...draft,
+      categories: draft.categories.map((c) =>
+        c.id === id ? { ...c, monthlyLimitEUR: value } : c,
+      ),
+    })
+  }
+
+  const LIMIT_ELIGIBLE: CategoryBudgetType[] = ['Ortak-Ev', 'Ortak-Dışarı', 'Mike']
+
   return (
     <section className="settings-section">
       <h2>Kategoriler</h2>
@@ -186,12 +197,26 @@ function CategoriesSection({ draft, onSave }: SectionProps) {
           <li key={c.id}>
             <span>{c.name}</span>
             <span className="settings-list-meta">{c.budgetType}</span>
+            {LIMIT_ELIGIBLE.includes(c.budgetType) && (
+              <input
+                className="settings-list-inline-input"
+                type="number"
+                step="0.01"
+                aria-label={`${c.name} aylık limit`}
+                defaultValue={c.monthlyLimitEUR ?? 0}
+                onBlur={(e) => setCategoryLimit(c.id, Number(e.target.value) || 0)}
+              />
+            )}
             <button onClick={() => removeCategory(c.id)} aria-label={`${c.name} sil`}>
               Sil
             </button>
           </li>
         ))}
       </ul>
+      <p className="settings-note">
+        Limit (EUR): yalnızca Ortak-Ev/Ortak-Dışarı/Mike kategorilerinde anlamlıdır, aya göre
+        değişmez. Kişisel limitler Faz 6'da eklenecek.
+      </p>
       <form className="settings-add-form" onSubmit={addCategory}>
         <input
           placeholder="Yeni kategori adı"

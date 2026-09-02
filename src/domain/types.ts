@@ -35,6 +35,12 @@ export type Category = {
   id: string
   name: string
   budgetType: CategoryBudgetType
+  /**
+   * Ortak_Butce!Aylık Limit (EUR). Sadece Ortak-Ev/Ortak-Dışarı/Mike
+   * tipinde anlamlidir; Excel'de aya gore degismez, tek bir sabit
+   * tablodur (bkz. src/domain/dashboard.ts). Girilmemisse 0 sayilir.
+   */
+  monthlyLimitEUR?: number
 }
 
 export type IncomeSource = {

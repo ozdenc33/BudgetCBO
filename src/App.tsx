@@ -8,6 +8,7 @@ import { ExpensesPage } from './pages/ExpensesPage'
 import { IncomesPage } from './pages/IncomesPage'
 import { TransfersPage } from './pages/TransfersPage'
 import { BalancesPage } from './pages/BalancesPage'
+import { DashboardPage } from './pages/DashboardPage'
 
 export function App() {
   return (
@@ -59,6 +60,14 @@ export function App() {
           element={
             <RequireAuth>
               <BalancesPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/pano"
+          element={
+            <RequireAuth>
+              <DashboardPage />
             </RequireAuth>
           }
         />
