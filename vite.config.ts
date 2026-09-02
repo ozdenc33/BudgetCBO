@@ -24,6 +24,18 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // exceljs (~1MB) sadece Ice/Disa Aktarma sayfasinda kullanilir;
+        // ilk acilista onbellege alinip mobil veri harcamasin diye
+        // onceden indirilmez, yalnizca sayfa gercekten ziyaret
+        // edildiginde indirilip cache-first ile saklanir.
+        globIgnores: ['**/exceljs*.js'],
+        runtimeCaching: [
+          {
+            urlPattern: /exceljs.*\.js$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'exceljs-chunk' },
+          },
+        ],
       },
     }),
   ],

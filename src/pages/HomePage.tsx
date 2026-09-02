@@ -11,6 +11,7 @@ const AVAILABLE_MODULES = [
   { title: 'Sabit Giderler', phase: 'Faz 5', to: '/sabit-giderler' },
   { title: 'Kişisel Bütçe', phase: 'Faz 6', to: '/kisisel-butce' },
   { title: 'Hedefler', phase: 'Faz 6', to: '/hedefler' },
+  { title: 'İçe/Dışa Aktar', phase: 'Faz 7', to: '/ice-disa-aktar' },
 ]
 
 export function HomePage() {
@@ -27,9 +28,8 @@ export function HomePage() {
       </header>
 
       <p className="home-note">
-        Faz 6: kişisel bütçeler, hedefler ve katkı özeti (Hesap Bakiyeleri
-        sayfasında) hazır. Excel'in ana iş akışları burada; Faz 7 (içe/dışa
-        aktarma, offline) ve Faz 8 (hızlı giriş, hatırlatmalar) sırada.
+        Faz 7: Excel içe/dışa aktarma, offline çalışma ve PWA hazır. Faz 8
+        (hızlı giriş ekranı, hatırlatmalar) sırada.
       </p>
 
       <div className="module-grid">

@@ -12,10 +12,13 @@ import { DashboardPage } from './pages/DashboardPage'
 import { RecurringPage } from './pages/RecurringPage'
 import { GoalsPage } from './pages/GoalsPage'
 import { PersonalBudgetPage } from './pages/PersonalBudgetPage'
+import { ImportExportPage } from './pages/ImportExportPage'
+import { OfflineBanner } from './components/OfflineBanner'
 
 export function App() {
   return (
     <AuthProvider>
+      <OfflineBanner />
       <Routes>
         <Route path="/giris" element={<LoginPage />} />
         <Route
@@ -95,6 +98,14 @@ export function App() {
           element={
             <RequireAuth>
               <PersonalBudgetPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/ice-disa-aktar"
+          element={
+            <RequireAuth>
+              <ImportExportPage />
             </RequireAuth>
           }
         />

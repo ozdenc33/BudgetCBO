@@ -5,11 +5,11 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 6
+## Durum: Faz 7
 
-**Faz 1-5** tamamlandı: iskelet/Auth/kurallar, ayarlar/harcama girişi,
+**Faz 1-6** tamamlandı: iskelet/Auth/kurallar, ayarlar/harcama girişi,
 gelirler/transferler/hesap bakiyeleri, ay panosu/kategori kırılımı, sabit
-giderler/otomatik taslak üretimi.
+giderler/otomatik taslak üretimi, kişisel bütçeler/hedefler/katkı özeti.
 
 **Faz 6** bu asamada eklendi — kişisel bütçeler, hedefler, katkı özeti:
 
@@ -44,9 +44,33 @@ giderler/otomatik taslak üretimi.
   kalıcılığını doğrulama, katkı özeti) Firebase emülatörlerinde
   tarayıcıda test edildi.
 
-Sonraki adımlar Faz 7 (Excel içe/dışa aktarma, offline, PWA) ve Faz 8
-(hızlı giriş ekranı, hatırlatmalar); roadmap'teki ana modüller (Faz 1-6)
-artık tamamlandı.
+**Faz 7** bu asamada eklendi — Excel içe/dışa aktarma, offline çalışma, PWA:
+
+- **İçe/Dışa Aktarma** (`/ice-disa-aktar`): `src/domain/excelImport.ts`
+  Ortak_Butce_v9.xlsx'in gerçek kolon düzenini (veri 4. satırdan başlar)
+  okuyup Islemler/Gelirler/Transferler/Sabit_Giderler/Hedefler
+  sayfalarını Firestore'a aktarır; Ayarlar sayfası okunmaz (kategoriler/
+  hesaplar zaten uygulamada tanımlı). `src/domain/excelExport.ts` aynı
+  kolon düzeninde bir yedek üretir, yani **dışa aktarılan dosya tekrar
+  içe aktarılabilir** (round-trip, test edildi). `exceljs` kütüphanesi
+  (~1 MB) yalnızca bu sayfa ziyaret edildiğinde indirilir (dynamic
+  import + PWA'nın önceden önbelleğe almasından hariç tutuldu), mobil
+  ana paket şişmesin diye.
+  **Bulunan ve düzeltilen hata:** Excel sayfalarında veri bloğundan
+  sonra boş bir satırla ayrılmış TOPLAM/açıklama satırları var (ör.
+  Hedefler!A12='TOPLAM'). İlk yaklaşım bunları da veri satırı sanıp
+  yanlışlıkla içe aktarıyordu; parser artık ilk boş satırda kesin
+  duruyor. Gerçek dosyayla (7 harcama, 2 gelir, 3 transfer, 16 sabit
+  gider, 3 hedef) doğrulandı.
+- **Offline çalışma**: Firestore `persistentLocalCache` ile etkinleştirildi
+  (`src/firebase.ts`) — kayıtlar IndexedDB'de tutulur, internet yokken
+  okuma/yazma çalışır, bağlantı gelince otomatik eşitlenir. Çevrimdışı
+  olunduğunda küçük bir bildirim şeridi gösterilir (`OfflineBanner`).
+- **PWA**: Faz 1'den beri kurulu olan service worker ve manifest
+  doğrulandı; ana paket artık `exceljs` hariç ~800 KB önbelleğe alınıyor.
+
+Sonraki adım Faz 8 (hızlı giriş ekranı, hatırlatmalar); roadmap'teki tüm
+ana modüller artık tamamlandı.
 
 ## Kurulum
 
@@ -116,3 +140,6 @@ Bu komut hem `firestore.rules`'u hem de `npm run build` çıktısını
 - Cloud Functions kullanılmıyor; ücretsiz katmanda kalmak esas.
 - PWA ikonları `public/icons/` altında yer tutucu olarak üretildi, isteğe
   bağlı olarak değiştirilebilir.
+- Excel okuma/yazma için `exceljs` kullanılıyor (SheetJS `xlsx` paketinin
+  npm'deki sürümü bilinen güvenlik açıkları taşıyor ve güncel/yamalı
+  sürümüne bu ortamdan erişilemedi, bkz. commit geçmişi).
