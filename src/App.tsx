@@ -9,6 +9,7 @@ import { IncomesPage } from './pages/IncomesPage'
 import { TransfersPage } from './pages/TransfersPage'
 import { BalancesPage } from './pages/BalancesPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { RecurringPage } from './pages/RecurringPage'
 
 export function App() {
   return (
@@ -68,6 +69,14 @@ export function App() {
           element={
             <RequireAuth>
               <DashboardPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/sabit-giderler"
+          element={
+            <RequireAuth>
+              <RecurringPage />
             </RequireAuth>
           }
         />

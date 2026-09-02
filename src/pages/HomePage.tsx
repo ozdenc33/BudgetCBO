@@ -8,10 +8,10 @@ const AVAILABLE_MODULES = [
   { title: 'Transferler', phase: 'Faz 3', to: '/transferler' },
   { title: 'Hesaplar', phase: 'Faz 3', to: '/hesaplar' },
   { title: 'Ay Panosu', phase: 'Faz 4', to: '/pano' },
+  { title: 'Sabit Giderler', phase: 'Faz 5', to: '/sabit-giderler' },
 ]
 
 const SOON_MODULES = [
-  { title: 'Sabit Giderler', phase: 'Faz 5' },
   { title: 'Kişisel Bütçeler', phase: 'Faz 6' },
   { title: 'Hedefler', phase: 'Faz 6' },
   { title: 'Katkı Özeti', phase: 'Faz 6' },
@@ -31,8 +31,8 @@ export function HomePage() {
       </header>
 
       <p className="home-note">
-        Faz 4: ay panosu ve kategori kırılımı hazır. Diğer modüller yol
-        haritasındaki sıraya göre eklenecek.
+        Faz 5: sabit giderler ve otomatik taslak üretimi hazır. Diğer
+        modüller yol haritasındaki sıraya göre eklenecek.
       </p>
 
       <div className="module-grid">

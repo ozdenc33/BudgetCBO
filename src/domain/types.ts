@@ -162,3 +162,51 @@ export type AccountBalance = {
   transfersInEUR: number
   balanceEUR: number
 }
+
+export type FrequencyMonths = 1 | 3 | 6 | 12
+
+// Sabit_Giderler sayfasinda elle doldurulan alanlar (A-H, N kolonlari).
+// Tutar plandir, harcama sayilmaz; gerceklesen kayit ancak kullanici
+// onayladiktan sonra transactions koleksiyonuna girer (bkz.
+// src/domain/recurring.ts).
+export type RecurringItem = {
+  id: string
+  name: string
+  budgetType: BudgetType
+  category: string
+  /** Girilmemisse plan tutari belirsizdir, taslakta tutar bos gelir. */
+  amount?: number
+  frequencyMonths: FrequencyMonths
+  account: string
+  firstPaymentDate: string // YYYY-MM-DD
+  active: boolean
+  note?: string
+}
+
+export type RecurringItemDraft = Omit<RecurringItem, 'id'>
+
+// Sabit_Giderler!Seçili Ay Durumu kolonunun karsiligi.
+export type RecurringMonthStatus = 'pasif' | 'tarih-sıklık-eksik' | 'vadesi-degil' | 'girildi' | 'eksik'
+
+export type ComputedRecurringItem = RecurringItem & {
+  monthlyEquivalentEUR: number | undefined
+  /** Bugune gore bir sonraki odeme tarihi (hatirlatma icin). */
+  nextPaymentDate: string | undefined
+  remainingDays: number | undefined
+  /** Secili ay icin durum (bkz. RecurringMonthStatus). */
+  monthStatus: RecurringMonthStatus
+  /** monthStatus 'girildi' ise o ay zaten girilen tutar (EUR). */
+  enteredThisMonthEUR: number
+}
+
+/**
+ * recurringSkips koleksiyonu: bir kalemin belirli bir ay icin
+ * kullanicinin bilerek atladigini kaydeder (Excel'de karsiligi yok,
+ * "Kullanıcı ... atlar" gereksinimi icin eklendi, bkz. proje
+ * talimatlari bolum 6.1).
+ */
+export type RecurringSkip = {
+  id: string
+  recurringId: string
+  monthKey: string
+}

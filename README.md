@@ -5,43 +5,42 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 4
+## Durum: Faz 5
 
 **Faz 1** (iskelet, Auth, Firestore kuralları), **Faz 2** (ayarlar, harcama
-girişi, doğrulama) ve **Faz 3** (gelirler, transferler, hesap bakiyeleri)
-tamamlandı.
+girişi, doğrulama), **Faz 3** (gelirler, transferler, hesap bakiyeleri) ve
+**Faz 4** (ay panosu, kategori kırılımı) tamamlandı.
 
-**Faz 4** bu asamada eklendi — Ay Panosu (`/pano`), Ozet sayfasının
-karşılığı:
+**Faz 5** bu asamada eklendi — Sabit Giderler (`/sabit-giderler`),
+Sabit_Giderler sayfasının karşılığı:
 
-- Ay Özeti: toplam gelir, toplam harcama, tasarrufa aktarılan, net,
-  taşınma harici harcama, tasarruf oranı.
-- Bütçe Tipi Bazında: her bütçe tipi için harcama, limit, kalan, kullanım
-  %, önceki ay, pay %. Kategori limitleri Ayarlar > Kategoriler'e eklendi
-  (`monthlyLimitEUR`, sadece Ortak-Ev/Ortak-Dışarı/Mike'ta anlamlı).
-  **Not:** Excel'in Ortak_Butce sayfası limitleri aya göre değişmeyen tek
-  bir sabit tablodur; talimatlar bölüm 4'teki `budgets` koleksiyonu
-  aylık planlanmış olsa da, Excel'e birebir sadakat için limitler burada
-  da aya göre değişmeyen tek bir değer olarak tutuluyor (kategori
-  ayarının bir parçası, ayrı bir `budgets` koleksiyonu değil).
-- Kategori Kırılımı: seçili ayda harcaması olan her kategori, harcama
-  büyüklüğüne göre sıralı (en büyükler en üstte — Excel'deki "En Büyük 5
-  Kategori" ve "Kategori Kırılımı" blokları tek tabloda birleştirildi).
-- Kontroller: hatalı işlem/transfer satırı, kuru girilmemiş TL ayı, Ortak
-  Kasa bakiye farkı. (Katkı kontrolü ve hedef farkı Faz 6'ya, sabit gider
-  eksikliği Faz 5'e ertelendi çünkü kaynak veri henüz yok.)
-- Aylık Gelişim: bütçe tipi bazında ve toplam, veri girilen her ay için
-  (Excel'deki gibi 18 ay önceden sabit liste değil, veriden türetilir).
-- `src/domain/dashboard.test.ts`: Ozet sayfasındaki gerçek Ekim 2026
-  rakamlarıyla (Ortak-Ev 1012,40 €, toplam harcama 1196,79 €, net
-  215,21 €, tasarruf oranı %20,85 dahil) birebir karşılaştırma yapar.
-- Uçtan uca akış (panoyu gerçek veriyle görüntüleme, kategori limiti
-  girip bütçe tipine yansıması) Firebase emülatörlerinde tarayıcıda test
-  edildi.
+- Sabit gider listesi: kalem, bütçe tipi, kategori, plan tutarı
+  (opsiyonel), sıklık (1/3/6/12 ay), hesap, ilk ödeme tarihi, aktif.
+  Aylık eşdeğer, sonraki ödeme tarihi (bugüne göre), kalan gün ve seçili
+  ay durumu (Girildi/EKSIK/—) `src/domain/recurring.ts` içinde
+  hesaplanır — Sabit_Giderler!I,J,K,M formüllerinin birebir karşılığı.
+  "Bu ay girildi mi" kontrolü Excel'deki gibi kalem bazında değil,
+  Bütçe+Kategori ikilisi bazında eşleşir (aynı ikiliyi paylaşan iki
+  kalem birlikte "Girildi" sayılır, bkz. Kilavuz!B24).
+- **Otomatik taslak üretimi** (Excel'in yapamadığı, elle kopyala-yapıştır
+  yerine): o ay vadesi gelmiş ve girilmemiş her kalem için bir taslak
+  işlem kartı gösterilir (tutar düzenlenebilir). Kullanıcı **Onayla**
+  derse gerçek bir harcama olarak `transactions`'a yazılır; **Atla**
+  derse `recurringSkips` koleksiyonunda o kalem+ay için işaretlenir ve
+  bir daha taslak olarak çıkmaz (idempotent — sayfa her açıldığında
+  aynı kalem tekrar üretilmez, onaylanmadan hiçbir kayıt gerçekleşen
+  sayılmaz).
+- `src/domain/recurring.test.ts` (14 test): Sabit_Giderler sayfasındaki
+  16 gerçek kalemle ve gerçek "bugün" tarihiyle (2026-09-02, bu depoyu
+  hazırladığımız gün) birebir karşılaştırma yapar — sonraki ödeme
+  tarihleri, kalan gün sayıları ve seçili ay durumları dahil.
+- Uçtan uca akış (16 kalemi yükleyip taslak listesini görüntüleme, tutar
+  girip onaylama, atlama ve geri alma) Firebase emülatörlerinde
+  tarayıcıda test edildi.
 
-Sonraki modüller (sabit giderler, kişisel bütçeler, hedefler, katkı
-özeti) henüz yok; her biri kendi fazında, önceki fazın gerçek veriyle
-test edilmesinden sonra eklenecek.
+Sonraki modüller (kişisel bütçeler, hedefler, katkı özeti) henüz yok;
+her biri kendi fazında, önceki fazın gerçek veriyle test edilmesinden
+sonra eklenecek.
 
 ## Kurulum
 

@@ -704,3 +704,90 @@ button {
 .control-badge--ok {
   color: #4ade80;
 }
+
+/* Sabit giderler */
+
+.recurring-page {
+  min-height: 100dvh;
+  padding-bottom: 2rem;
+}
+
+.draft-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.draft-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.draft-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.draft-row-name {
+  font-weight: 600;
+}
+
+.draft-row-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.draft-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.draft-row-actions input {
+  width: 90px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  color: var(--text);
+}
+
+.draft-row-actions button {
+  background: var(--accent);
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.draft-row-actions button:last-child {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.recurring-page .expense-form {
+  max-width: 960px;
+}
+
+.recurring-page .expense-form h2 {
+  font-size: 1rem;
+  margin: 0 0 0.3rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
