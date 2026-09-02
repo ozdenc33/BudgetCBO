@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Yalnizca iki kimligi dogrulanmis kullanici (Can Berk, Tugce) okuyup
+// yazabilir. UID'ler Firebase Console > Authentication > Users altindan
+// alinir ve asagidaki listeye elle yazilir. Bkz. README.md "Kurulum" bolumu.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function allowedUids() {
+      return [
+        'REPLACE_WITH_CAN_BERK_UID',
+        'REPLACE_WITH_TUGCE_UID'
+      ];
+    }
+
+    function isAllowedUser() {
+      return request.auth != null && request.auth.uid in allowedUids();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAllowedUser();
+    }
+  }
+}
