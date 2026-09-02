@@ -5,22 +5,34 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 1
+## Durum: Faz 2
 
-Bu aşamada teslim edilenler:
+**Faz 1** (proje iskeleti, Firebase Auth, Firestore kuralları) tamamlandı.
 
-- Vite + React + TypeScript proje iskeleti, PWA olarak kurulabilir
-- Firebase Authentication ile giriş ekranı (kayıt yok, iki kullanıcı elle
-  oluşturulur)
-- Firestore güvenlik kuralları: yalnızca iki beyaz listeli UID okuyup
-  yazabilir; kurallar `@firebase/rules-unit-testing` ile Firestore
-  emülatöründe test edildi (whitelist'teki UID okuyup yazabiliyor,
-  whitelist dışı ve kimliksiz istekler reddediliyor)
-- Ana sayfa: yol haritasındaki modüllerin "yakında" listesi
+**Faz 2** bu asamada eklendi:
 
-Sonraki modüller (harcama girişi, ayarlar, gelirler, transferler, pano,
-sabit giderler, kişisel bütçeler, hedefler) henüz yok; her biri kendi
-fazında, önceki fazın gerçek veriyle test edilmesinden sonra eklenecek.
+- `settings/app` Firestore dokümanı: hesaplar, kategoriler, gelir
+  kaynakları, aylık EUR/TRY kur tablosu + varsayılan kur, Sperrkonto
+  (toplam + aylık serbest tutar). Doküman yoksa Ayarlar sayfasındaki
+  Excel verileriyle (8 hesap, 42 kategori, 8 gelir kaynağı) bir kerelik
+  tohumlanır; `/ayarlar` ekranından eklenip çıkarılabilir.
+- Harcama girişi (`/harcamalar`): Islemler sayfasındaki A-H alanları
+  (tarih, açıklama, kategori, tutar, hesap, para birimi, Can %/Tuğçe %,
+  etiket, not). Gri (formül) kolonların birebir karşılığı —kur çevirisi,
+  bütçe tipi, ödeyen, paylaşım oranı, Can/Tuğçe payı, doğrulama— istemci
+  tarafında `src/domain/transactions.ts` içinde hesaplanır, Firestore'a
+  yazılmaz.
+- Doğrulama kuralları (talimatlar bölüm 5) canlı önizlemede uygulanır;
+  hata varsa kayıt engellenir. `src/domain/transactions.test.ts`,
+  Islemler sayfasındaki 6 gerçek satırla ve tüm doğrulama kurallarıyla
+  test eder (`npm run test`).
+- Uçtan uca akış (giriş, ayarlar tohumlama, harcama ekle/düzenle/sil)
+  Firebase emülatörlerinde tarayıcıda test edildi.
+
+Sonraki modüller (gelirler, transferler, hesap bakiyeleri, ay panosu,
+sabit giderler, kişisel bütçeler, hedefler, katkı özeti) henüz yok; her
+biri kendi fazında, önceki fazın gerçek veriyle test edilmesinden sonra
+eklenecek.
 
 ## Kurulum
 
@@ -55,7 +67,13 @@ Firebase proje ID'nizi yazın.
 
 ```bash
 npm run dev
+npm run test        # is kurallari testleri (vitest)
+npm run typecheck
 ```
+
+Firebase yerine yerel emülatörlere bağlanmak için `.env` içinde
+`VITE_USE_EMULATOR=true` yapıp `npx firebase emulators:start --only
+firestore,auth` çalıştırın.
 
 ### 4. Firestore kurallarını emülatörde test etme
 

@@ -1,9 +1,12 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
-const MODULES = [
-  { title: 'Hızlı Giriş', phase: 'Faz 2' },
-  { title: 'Harcamalar', phase: 'Faz 2' },
-  { title: 'Ayarlar', phase: 'Faz 2' },
+const AVAILABLE_MODULES = [
+  { title: 'Harcamalar', phase: 'Faz 2', to: '/harcamalar' },
+  { title: 'Ayarlar', phase: 'Faz 2', to: '/ayarlar' },
+]
+
+const SOON_MODULES = [
   { title: 'Gelirler', phase: 'Faz 3' },
   { title: 'Transferler', phase: 'Faz 3' },
   { title: 'Hesaplar', phase: 'Faz 3' },
@@ -28,12 +31,18 @@ export function HomePage() {
       </header>
 
       <p className="home-note">
-        Faz 1: kimlik doğrulama ve iskelet hazır. Diğer modüller yol
-        haritasındaki sıraya göre eklenecek.
+        Faz 2: harcama girişi ve ayarlar hazır. Diğer modüller yol haritasındaki
+        sıraya göre eklenecek.
       </p>
 
       <div className="module-grid">
-        {MODULES.map((m) => (
+        {AVAILABLE_MODULES.map((m) => (
+          <Link className="module-card" to={m.to} key={m.title}>
+            <span className="module-title">{m.title}</span>
+            <span className="module-phase">{m.phase}</span>
+          </Link>
+        ))}
+        {SOON_MODULES.map((m) => (
           <div className="module-card module-card--soon" key={m.title}>
             <span className="module-title">{m.title}</span>
             <span className="module-phase">{m.phase} · yakında</span>
