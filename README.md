@@ -5,34 +5,37 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 2
+## Durum: Faz 3
 
-**Faz 1** (proje iskeleti, Firebase Auth, Firestore kuralları) tamamlandı.
+**Faz 1** (proje iskeleti, Firebase Auth, Firestore kuralları) ve **Faz 2**
+(ayarlar, harcama girişi, doğrulama kuralları) tamamlandı.
 
-**Faz 2** bu asamada eklendi:
+**Faz 3** bu asamada eklendi:
 
-- `settings/app` Firestore dokümanı: hesaplar, kategoriler, gelir
-  kaynakları, aylık EUR/TRY kur tablosu + varsayılan kur, Sperrkonto
-  (toplam + aylık serbest tutar). Doküman yoksa Ayarlar sayfasındaki
-  Excel verileriyle (8 hesap, 42 kategori, 8 gelir kaynağı) bir kerelik
-  tohumlanır; `/ayarlar` ekranından eklenip çıkarılabilir.
-- Harcama girişi (`/harcamalar`): Islemler sayfasındaki A-H alanları
-  (tarih, açıklama, kategori, tutar, hesap, para birimi, Can %/Tuğçe %,
-  etiket, not). Gri (formül) kolonların birebir karşılığı —kur çevirisi,
-  bütçe tipi, ödeyen, paylaşım oranı, Can/Tuğçe payı, doğrulama— istemci
-  tarafında `src/domain/transactions.ts` içinde hesaplanır, Firestore'a
-  yazılmaz.
-- Doğrulama kuralları (talimatlar bölüm 5) canlı önizlemede uygulanır;
-  hata varsa kayıt engellenir. `src/domain/transactions.test.ts`,
-  Islemler sayfasındaki 6 gerçek satırla ve tüm doğrulama kurallarıyla
-  test eder (`npm run test`).
-- Uçtan uca akış (giriş, ayarlar tohumlama, harcama ekle/düzenle/sil)
-  Firebase emülatörlerinde tarayıcıda test edildi.
+- Gelirler (`/gelirler`): Gelirler sayfasının alanları (tarih, kaynak,
+  kişi, tutar, para birimi, hesap, not). Kişi zorunlu. Kur çevirisi ve
+  doğrulama `src/domain/incomes.ts` içinde hesaplanır. Excel'deki gibi
+  kaynak/hesap listeye karşı doğrulanmaz, sadece zorunlu alanlar kontrol
+  edilir.
+- Transferler (`/transferler`): Ortak Kasa Katkısı / Kişiden Kişiye /
+  Tasarruf tipleri, `src/domain/transfers.ts` içinde Transferler!M
+  formülünün birebir karşılığı olan doğrulama (ör. "Alıcı Ortak Kasa
+  olmalı"). Transfer harcama sayılmaz, harcama toplamlarına girmez.
+- Hesap Bakiyeleri (`/hesaplar`): her hesap için
+  Başlangıç + Gelir − Harcama − Transfer Çıkış + Transfer Giriş,
+  `src/domain/balances.ts` içinde hesaplanır; Hesaplar sayfasındaki gibi
+  tüm zamanların toplamıdır (aya göre filtrelenmez). Hesap ayarlarına
+  "Başlangıç bakiyesi (EUR)" alanı eklendi (Faz 2'de eksikti).
+- `src/domain/incomes.test.ts`, `transfers.test.ts`, `balances.test.ts`:
+  Gelirler/Transferler sayfalarındaki gerçek satırlarla ve Hesaplar
+  sayfasındaki gerçek bakiye rakamlarıyla (ör. Can-DE Girokonto 290,70 €,
+  net varlık 265,21 €) birebir karşılaştırma yapar (`npm run test`).
+- Uçtan uca akış (gelir/transfer ekle, geçersiz transfer engellenmesi,
+  hesap bakiyeleri raporu) Firebase emülatörlerinde tarayıcıda test edildi.
 
-Sonraki modüller (gelirler, transferler, hesap bakiyeleri, ay panosu,
-sabit giderler, kişisel bütçeler, hedefler, katkı özeti) henüz yok; her
-biri kendi fazında, önceki fazın gerçek veriyle test edilmesinden sonra
-eklenecek.
+Sonraki modüller (ay panosu, sabit giderler, kişisel bütçeler, hedefler,
+katkı özeti) henüz yok; her biri kendi fazında, önceki fazın gerçek
+veriyle test edilmesinden sonra eklenecek.
 
 ## Kurulum
 

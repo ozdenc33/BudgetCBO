@@ -6,16 +6,14 @@ import type {
   Settings,
   Transaction,
 } from './types'
+import { monthKeyOf, resolveRate } from './rate'
 
 // Bu dosya Islemler sayfasindaki gri (formul) kolonlarin birebir
 // karsiligidir: Kontrol (I), Tutar EUR (J), Butce (K), Can Payi (L),
 // Tugce Payi (M), Ay (N), Kur (Q), Odeyen (R), Oran (S). Degistirilmeden
 // once docs/proje-talimatlari.md bolum 5'e ve testlerine bakin.
 
-export function monthKeyOf(date: string): string {
-  // date: YYYY-MM-DD -> YYYY-MM (Excel'deki YYYY-AA ile ayni bicim)
-  return date.slice(0, 7)
-}
+export { monthKeyOf }
 
 export function findAccount(name: string, settings: Settings): Account | undefined {
   return settings.accounts.find((a) => a.name === name)
@@ -50,17 +48,6 @@ function resolveBudgetType(
   if (ratio === 1) return 'Kişisel-Can'
   if (ratio === 0) return 'Kişisel-Tuğçe'
   return 'Paylaşım eksik'
-}
-
-function resolveRate(
-  currency: Transaction['currency'],
-  monthKey: string,
-  settings: Settings,
-): { rate: number; rateSource: ComputedTransaction['rateSource'] } {
-  if (!currency || currency === 'EUR') return { rate: 1, rateSource: 'eur' }
-  const monthly = settings.rates[monthKey]
-  if (monthly && monthly > 0) return { rate: monthly, rateSource: 'monthly' }
-  return { rate: settings.defaultRate || 1, rateSource: 'default' }
 }
 
 function validate(

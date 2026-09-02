@@ -5,6 +5,9 @@ import { LoginPage } from './pages/LoginPage'
 import { HomePage } from './pages/HomePage'
 import { SettingsPage } from './pages/SettingsPage'
 import { ExpensesPage } from './pages/ExpensesPage'
+import { IncomesPage } from './pages/IncomesPage'
+import { TransfersPage } from './pages/TransfersPage'
+import { BalancesPage } from './pages/BalancesPage'
 
 export function App() {
   return (
@@ -32,6 +35,30 @@ export function App() {
           element={
             <RequireAuth>
               <ExpensesPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/gelirler"
+          element={
+            <RequireAuth>
+              <IncomesPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/transferler"
+          element={
+            <RequireAuth>
+              <TransfersPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/hesaplar"
+          element={
+            <RequireAuth>
+              <BalancesPage />
             </RequireAuth>
           }
         />

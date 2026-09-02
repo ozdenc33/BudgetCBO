@@ -140,6 +140,26 @@ describe('computeTransaction — Islemler A4:S9 ile karsilastirma', () => {
     expect(c.canShare).toBeCloseTo(15.75)
     expect(c.tugceShare).toBeCloseTo(15.75)
   })
+
+  it('satir 10: kisisel kategori, Tugce % = 1 — Kisisel-Tugce, tamami Tugce payi', () => {
+    const c = computeTransaction(
+      tx({
+        date: '2026-10-20',
+        description: 'Kis montu',
+        category: 'Giyim',
+        amount: 89.99,
+        currency: 'EUR',
+        account: 'Tuğçe-DE Girokonto',
+        tugcePct: 1,
+      }),
+      DEFAULT_SETTINGS,
+    )
+    expect(c.validation).toBe('OK')
+    expect(c.payer).toBe('Tuğçe')
+    expect(c.budgetType).toBe('Kişisel-Tuğçe')
+    expect(c.canShare).toBe(0)
+    expect(c.tugceShare).toBeCloseTo(89.99)
+  })
 })
 
 describe('computeTransaction — dogrulama kurallari (bolum 5)', () => {

@@ -85,13 +85,28 @@ function AccountsSection({ draft, onSave }: SectionProps) {
   function addAccount(e: FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
-    const account: Account = { id: slugify(name), name: name.trim(), currency, owner }
+    const account: Account = {
+      id: slugify(name),
+      name: name.trim(),
+      currency,
+      owner,
+      startingBalanceEUR: 0,
+    }
     onSave({ ...draft, accounts: [...draft.accounts, account] })
     setName('')
   }
 
   function removeAccount(id: string) {
     onSave({ ...draft, accounts: draft.accounts.filter((a) => a.id !== id) })
+  }
+
+  function setStartingBalance(id: string, value: number) {
+    onSave({
+      ...draft,
+      accounts: draft.accounts.map((a) =>
+        a.id === id ? { ...a, startingBalanceEUR: value } : a,
+      ),
+    })
   }
 
   return (
@@ -104,12 +119,23 @@ function AccountsSection({ draft, onSave }: SectionProps) {
             <span className="settings-list-meta">
               {a.currency} · {a.owner}
             </span>
+            <input
+              className="settings-list-inline-input"
+              type="number"
+              step="0.01"
+              aria-label={`${a.name} başlangıç bakiyesi`}
+              defaultValue={a.startingBalanceEUR}
+              onBlur={(e) => setStartingBalance(a.id, Number(e.target.value) || 0)}
+            />
             <button onClick={() => removeAccount(a.id)} aria-label={`${a.name} sil`}>
               Sil
             </button>
           </li>
         ))}
       </ul>
+      <p className="settings-note">
+        Başlangıç bakiyesi (EUR): uygulamayı kullanmaya başlamadan önceki hesap bakiyesi.
+      </p>
       <form className="settings-add-form" onSubmit={addAccount}>
         <input
           placeholder="Yeni hesap adı"

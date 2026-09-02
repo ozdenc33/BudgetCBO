@@ -4,12 +4,12 @@ import { useAuth } from '../auth/AuthContext'
 const AVAILABLE_MODULES = [
   { title: 'Harcamalar', phase: 'Faz 2', to: '/harcamalar' },
   { title: 'Ayarlar', phase: 'Faz 2', to: '/ayarlar' },
+  { title: 'Gelirler', phase: 'Faz 3', to: '/gelirler' },
+  { title: 'Transferler', phase: 'Faz 3', to: '/transferler' },
+  { title: 'Hesaplar', phase: 'Faz 3', to: '/hesaplar' },
 ]
 
 const SOON_MODULES = [
-  { title: 'Gelirler', phase: 'Faz 3' },
-  { title: 'Transferler', phase: 'Faz 3' },
-  { title: 'Hesaplar', phase: 'Faz 3' },
   { title: 'Ay Panosu', phase: 'Faz 4' },
   { title: 'Sabit Giderler', phase: 'Faz 5' },
   { title: 'Kişisel Bütçeler', phase: 'Faz 6' },
@@ -31,8 +31,8 @@ export function HomePage() {
       </header>
 
       <p className="home-note">
-        Faz 2: harcama girişi ve ayarlar hazır. Diğer modüller yol haritasındaki
-        sıraya göre eklenecek.
+        Faz 3: gelirler, transferler ve hesap bakiyeleri hazır. Diğer modüller
+        yol haritasındaki sıraya göre eklenecek.
       </p>
 
       <div className="module-grid">

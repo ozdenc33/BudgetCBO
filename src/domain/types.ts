@@ -27,6 +27,8 @@ export type Account = {
   name: string
   currency: Currency
   owner: AccountOwner
+  /** Hesaplar!Başlangıç (EUR). Girilmemisse 0 sayilir. */
+  startingBalanceEUR: number
 }
 
 export type Category = {
@@ -92,4 +94,65 @@ export type ComputedTransaction = Transaction & {
   tugceShare: number | undefined
   /** Islemler!Kontrol kolonunun karsiligi. Bos satir icin "". */
   validation: string
+}
+
+// Gelirler sayfasinda elle doldurulan alanlar.
+export type Income = {
+  id: string
+  date: string // YYYY-MM-DD
+  source: string
+  person: Person
+  amount: number
+  currency: Currency | ''
+  account: string
+  note?: string
+}
+
+export type IncomeDraft = Omit<Income, 'id'>
+
+export type ComputedIncome = Income & {
+  monthKey: string
+  rate: number
+  rateSource: RateSource
+  amountEUR: number | undefined
+  /** Gelirler!Kontrol kolonunun karsiligi. Bos satir icin "". */
+  validation: string
+}
+
+export type TransferType = 'Ortak Kasa Katkısı' | 'Kişiden Kişiye' | 'Tasarruf'
+
+// Transferler sayfasinda elle doldurulan alanlar. Harcama sayilmaz.
+export type Transfer = {
+  id: string
+  date: string // YYYY-MM-DD
+  type: TransferType
+  from: string
+  to: string
+  amount: number
+  currency: Currency | ''
+  fromAccount: string
+  toAccount: string
+  /** Tip = Tasarruf oldugunda hedefin id'si (Faz 6 oncesi kullanilmaz). */
+  goalId?: string
+  note?: string
+}
+
+export type TransferDraft = Omit<Transfer, 'id'>
+
+export type ComputedTransfer = Transfer & {
+  monthKey: string
+  rate: number
+  rateSource: RateSource
+  amountEUR: number | undefined
+  /** Transferler!Kontrol kolonunun karsiligi. Bos satir icin "". */
+  validation: string
+}
+
+export type AccountBalance = {
+  account: Account
+  incomesEUR: number
+  expensesEUR: number
+  transfersOutEUR: number
+  transfersInEUR: number
+  balanceEUR: number
 }
