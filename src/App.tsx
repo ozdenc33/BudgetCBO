@@ -17,6 +17,8 @@ import { PersonalBudgetPage } from './pages/PersonalBudgetPage'
 import { ImportExportPage } from './pages/ImportExportPage'
 import { QuickEntryPage } from './pages/QuickEntryPage'
 import { AppShell } from './components/AppShell'
+import { ToastProvider } from './components/ToastProvider'
+import { WelcomeGreeting } from './components/WelcomeGreeting'
 
 // Kimlik dogrulamasi gereken her sayfa ayni kabuga (ust baslik + alt
 // sekme cubugu + menu) sarilir; boylece modul degistirmek icin her
@@ -32,6 +34,7 @@ function Shell({
 }) {
   return (
     <RequireAuth>
+      <WelcomeGreeting />
       <AppShell title={title} subtitle={subtitle}>
         {children}
       </AppShell>
@@ -42,113 +45,115 @@ function Shell({
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/giris" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <Shell title="Ortak Bütçe" subtitle="Bu ayın özeti">
-              <HomePage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/ayarlar"
-          element={
-            <Shell title="Ayarlar" subtitle="Hesaplar, kategoriler, kur">
-              <SettingsPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/harcamalar"
-          element={
-            <Shell title="Harcamalar" subtitle="Kayıt gir, düzenle, listele">
-              <ExpensesPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/gelirler"
-          element={
-            <Shell title="Gelirler" subtitle="Maaş, burs, Sperrkonto">
-              <IncomesPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/transferler"
-          element={
-            <Shell title="Transferler" subtitle="Ortak Kasa, tasarruf, hedef">
-              <TransfersPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/hesaplar"
-          element={
-            <Shell title="Hesap Bakiyeleri" subtitle="Bakiyeler ve katkı özeti">
-              <BalancesPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/hesaplar/:accountId"
-          element={
-            <Shell title="Hesap Hareketleri" subtitle="Tüm giriş ve çıkışlar">
-              <AccountDetailPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/pano"
-          element={
-            <Shell title="Ay Panosu" subtitle="Özet, kırılım, kontroller">
-              <DashboardPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/sabit-giderler"
-          element={
-            <Shell title="Sabit Giderler" subtitle="Kira, sigorta, abonelikler">
-              <RecurringPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/hedefler"
-          element={
-            <Shell title="Hedefler" subtitle="Birikim hedefleri">
-              <GoalsPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/kisisel-butce"
-          element={
-            <Shell title="Kişisel Bütçe" subtitle="Can ve Tuğçe planı">
-              <PersonalBudgetPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/ice-disa-aktar"
-          element={
-            <Shell title="İçe/Dışa Aktar" subtitle="Excel yedek ve aktarım">
-              <ImportExportPage />
-            </Shell>
-          }
-        />
-        <Route
-          path="/hizli-giris"
-          element={
-            <Shell title="Hızlı Giriş" subtitle="Tek ekranda harcama kaydı">
-              <QuickEntryPage />
-            </Shell>
-          }
-        />
-      </Routes>
+      <ToastProvider>
+        <Routes>
+          <Route path="/giris" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <Shell title="BudgetCBO" subtitle="Bu ayın özeti">
+                <HomePage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/ayarlar"
+            element={
+              <Shell title="Ayarlar" subtitle="Hesaplar, kategoriler, kur">
+                <SettingsPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/harcamalar"
+            element={
+              <Shell title="Harcamalar" subtitle="Kayıt gir, düzenle, listele">
+                <ExpensesPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/gelirler"
+            element={
+              <Shell title="Gelirler" subtitle="Maaş, burs, Sperrkonto">
+                <IncomesPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/transferler"
+            element={
+              <Shell title="Transferler" subtitle="Ortak Kasa, tasarruf, hedef">
+                <TransfersPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/hesaplar"
+            element={
+              <Shell title="Hesap Bakiyeleri" subtitle="Bakiyeler ve katkı özeti">
+                <BalancesPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/hesaplar/:accountId"
+            element={
+              <Shell title="Hesap Hareketleri" subtitle="Tüm giriş ve çıkışlar">
+                <AccountDetailPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/pano"
+            element={
+              <Shell title="Ay Panosu" subtitle="Özet, kırılım, kontroller">
+                <DashboardPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/sabit-giderler"
+            element={
+              <Shell title="Sabit Giderler" subtitle="Kira, sigorta, abonelikler">
+                <RecurringPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/hedefler"
+            element={
+              <Shell title="Hedefler" subtitle="Birikim hedefleri">
+                <GoalsPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/kisisel-butce"
+            element={
+              <Shell title="Kişisel Bütçe" subtitle="Can ve Tuğçe planı">
+                <PersonalBudgetPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/ice-disa-aktar"
+            element={
+              <Shell title="İçe/Dışa Aktar" subtitle="Excel yedek ve aktarım">
+                <ImportExportPage />
+              </Shell>
+            }
+          />
+          <Route
+            path="/hizli-giris"
+            element={
+              <Shell title="Hızlı Giriş" subtitle="Tek ekranda harcama kaydı">
+                <QuickEntryPage />
+              </Shell>
+            }
+          />
+        </Routes>
+      </ToastProvider>
     </AuthProvider>
   )
 }

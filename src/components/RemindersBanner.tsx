@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useRecurring } from '../hooks/useRecurring'
@@ -12,7 +13,7 @@ export function RemindersBanner() {
   const { transactions, loading: txLoading } = useTransactions()
   const { items: recurring, loading: recurringLoading } = useRecurring()
 
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
   const loading = settingsLoading || txLoading || recurringLoading
 
   const reminders = useMemo(

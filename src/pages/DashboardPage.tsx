@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -14,10 +15,7 @@ import {
 import { CategoryBars, MonthlyColumns, NetTrend } from '../components/charts'
 import { summarizeFutureDated } from '../domain/futureDated'
 import { computeTransaction, monthKeyOf } from '../domain/transactions'
-
-function todayMonthKey(): string {
-  return new Date().toISOString().slice(0, 7)
-}
+import { todayMonthKey } from '../domain/dates'
 
 function fmt(value: number | undefined): string {
   if (value == null) return '—'
@@ -35,7 +33,7 @@ export function DashboardPage() {
   const { incomes, loading: incomesLoading } = useIncomes()
   const { transfers, loading: transfersLoading } = useTransfers()
   const [month, setMonth] = useState(todayMonthKey)
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
 
   const loading = settingsLoading || txLoading || incomesLoading || transfersLoading
 
@@ -85,7 +83,7 @@ export function DashboardPage() {
         </button>
       </div>
 
-      <p className="print-only print-title">Ortak Bütçe — Ay Panosu · {month}</p>
+      <p className="print-only print-title">BudgetCBO — Ay Panosu · {month}</p>
 
       <section className="dashboard-section">
         <h2>Ay Özeti</h2>

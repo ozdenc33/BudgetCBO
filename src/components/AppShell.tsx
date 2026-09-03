@@ -104,8 +104,8 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
       {/* Masaustu: kalici kenar cubugu. Mobilde gizli, yerine alt sekme cubugu var. */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <span className="sidebar-brand-mark">OB</span>
-          <span>Ortak Bütçe</span>
+          <span className="sidebar-brand-mark">CBO</span>
+          <span>BudgetCBO</span>
         </div>
         <nav className="sidebar-nav" aria-label="Modüller">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}>

@@ -1,10 +1,12 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransfers } from '../hooks/useTransfers'
 import { useGoals } from '../hooks/useGoals'
 import { addGoal, deleteGoal, updateGoal } from '../lib/firestoreGoals'
 import { computeGoals } from '../domain/goals'
 import type { Goal, GoalDraft, GoalOwner } from '../domain/types'
+import { useWrite } from '../hooks/useWrite'
 
 const OWNERS: GoalOwner[] = ['Ortak', 'Can', 'Tuğçe']
 
@@ -57,7 +59,8 @@ export function GoalsPage() {
   const [formOpen, setFormOpen] = useState(false)
 
   const loading = settingsLoading || transfersLoading || goalsLoading
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
+  const runWrite = useWrite()
 
   const computed = useMemo(
     () => computeGoals(goals, transfers, settings, today),
@@ -78,11 +81,10 @@ export function GoalsPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const draft = formToDraft(form)
-    if (editingId) {
-      await updateGoal(editingId, draft)
-    } else {
-      await addGoal(draft)
-    }
+    const ok = editingId
+      ? await runWrite(updateGoal(editingId, draft), { failureMessage: 'Hedef güncellenemedi' })
+      : await runWrite(addGoal(draft), { failureMessage: 'Hedef kaydedilemedi' })
+    if (!ok) return
     setForm(emptyForm())
     setEditingId(null)
   }
@@ -100,7 +102,7 @@ export function GoalsPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Bu hedefi silmek istediğinize emin misiniz?')) return
-    await deleteGoal(id)
+    await runWrite(deleteGoal(id), { failureMessage: 'Hedef silinemedi' })
   }
 
   if (loading) {

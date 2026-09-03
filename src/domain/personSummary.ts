@@ -2,6 +2,7 @@ import type { Income, Person, Settings, Transaction, Transfer } from './types'
 import { computeTransaction, monthKeyOf } from './transactions'
 import { computeIncome } from './incomes'
 import { computeTransfer } from './transfers'
+import { localISO } from './dates'
 
 // Ana sayfadaki "Ortak / Can / Tuğçe" ozeti. Hicbir yeni is kurali
 // getirmez: kisinin harcamasi, Islemler sayfasindaki "Can Payı" /
@@ -111,7 +112,7 @@ export function computeWeekSummary(
   today: Date,
 ): WeekSummary {
   const fromISO = weekStartISO(today)
-  const toISO = today.toISOString().slice(0, 10)
+  const toISO = localISO(today)
 
   const prevStart = new Date(fromISO + 'T00:00:00Z')
   prevStart.setUTCDate(prevStart.getUTCDate() - 7)

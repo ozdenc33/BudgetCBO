@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -9,6 +10,8 @@ import { computePersonalBudget } from '../domain/personalBudget'
 import { personForEmail } from '../lib/currentPerson'
 import { useAuth } from '../auth/AuthContext'
 import type { Person, PersonalBudgetPlan } from '../domain/types'
+import { todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
 
 const PERSONS: Person[] = ['Can', 'Tuğçe']
 
@@ -16,10 +19,6 @@ const UNASSIGNED_LABEL: Record<string, string> = {
   tamam: 'Sıfır bazlı plan tamam',
   dagitilmadi: 'Plan gelirin tamamı dağıtılmadı, tasarrufa veya kategoriye atayın',
   asildi: 'Plan gelirden fazla harcama planlanmış',
-}
-
-function todayMonthKey(): string {
-  return new Date().toISOString().slice(0, 7)
 }
 
 function fmt(value: number | undefined): string {
@@ -46,7 +45,8 @@ export function PersonalBudgetPage() {
   const [otherPersonConfirmed, setOtherPersonConfirmed] = useState(false)
 
   const loading = settingsLoading || txLoading || incomesLoading || transfersLoading || recurringLoading
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
+  const runWrite = useWrite()
 
   const plan = settings.personalPlans[person]
 
@@ -68,10 +68,13 @@ export function PersonalBudgetPage() {
       if (!ok) return
       setOtherPersonConfirmed(true)
     }
-    await saveSettings({
-      ...settings,
-      personalPlans: { ...settings.personalPlans, [person]: next },
-    })
+    await runWrite(
+      saveSettings({
+        ...settings,
+        personalPlans: { ...settings.personalPlans, [person]: next },
+      }),
+      { failureMessage: 'Plan kaydedilemedi' },
+    )
   }
 
   function selectPerson(next: Person) {

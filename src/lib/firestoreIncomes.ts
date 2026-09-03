@@ -3,21 +3,22 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
   updateDoc,
   type UpdateData,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { subscribeCollection } from './firestoreCollection'
+import { toIncome } from './normalize'
 import type { Income, IncomeDraft } from '../domain/types'
 
 const INCOMES = collection(db, 'incomes')
 
-export function subscribeIncomes(onChange: (incomes: Income[]) => void): Unsubscribe {
-  return onSnapshot(INCOMES, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Income)
-    onChange(items)
-  })
+export function subscribeIncomes(
+  onChange: (incomes: Income[]) => void,
+  onError?: (err: Error) => void,
+): Unsubscribe {
+  return subscribeCollection(INCOMES, toIncome, onChange, onError)
 }
 
 export async function addIncome(draft: IncomeDraft): Promise<void> {

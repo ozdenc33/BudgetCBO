@@ -6,10 +6,8 @@ import { addIncome, deleteIncome, updateIncome } from '../lib/firestoreIncomes'
 import { computeIncome } from '../domain/incomes'
 import { monthKeyOf } from '../domain/rate'
 import type { Currency, Income, IncomeDraft, Person } from '../domain/types'
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayISO, todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
 
 type FormState = {
   date: string
@@ -23,7 +21,7 @@ type FormState = {
 
 function emptyForm(): FormState {
   return {
-    date: todayIso(),
+    date: todayISO(),
     source: '',
     person: 'Can',
     amount: '',
@@ -76,8 +74,9 @@ export function IncomesPage() {
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [month, setMonth] = useState(() => todayIso().slice(0, 7))
+  const [month, setMonth] = useState(todayMonthKey)
   const [saving, setSaving] = useState(false)
+  const runWrite = useWrite()
 
   const preview = useMemo(
     () => computeIncome({ id: 'preview', ...formToDraft(form) }, settings),
@@ -102,11 +101,12 @@ export function IncomesPage() {
     if (!canSubmit) return
     setSaving(true)
     try {
-      if (editingId) {
-        await updateIncome(editingId, formToUpdatePayload(form))
-      } else {
-        await addIncome(formToDraft(form))
-      }
+      const ok = editingId
+        ? await runWrite(updateIncome(editingId, formToUpdatePayload(form)), {
+            failureMessage: 'Gelir güncellenemedi',
+          })
+        : await runWrite(addIncome(formToDraft(form)), { failureMessage: 'Gelir kaydedilemedi' })
+      if (!ok) return
       setForm(emptyForm())
       setEditingId(null)
     } finally {
@@ -127,7 +127,7 @@ export function IncomesPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Bu geliri silmek istediğinize emin misiniz?')) return
-    await deleteIncome(id)
+    await runWrite(deleteIncome(id), { failureMessage: 'Gelir silinemedi' })
   }
 
   if (settingsLoading) {

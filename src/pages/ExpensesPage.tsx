@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { deleteField, type UpdateData } from 'firebase/firestore'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import {
@@ -13,10 +14,10 @@ import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../d
 import { isFutureDated } from '../domain/futureDated'
 import { TransactionFilters } from '../components/TransactionFilters'
 import type { Currency, Transaction, TransactionDraft } from '../domain/types'
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayISO, todayMonthKey } from '../domain/dates'
+import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
+import { useWrite } from '../hooks/useWrite'
+import { useToast } from '../components/ToastProvider'
 
 type FormState = {
   date: string
@@ -33,7 +34,7 @@ type FormState = {
 
 function emptyForm(): FormState {
   return {
-    date: todayIso(),
+    date: todayISO(),
     description: '',
     category: '',
     amount: '',
@@ -105,10 +106,12 @@ export function ExpensesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [filter, setFilter] = useState<TransactionFilter>(() => ({
-    monthKey: todayIso().slice(0, 7),
+    monthKey: todayMonthKey(),
   }))
   const [saving, setSaving] = useState(false)
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
+  const runWrite = useWrite()
+  const { showToast } = useToast()
 
   const preview = useMemo(
     () => computeTransaction({ id: 'preview', ...formToDraft(form) }, settings),
@@ -140,12 +143,19 @@ export function ExpensesPage() {
         }
       }
     }
+    const draft = formToDraft(form)
     setSaving(true)
     try {
-      if (editingId) {
-        await updateTransaction(editingId, formToUpdatePayload(form))
-      } else {
-        await addTransaction(formToDraft(form))
+      const ok = editingId
+        ? await runWrite(updateTransaction(editingId, formToUpdatePayload(form)), {
+            failureMessage: 'Harcama güncellenemedi',
+          })
+        : await runWrite(addTransaction(draft), { failureMessage: 'Harcama kaydedilemedi' })
+      if (!ok) return
+      // Mike'in butcesine giren her harcamada kucuk bir tesekkur
+      // (bkz. src/domain/personalNotes.ts).
+      if (isMikeExpense(draft, settings)) {
+        showToast({ message: MIKE_THANKS_NOTE, tone: 'fun', durationMs: 5000, key: 'mike-thanks' })
       }
       setForm(emptyForm())
       setEditingId(null)
@@ -165,7 +175,7 @@ export function ExpensesPage() {
   function repeat(tx: Transaction) {
     setEditingId(null)
     setFormOpen(true)
-    setForm({ ...transactionToForm(tx), date: todayIso() })
+    setForm({ ...transactionToForm(tx), date: todayISO() })
   }
 
   function cancelEdit() {
@@ -175,7 +185,7 @@ export function ExpensesPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Bu harcamayı silmek istediğinize emin misiniz?')) return
-    await deleteTransaction(id)
+    await runWrite(deleteTransaction(id), { failureMessage: 'Harcama silinemedi' })
   }
 
   if (settingsLoading) {
@@ -324,6 +334,12 @@ export function ExpensesPage() {
           </div>
         )}
 
+        {preview.rateWarning && (
+          <div className="expense-preview expense-preview--warning">
+            <span>{preview.rateWarning}</span>
+          </div>
+        )}
+
         <div className="expense-form-actions">
           <button type="submit" disabled={!canSubmit || saving}>
             {editingId ? 'Güncelle' : 'Kaydet'}
@@ -376,6 +392,11 @@ export function ExpensesPage() {
                 >
                   {t.validation}
                 </span>
+                {t.rateWarning && (
+                  <span className="expense-badge expense-badge--warning" title={t.rateWarning}>
+                    kur eksik
+                  </span>
+                )}
               </div>
               <div className="expense-row-actions">
                 <button onClick={() => startEdit(t)}>Düzenle</button>

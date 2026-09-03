@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { saveSettings } from '../lib/firestoreSettings'
+import { useWrite } from '../hooks/useWrite'
 import type {
   Account,
   AccountOwner,
@@ -39,6 +40,7 @@ function slugify(name: string): string {
 export function SettingsPage() {
   const { settings, loading } = useSettings()
   const [draft, setDraft] = useState<Settings>(settings)
+  const runWrite = useWrite()
 
   useEffect(() => {
     setDraft(settings)
@@ -46,7 +48,10 @@ export function SettingsPage() {
 
   async function persist(next: Settings) {
     setDraft(next)
-    await saveSettings(next)
+    const ok = await runWrite(saveSettings(next), { failureMessage: 'Ayarlar kaydedilemedi' })
+    // Yazma reddedildiyse ekrandaki taslak gercekle uyusmuyor demektir;
+    // en son bilinen kayitli ayarlara geri don.
+    if (!ok) setDraft(settings)
   }
 
   if (loading) {

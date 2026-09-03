@@ -74,7 +74,12 @@ export type Transaction = {
   date: string // YYYY-MM-DD
   description: string
   category: string
-  amount: number
+  /**
+   * Firestore'da tutar eksik veya sayiya cevrilemez olabilir (bozuk
+   * ice aktarma, elle duzenleme). Bu durumda alan hic gelmez ve
+   * dogrulama "Eksik alan" der; bkz. src/lib/normalize.ts.
+   */
+  amount?: number
   currency: Currency | ''
   account: string
   /** 0-1 arasi oran. Doluysa Tugce % yok sayilir. */
@@ -87,12 +92,20 @@ export type Transaction = {
 
 export type TransactionDraft = Omit<Transaction, 'id'>
 
-export type RateSource = 'eur' | 'monthly' | 'default'
+/**
+ * 'missing': para birimi EUR degil ama ne o ayin kuru ne de gecerli bir
+ * varsayilan kur girilmis. Bu durumda kur 1 kabul edilir — yani 1 TRY =
+ * 1 EUR — ve tutarlar buyuk olcude yanlis cikar, bu yuzden ayrica
+ * uyarilir (bkz. rateWarning).
+ */
+export type RateSource = 'eur' | 'monthly' | 'default' | 'missing'
 
 export type ComputedTransaction = Transaction & {
   monthKey: string
   rate: number
   rateSource: RateSource
+  /** Kur eksikse kullaniciya gosterilecek uyari; yoksa undefined. */
+  rateWarning: string | undefined
   amountEUR: number | undefined
   payer: AccountOwner | ''
   ratio: number | undefined
@@ -109,7 +122,8 @@ export type Income = {
   date: string // YYYY-MM-DD
   source: string
   person: Person
-  amount: number
+  /** Eksik/bozuk kayitlarda gelmez; bkz. Transaction.amount. */
+  amount?: number
   currency: Currency | ''
   account: string
   note?: string
@@ -121,6 +135,8 @@ export type ComputedIncome = Income & {
   monthKey: string
   rate: number
   rateSource: RateSource
+  /** Kur eksikse kullaniciya gosterilecek uyari; yoksa undefined. */
+  rateWarning: string | undefined
   amountEUR: number | undefined
   /** Gelirler!Kontrol kolonunun karsiligi. Bos satir icin "". */
   validation: string
@@ -135,7 +151,8 @@ export type Transfer = {
   type: TransferType
   from: string
   to: string
-  amount: number
+  /** Eksik/bozuk kayitlarda gelmez; bkz. Transaction.amount. */
+  amount?: number
   currency: Currency | ''
   fromAccount: string
   toAccount: string
@@ -150,6 +167,8 @@ export type ComputedTransfer = Transfer & {
   monthKey: string
   rate: number
   rateSource: RateSource
+  /** Kur eksikse kullaniciya gosterilecek uyari; yoksa undefined. */
+  rateWarning: string | undefined
   amountEUR: number | undefined
   /** Transferler!Kontrol kolonunun karsiligi. Bos satir icin "". */
   validation: string

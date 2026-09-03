@@ -3,21 +3,22 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
   updateDoc,
   type UpdateData,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { subscribeCollection } from './firestoreCollection'
+import { toTransfer } from './normalize'
 import type { Transfer, TransferDraft } from '../domain/types'
 
 const TRANSFERS = collection(db, 'transfers')
 
-export function subscribeTransfers(onChange: (transfers: Transfer[]) => void): Unsubscribe {
-  return onSnapshot(TRANSFERS, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transfer)
-    onChange(items)
-  })
+export function subscribeTransfers(
+  onChange: (transfers: Transfer[]) => void,
+  onError?: (err: Error) => void,
+): Unsubscribe {
+  return subscribeCollection(TRANSFERS, toTransfer, onChange, onError)
 }
 
 export async function addTransfer(draft: TransferDraft): Promise<void> {

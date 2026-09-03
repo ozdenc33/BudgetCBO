@@ -1,4 +1,5 @@
-import { useMemo, useState, type ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -7,14 +8,12 @@ import { useRecurring } from '../hooks/useRecurring'
 import { useGoals } from '../hooks/useGoals'
 import type { ImportResult } from '../domain/excelImport'
 import { bulkImport } from '../lib/firestoreImport'
+import { todayISO } from '../domain/dates'
+import { firestoreErrorMessage } from '../domain/firestoreErrors'
 
 // exceljs agir bir kutuphane (~1.7MB); mobil-oncelikli ana paketi
 // sismemesi icin yalnizca bu sayfa kullanildiginda dinamik olarak
 // yuklenir (ayri bir Vite chunk'ina boler).
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export function ImportExportPage() {
   const { settings, loading: settingsLoading } = useSettings()
@@ -32,14 +31,19 @@ export function ImportExportPage() {
 
   const loading =
     settingsLoading || txLoading || incomesLoading || transfersLoading || recurringLoading || goalsLoading
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
 
   async function handleExport() {
     setExporting(true)
     try {
       const { exportWorkbook, downloadBlob } = await import('../domain/excelExport')
       const blob = await exportWorkbook({ transactions, incomes, transfers, recurring, goals, settings, today })
-      downloadBlob(blob, `ortak-butce-yedek-${todayIso()}.xlsx`)
+      downloadBlob(blob, `budgetcbo-yedek-${todayISO()}.xlsx`)
+    } catch (err) {
+      console.error('Disa aktarma basarisiz', err)
+      setImportLog(
+        `Yedek oluşturulamadı: ${err instanceof Error ? err.message : String(err)}`,
+      )
     } finally {
       setExporting(false)
     }
@@ -74,11 +78,17 @@ export function ImportExportPage() {
     }
     setImporting(true)
     try {
+      // Toplu yazma commitWrite'tan gecirilmez: yarim kalmis bir ice
+      // aktarmayi "kaydedildi" gibi gostermek yanlis olur, kullanicinin
+      // gercekten kac satirin gectigini gormesi gerekir.
       const counts = await bulkImport(importResult)
       setImportLog(
         `İçe aktarıldı: ${counts.transactions} harcama, ${counts.incomes} gelir, ${counts.transfers} transfer, ${counts.recurring} sabit gider, ${counts.goals} hedef.`,
       )
       setImportResult(null)
+    } catch (err) {
+      console.error('Ice aktarma basarisiz', err)
+      setImportLog(`İçe aktarma tamamlanamadı: ${firestoreErrorMessage(err)}`)
     } finally {
       setImporting(false)
     }

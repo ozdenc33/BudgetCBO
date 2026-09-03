@@ -3,21 +3,22 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
   updateDoc,
   type UpdateData,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { subscribeCollection } from './firestoreCollection'
+import { toRecurringItem } from './normalize'
 import type { RecurringItem, RecurringItemDraft } from '../domain/types'
 
 const RECURRING = collection(db, 'recurring')
 
-export function subscribeRecurring(onChange: (items: RecurringItem[]) => void): Unsubscribe {
-  return onSnapshot(RECURRING, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as RecurringItem)
-    onChange(items)
-  })
+export function subscribeRecurring(
+  onChange: (items: RecurringItem[]) => void,
+  onError?: (err: Error) => void,
+): Unsubscribe {
+  return subscribeCollection(RECURRING, toRecurringItem, onChange, onError)
 }
 
 export async function addRecurring(draft: RecurringItemDraft): Promise<void> {

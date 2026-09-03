@@ -29,7 +29,7 @@ function validate(transfer: Transfer): string {
 
 export function computeTransfer(transfer: Transfer, settings: Settings): ComputedTransfer {
   const monthKey = transfer.date ? monthKeyOf(transfer.date) : ''
-  const { rate, rateSource } = resolveRate(transfer.currency, monthKey, settings)
+  const { rate, rateSource, rateWarning } = resolveRate(transfer.currency, monthKey, settings)
   const amountEUR = transfer.amount != null ? transfer.amount / rate : undefined
   const validation = validate(transfer)
 
@@ -38,6 +38,7 @@ export function computeTransfer(transfer: Transfer, settings: Settings): Compute
     monthKey,
     rate,
     rateSource,
+    rateWarning,
     amountEUR,
     validation,
   }

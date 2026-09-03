@@ -65,3 +65,39 @@ export function setThemePreference(theme: 'light' | 'dark'): void {
     // yoksay
   }
 }
+
+// --- Karsilama notu (oturum bazli) ---
+// Karsilama notu her sayfa gecisinde degil, "uygulamaya girince" bir kez
+// cikmali. sessionStorage kullaniyoruz: sekme yenilense de tekrar
+// cikmaz, ama uygulama kapanip yeniden acilinca yeniden cikar.
+// Cikis yapildiginda temizlenir ki tekrar giriste yeniden gorunsun.
+
+const GREETED_PREFIX = 'butce.greeted.'
+
+export function hasBeenGreeted(uid: string): boolean {
+  try {
+    return sessionStorage.getItem(GREETED_PREFIX + uid) === '1'
+  } catch {
+    // Depolama yoksa notu gostermemek yerine gosterelim; en kotu
+    // ihtimalle bir kez fazla cikar.
+    return false
+  }
+}
+
+export function markGreeted(uid: string): void {
+  try {
+    sessionStorage.setItem(GREETED_PREFIX + uid, '1')
+  } catch {
+    // yoksay
+  }
+}
+
+export function clearGreetings(): void {
+  try {
+    Object.keys(sessionStorage)
+      .filter((key) => key.startsWith(GREETED_PREFIX))
+      .forEach((key) => sessionStorage.removeItem(key))
+  } catch {
+    // yoksay
+  }
+}

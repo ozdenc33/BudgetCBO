@@ -11,10 +11,8 @@ import { computeTransfer } from '../domain/transfers'
 import { monthKeyOf } from '../domain/rate'
 import { TRANSFER_TYPES, PERSONS } from '../domain/constants'
 import type { Currency, Transfer, TransferDraft, TransferType } from '../domain/types'
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayISO, todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
 
 type FormState = {
   date: string
@@ -30,7 +28,7 @@ type FormState = {
 
 function emptyForm(): FormState {
   return {
-    date: todayIso(),
+    date: todayISO(),
     type: 'Ortak Kasa Katkısı',
     from: 'Can',
     to: '',
@@ -94,8 +92,9 @@ export function TransfersPage() {
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [month, setMonth] = useState(() => todayIso().slice(0, 7))
+  const [month, setMonth] = useState(todayMonthKey)
   const [saving, setSaving] = useState(false)
+  const runWrite = useWrite()
 
   const preview = useMemo(
     () => computeTransfer({ id: 'preview', ...formToDraft(form) }, settings),
@@ -149,11 +148,14 @@ export function TransfersPage() {
 
     setSaving(true)
     try {
-      if (editingId) {
-        await updateTransfer(editingId, formToUpdatePayload(form))
-      } else {
-        await addTransfer(formToDraft(form))
-      }
+      const saved = editingId
+        ? await runWrite(updateTransfer(editingId, formToUpdatePayload(form)), {
+            failureMessage: 'Transfer güncellenemedi',
+          })
+        : await runWrite(addTransfer(formToDraft(form)), {
+            failureMessage: 'Transfer kaydedilemedi',
+          })
+      if (!saved) return
       setForm(emptyForm())
       setEditingId(null)
     } finally {
@@ -174,7 +176,7 @@ export function TransfersPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Bu transferi silmek istediğinize emin misiniz?')) return
-    await deleteTransfer(id)
+    await runWrite(deleteTransfer(id), { failureMessage: 'Transfer silinemedi' })
   }
 
   if (settingsLoading) {

@@ -13,9 +13,22 @@ export function resolveRate(
   currency: Currency | '',
   monthKey: string,
   settings: Settings,
-): { rate: number; rateSource: RateSource } {
-  if (!currency || currency === 'EUR') return { rate: 1, rateSource: 'eur' }
+): { rate: number; rateSource: RateSource; rateWarning: string | undefined } {
+  if (!currency || currency === 'EUR') {
+    return { rate: 1, rateSource: 'eur', rateWarning: undefined }
+  }
   const monthly = settings.rates[monthKey]
-  if (monthly && monthly > 0) return { rate: monthly, rateSource: 'monthly' }
-  return { rate: settings.defaultRate || 1, rateSource: 'default' }
+  if (monthly && monthly > 0) {
+    return { rate: monthly, rateSource: 'monthly', rateWarning: undefined }
+  }
+  if (settings.defaultRate && settings.defaultRate > 0) {
+    return { rate: settings.defaultRate, rateSource: 'default', rateWarning: undefined }
+  }
+  // Kur hic yok. Eskiden sessizce 1 kullaniliyordu, yani 1 TRY = 1 EUR:
+  // TRY tutarlar ~35 kat sisiyor ve hicbir yerde belirtilmiyordu.
+  return {
+    rate: 1,
+    rateSource: 'missing',
+    rateWarning: `${monthKey || 'Bu ay'} için ${currency} kuru girilmemiş; tutar 1:1 sayıldı. Ayarlar'dan kuru girin.`,
+  }
 }

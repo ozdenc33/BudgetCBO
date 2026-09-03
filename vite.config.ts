@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
-        name: 'Ortak Bütçe',
-        short_name: 'Bütçe',
-        description: 'Can Berk ve Tuğçe için ortak bütçe uygulaması',
+        name: 'BudgetCBO',
+        short_name: 'BudgetCBO',
+        description: 'Can Berk ve Tuğçe için ortak bütçe uygulaması (BudgetCBO)',
         theme_color: '#0065bd',
         background_color: '#15181c',
         display: 'standalone',

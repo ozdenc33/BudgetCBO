@@ -27,8 +27,8 @@ export function LoginPage() {
       </div>
       <form className="auth-card" onSubmit={handleSubmit}>
         <div className="auth-brand">
-          <span className="auth-brand-mark">OB</span>
-          <h1>Ortak Bütçe</h1>
+          <span className="auth-brand-mark">CBO</span>
+          <h1>BudgetCBO</h1>
           <p className="auth-brand-note">Can Berk &amp; Tuğçe</p>
         </div>
         <label>

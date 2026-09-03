@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useRecurring } from '../hooks/useRecurring'
@@ -12,6 +13,10 @@ import { skipRecurringForMonth, unskipRecurringForMonth } from '../lib/firestore
 import { addTransaction } from '../lib/firestoreTransactions'
 import { computeRecurringItems, draftTransactionsForMonth } from '../domain/recurring'
 import { BUDGET_TYPES_ORDER } from '../domain/dashboard'
+import { todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
+import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
+import { useToast } from '../components/ToastProvider'
 import type {
   BudgetType,
   FrequencyMonths,
@@ -32,10 +37,6 @@ const STATUS_LABEL: Record<string, string> = {
   'vadesi-degil': '—',
   girildi: 'Girildi',
   eksik: 'EKSIK',
-}
-
-function todayMonthKey(): string {
-  return new Date().toISOString().slice(0, 7)
 }
 
 function fmt(value: number | undefined): string {
@@ -110,7 +111,9 @@ export function RecurringPage() {
   const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
 
   const loading = settingsLoading || txLoading || itemsLoading || skipsLoading
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
+  const runWrite = useWrite()
+  const { showToast } = useToast()
 
   const computedItems = useMemo(
     () => computeRecurringItems(items, month, transactions, settings, today),
@@ -130,25 +133,37 @@ export function RecurringPage() {
   async function handleConfirm(itemId: string, defaultAmount: number, draft: ReturnType<typeof draftTransactionsForMonth>[number]['draft']) {
     const raw = draftAmounts[itemId]
     const amount = raw !== undefined && raw !== '' ? Number(raw) : defaultAmount
-    await addTransaction({ ...draft, amount })
+    const ok = await runWrite(addTransaction({ ...draft, amount }), {
+      failureMessage: 'Sabit gider kaydedilemedi',
+    })
+    // Sabit gider de Mike'in butcesine girebilir (ornegin duzenli mama
+    // siparisi); tesekkur notu orada da ciksin.
+    if (ok && isMikeExpense(draft, settings)) {
+      showToast({ message: MIKE_THANKS_NOTE, tone: 'fun', durationMs: 5000, key: 'mike-thanks' })
+    }
   }
 
   async function handleSkip(itemId: string) {
-    await skipRecurringForMonth(itemId, month)
+    await runWrite(skipRecurringForMonth(itemId, month), {
+      failureMessage: 'Bu ay atlanamadı',
+    })
   }
 
   async function handleUnskip(itemId: string) {
-    await unskipRecurringForMonth(itemId, month)
+    await runWrite(unskipRecurringForMonth(itemId, month), {
+      failureMessage: 'Atlama geri alınamadı',
+    })
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const draft = formToDraft(form)
-    if (editingId) {
-      await updateRecurring(editingId, draft)
-    } else {
-      await addRecurring(draft)
-    }
+    const ok = editingId
+      ? await runWrite(updateRecurring(editingId, draft), {
+          failureMessage: 'Sabit gider güncellenemedi',
+        })
+      : await runWrite(addRecurring(draft), { failureMessage: 'Sabit gider eklenemedi' })
+    if (!ok) return
     setForm(emptyForm())
     setEditingId(null)
   }
@@ -166,7 +181,7 @@ export function RecurringPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Bu sabit gideri silmek istediğinize emin misiniz?')) return
-    await deleteRecurring(id)
+    await runWrite(deleteRecurring(id), { failureMessage: 'Sabit gider silinemedi' })
   }
 
   if (loading) {

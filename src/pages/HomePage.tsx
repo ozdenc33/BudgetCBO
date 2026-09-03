@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -12,6 +13,7 @@ import { computeTransaction } from '../domain/transactions'
 import { personForEmail } from '../lib/currentPerson'
 import { useAuth } from '../auth/AuthContext'
 import { RemindersBanner } from '../components/RemindersBanner'
+import { todayMonthKey } from '../domain/dates'
 import {
   IconChart,
   IconPlus,
@@ -25,10 +27,6 @@ const SCOPES: PersonScope[] = ['Ortak', 'Can', 'Tuğçe']
 
 // Ana sayfa uyari duvarina donmesin: fazlasi tek satirda ozetlenir.
 const MAX_ALERTS = 3
-
-function todayMonthKey(): string {
-  return new Date().toISOString().slice(0, 7)
-}
 
 function fmt(value: number | undefined): string {
   if (value == null) return '—'
@@ -70,7 +68,7 @@ export function HomePage() {
 
   const month = todayMonthKey()
   const loading = settingsLoading || txLoading || incomesLoading || transfersLoading
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
 
   const summary = useMemo(
     () => computeScopeSummary(scope, month, transactions, incomes, transfers, settings),

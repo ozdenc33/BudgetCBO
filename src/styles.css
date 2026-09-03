@@ -1065,6 +1065,14 @@ h1, h2, h3 {
   border: 1px solid rgba(var(--negative-rgb), 0.3);
 }
 
+/* Kur eksik uyarisi: hata degil, ama tutarlarin yanlis olabilecegini
+   soyler (bkz. src/domain/rate.ts rateWarning). */
+.expense-preview--warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+}
+
 .expense-form-actions {
   display: flex;
   gap: 0.6rem;
@@ -1202,6 +1210,11 @@ h1, h2, h3 {
 .expense-badge--ok {
   color: var(--positive) !important;
   background: rgba(var(--positive-rgb), 0.12) !important;
+}
+
+.expense-badge--warning {
+  color: var(--warning-text) !important;
+  background: var(--warning-bg) !important;
 }
 
 .expense-row-actions {
@@ -2740,4 +2753,131 @@ h1, h2, h3 {
   background: rgba(var(--negative-rgb), 0.1);
   border-color: rgba(var(--negative-rgb), 0.4);
   color: var(--negative);
+}
+
+/* ---------------------------------------------------------------
+ * Bildirimler (toast)
+ * Mobilde alt sekme cubugunun ustunde, masaustunde sag altta durur.
+ * z-index 30: sekme cubugunun (20) ustunde, menu perdesinin altinda.
+ * --------------------------------------------------------------- */
+.toast-stack {
+  position: fixed;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  animation: toast-in 0.22s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toast--success {
+  border-color: rgba(var(--positive-rgb), 0.5);
+  background: var(--surface);
+  color: var(--positive);
+}
+
+.toast--error {
+  border-color: rgba(var(--negative-rgb), 0.5);
+  color: var(--negative);
+}
+
+/* "fun": Tuğçe'nin karsilamasi ve Mike'in tesekkuru. Tek yerde
+   tanimli, boylece iki not da ayni dille konusur. */
+.toast--fun {
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(120deg, #d63384 0%, #e37222 55%, #f2a65a 100%);
+  font-weight: 600;
+}
+
+.toast--fun .toast-action {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.toast--fun .toast-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+@media (min-width: 900px) {
+  .toast-stack {
+    left: auto;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    width: min(24rem, calc(100vw - 2.5rem));
+  }
 }

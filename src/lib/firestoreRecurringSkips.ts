@@ -2,11 +2,12 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
   setDoc,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { subscribeCollection } from './firestoreCollection'
+import { toRecurringSkip } from './normalize'
 import type { RecurringSkip } from '../domain/types'
 
 const SKIPS = collection(db, 'recurringSkips')
@@ -17,11 +18,9 @@ function skipDocId(recurringId: string, monthKey: string): string {
 
 export function subscribeRecurringSkips(
   onChange: (skips: RecurringSkip[]) => void,
+  onError?: (err: Error) => void,
 ): Unsubscribe {
-  return onSnapshot(SKIPS, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as RecurringSkip)
-    onChange(items)
-  })
+  return subscribeCollection(SKIPS, toRecurringSkip, onChange, onError)
 }
 
 /** Idempotent: ayni kalem+ay icin tekrar cagrilirsa ayni dokumani ustune yazar. */

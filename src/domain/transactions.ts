@@ -76,7 +76,7 @@ function validate(
 
 export function computeTransaction(tx: Transaction, settings: Settings): ComputedTransaction {
   const monthKey = tx.date ? monthKeyOf(tx.date) : ''
-  const { rate, rateSource } = resolveRate(tx.currency, monthKey, settings)
+  const { rate, rateSource, rateWarning } = resolveRate(tx.currency, monthKey, settings)
   const amountEUR = tx.amount != null ? tx.amount / rate : undefined
 
   const account = findAccount(tx.account, settings)
@@ -96,6 +96,7 @@ export function computeTransaction(tx: Transaction, settings: Settings): Compute
     monthKey,
     rate,
     rateSource,
+    rateWarning,
     amountEUR,
     payer,
     ratio,

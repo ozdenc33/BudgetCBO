@@ -7,6 +7,7 @@ import type {
   TransactionDraft,
 } from './types'
 import { computeTransaction } from './transactions'
+import { localISO } from './dates'
 
 // Bu dosya Sabit_Giderler sayfasinin birebir karsiligidir: Aylık
 // Eşdeğer (I), Sonraki Ödeme (J, TODAY() bazli), Kalan Gün (K), Seçili
@@ -52,9 +53,9 @@ function daysBetweenISO(a: string, b: string): number {
   return Math.round((toUTCTimestamp(a) - toUTCTimestamp(b)) / 86_400_000)
 }
 
-function todayISO(today: Date): string {
-  return `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`
-}
+// Yerel tarih (bkz. src/domain/dates.ts) — UTC kullanilirsa gece
+// yarisindan sonra "sonraki odeme" bir gun kayar.
+const todayISO = localISO
 
 /** Sabit_Giderler!Sonraki Ödeme (J) — TODAY() bazli, hatirlatma icindir. */
 export function nextPaymentDate(item: RecurringItem, today: Date): string | undefined {

@@ -1,0 +1,125 @@
+import { describe, expect, it } from 'vitest'
+import {
+  toGoal,
+  toIncome,
+  toRecurringItem,
+  toRecurringSkip,
+  toTransaction,
+  toTransfer,
+} from './normalize'
+
+// Bu testler "bozuk veriyi uydurma" kuralini korur: eksik/gecersiz bir
+// tutar 0'a cevrilmez, alan hic gelmez ve mevcut dogrulama satiri
+// kullaniciya "Eksik alan" der.
+
+describe('toTransaction', () => {
+  it('saglam kaydi oldugu gibi gecirir', () => {
+    const tx = toTransaction('t1', {
+      date: '2026-07-15',
+      description: 'Market',
+      category: 'Market (Ev)',
+      amount: 42.5,
+      currency: 'EUR',
+      account: 'Ortak Kasa',
+      canPct: 0.5,
+      tag: 'haftalik',
+    })
+    expect(tx).toEqual({
+      id: 't1',
+      date: '2026-07-15',
+      description: 'Market',
+      category: 'Market (Ev)',
+      amount: 42.5,
+      currency: 'EUR',
+      account: 'Ortak Kasa',
+      canPct: 0.5,
+      tag: 'haftalik',
+    })
+  })
+
+  it('sayiya cevrilemeyen tutari 0 yapmaz, alani hic yazmaz', () => {
+    expect(toTransaction('t2', { amount: 'abc' }).amount).toBeUndefined()
+    expect(toTransaction('t3', { amount: null }).amount).toBeUndefined()
+    expect(toTransaction('t4', {}).amount).toBeUndefined()
+    expect(toTransaction('t5', { amount: Number.NaN }).amount).toBeUndefined()
+  })
+
+  it('metin olarak saklanan sayiyi cevirir (virgul dahil)', () => {
+    expect(toTransaction('t6', { amount: '42.5' }).amount).toBe(42.5)
+    expect(toTransaction('t7', { amount: '42,5' }).amount).toBe(42.5)
+  })
+
+  it('taninmayan para birimini bos birakir', () => {
+    expect(toTransaction('t8', { currency: 'USD' }).currency).toBe('')
+    expect(toTransaction('t9', { currency: 'TRY' }).currency).toBe('TRY')
+  })
+
+  it('0-1 disindaki paylasim oranini yok sayar', () => {
+    expect(toTransaction('t10', { canPct: 50 }).canPct).toBeUndefined()
+    expect(toTransaction('t11', { canPct: -0.2 }).canPct).toBeUndefined()
+    expect(toTransaction('t12', { canPct: 1 }).canPct).toBe(1)
+    expect(toTransaction('t13', { canPct: 0 }).canPct).toBe(0)
+  })
+
+  it('metin olmayan alanlari bos metne cevirir', () => {
+    const tx = toTransaction('t14', { description: 42, category: null })
+    expect(tx.description).toBe('')
+    expect(tx.category).toBe('')
+  })
+})
+
+describe('toIncome', () => {
+  it('taninmayan kisiyi varsayilana cevirir', () => {
+    expect(toIncome('i1', { person: 'Ahmet' }).person).toBe('Can')
+    expect(toIncome('i2', { person: 'Tuğçe' }).person).toBe('Tuğçe')
+  })
+
+  it('bos notu hic yazmaz', () => {
+    expect(toIncome('i3', { note: '' }).note).toBeUndefined()
+  })
+})
+
+describe('toTransfer', () => {
+  it('gecerli tipi korur, gecersizi bos birakir', () => {
+    expect(toTransfer('tr1', { type: 'Tasarruf' }).type).toBe('Tasarruf')
+    expect(toTransfer('tr2', { type: 'Baska' }).type).toBe('')
+  })
+})
+
+describe('toGoal', () => {
+  it('taninmayan sahibi Ortak yapar', () => {
+    expect(toGoal('g1', { owner: 'X' }).owner).toBe('Ortak')
+    expect(toGoal('g2', { owner: 'Can' }).owner).toBe('Can')
+  })
+
+  it('hedef tutari yoksa alani yazmaz', () => {
+    expect(toGoal('g3', {}).targetAmount).toBeUndefined()
+  })
+})
+
+describe('toRecurringItem', () => {
+  it('gecersiz sikligi aylik kabul eder', () => {
+    expect(toRecurringItem('r1', { frequencyMonths: 5 }).frequencyMonths).toBe(1)
+    expect(toRecurringItem('r2', { frequencyMonths: 12 }).frequencyMonths).toBe(12)
+  })
+
+  it('active alani yoksa aktif sayar, false ise pasif', () => {
+    expect(toRecurringItem('r3', {}).active).toBe(true)
+    expect(toRecurringItem('r4', { active: false }).active).toBe(false)
+  })
+
+  it('taninmayan butce tipini varsayilana cevirir', () => {
+    expect(toRecurringItem('r5', { budgetType: 'Kişisel' }).budgetType).toBe('Ortak-Ev')
+    expect(toRecurringItem('r6', { budgetType: 'Mike' }).budgetType).toBe('Mike')
+  })
+})
+
+describe('toRecurringSkip', () => {
+  it('alanlari metne cevirir', () => {
+    expect(toRecurringSkip('s1', { recurringId: 'r1', monthKey: '2026-07' })).toEqual({
+      id: 's1',
+      recurringId: 'r1',
+      monthKey: '2026-07',
+    })
+  })
+})

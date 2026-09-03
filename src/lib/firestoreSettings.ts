@@ -18,14 +18,18 @@ export async function ensureSettingsSeeded(): Promise<void> {
 
 export function subscribeSettings(
   onChange: (settings: Settings) => void,
+  onError?: (err: Error) => void,
 ): Unsubscribe {
-  return onSnapshot(SETTINGS_DOC, (snap) => {
-    if (snap.exists()) {
-      onChange(snap.data() as Settings)
-    } else {
-      onChange(DEFAULT_SETTINGS)
-    }
-  })
+  return onSnapshot(
+    SETTINGS_DOC,
+    (snap) => {
+      onChange(snap.exists() ? (snap.data() as Settings) : DEFAULT_SETTINGS)
+    },
+    (err) => {
+      console.error('Ayarlar aboneligi basarisiz', err)
+      onError?.(err)
+    },
+  )
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {

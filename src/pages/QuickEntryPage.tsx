@@ -10,17 +10,17 @@ import {
   pushRecentCategory,
   setDefaultAccount,
 } from '../lib/localPrefs'
+import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
+import { useWrite } from '../hooks/useWrite'
+import { useToast } from '../components/ToastProvider'
 import type { TransactionDraft } from '../domain/types'
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayISO } from '../domain/dates'
 
 export function QuickEntryPage() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
 
-  const [date, setDate] = useState(todayIso)
+  const [date, setDate] = useState(todayISO)
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [account, setAccount] = useState('')
@@ -28,6 +28,8 @@ export function QuickEntryPage() {
   const [saving, setSaving] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
   const [pendingDuplicate, setPendingDuplicate] = useState<TransactionDraft | null>(null)
+  const runWrite = useWrite()
+  const { showToast } = useToast()
 
   const recentCategories = useMemo(() => {
     const recent = getRecentCategories()
@@ -63,7 +65,10 @@ export function QuickEntryPage() {
   async function commitSave(finalDraft: TransactionDraft) {
     setSaving(true)
     try {
-      await addTransaction(finalDraft)
+      const ok = await runWrite(addTransaction(finalDraft), {
+        failureMessage: 'Harcama kaydedilemedi',
+      })
+      if (!ok) return
       pushRecentCategory(finalDraft.category)
       setDefaultAccount(finalDraft.account)
       setAmount('')
@@ -71,6 +76,11 @@ export function QuickEntryPage() {
       setPendingDuplicate(null)
       setSavedFlash(true)
       setTimeout(() => setSavedFlash(false), 1500)
+      // Mike'in butcesine giren harcamalarda kucuk bir tesekkur
+      // (bkz. src/domain/personalNotes.ts).
+      if (isMikeExpense(finalDraft, settings)) {
+        showToast({ message: MIKE_THANKS_NOTE, tone: 'fun', durationMs: 5000, key: 'mike-thanks' })
+      }
     } finally {
       setSaving(false)
     }
@@ -99,8 +109,8 @@ export function QuickEntryPage() {
             Tarih
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </label>
-          {date !== todayIso() && (
-            <button type="button" className="quick-entry-today" onClick={() => setDate(todayIso())}>
+          {date !== todayISO() && (
+            <button type="button" className="quick-entry-today" onClick={() => setDate(todayISO())}>
               Bugüne dön
             </button>
           )}

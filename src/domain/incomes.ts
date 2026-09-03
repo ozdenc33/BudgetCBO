@@ -16,7 +16,7 @@ function validate(income: Income): string {
 
 export function computeIncome(income: Income, settings: Settings): ComputedIncome {
   const monthKey = income.date ? monthKeyOf(income.date) : ''
-  const { rate, rateSource } = resolveRate(income.currency, monthKey, settings)
+  const { rate, rateSource, rateWarning } = resolveRate(income.currency, monthKey, settings)
   const amountEUR = income.amount != null ? income.amount / rate : undefined
   const validation = validate(income)
 
@@ -25,6 +25,7 @@ export function computeIncome(income: Income, settings: Settings): ComputedIncom
     monthKey,
     rate,
     rateSource,
+    rateWarning,
     amountEUR,
     validation,
   }
