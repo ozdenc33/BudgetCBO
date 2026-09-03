@@ -5,6 +5,8 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
+**Canlı:** https://budgetcbo.web.app (Firebase Hosting, proje ID: `budgetcbo`)
+
 ## Durum: Faz 8
 
 **Faz 1-6** tamamlandı: iskelet/Auth/kurallar, ayarlar/harcama girişi,
