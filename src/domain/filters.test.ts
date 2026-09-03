@@ -109,6 +109,26 @@ describe('filterTransactions', () => {
     expect(rows.map((r) => r.id)).toEqual(['2', '5'])
   })
 
+  it('kisisel harcamanin notu sadece odeyen kisiye arama sonucunda gorunur', () => {
+    const withNote = TX.map((t) => (t.id === '4' ? { ...t, note: 'sürpriz saç kremi' } : t))
+    // id 4: Kuaför/Bakım -> Kişisel-Tuğçe (Tuğçe-DE Girokonto'dan odendi).
+    expect(filterTransactions(withNote, { text: 'sürpriz' }, 'Tuğçe').map((r) => r.id)).toEqual([
+      '4',
+    ])
+    expect(filterTransactions(withNote, { text: 'sürpriz' }, 'Can')).toEqual([])
+    expect(filterTransactions(withNote, { text: 'sürpriz' })).toEqual([])
+  })
+
+  it('kisisel disi harcamanin notu herkese arama sonucunda gorunur', () => {
+    const withNote = TX.map((t) => (t.id === '2' ? { ...t, note: 'haftalik market' } : t))
+    expect(filterTransactions(withNote, { text: 'haftalik' }, 'Can').map((r) => r.id)).toEqual([
+      '2',
+    ])
+    expect(filterTransactions(withNote, { text: 'haftalik' }, 'Tuğçe').map((r) => r.id)).toEqual([
+      '2',
+    ])
+  })
+
   it('sumFilteredEUR filtrelenmis toplami verir', () => {
     const rows = filterTransactions(TX, { monthKey: '2026-09', account: 'Ortak Kasa' })
     expect(sumFilteredEUR(rows)).toBeCloseTo(720 + 48.9 + 39.9)

@@ -9,11 +9,13 @@ import type { Transaction, TransactionDraft } from '../domain/types'
 // Firestore'a ve DataProvider'a dokunmadan sayfayi test ediyoruz.
 
 const addTransaction = vi.fn<(draft: TransactionDraft) => Promise<void>>()
+const updateTransaction = vi.fn<(id: string, payload: unknown) => Promise<void>>()
 let mockTransactions: Transaction[] = []
+let mockCurrentPerson: 'Can' | 'Tuğçe' = 'Can'
 
 vi.mock('../lib/firestoreTransactions', () => ({
   addTransaction: (draft: TransactionDraft) => addTransaction(draft),
-  updateTransaction: vi.fn(),
+  updateTransaction: (id: string, payload: unknown) => updateTransaction(id, payload),
   deleteTransaction: vi.fn(),
 }))
 
@@ -36,6 +38,14 @@ vi.mock('../hooks/useIncomes', () => ({
 
 vi.mock('../hooks/useTransfers', () => ({
   useTransfers: () => ({ transfers: [], loading: false, error: null }),
+}))
+
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: () => ({ user: { email: 'can@test.dev' }, loading: false, error: null }),
+}))
+
+vi.mock('../lib/currentPerson', () => ({
+  personForEmail: () => mockCurrentPerson,
 }))
 
 // TL kuru otomatik cekme ozelligi firestoreSettings/fetchRate'e bagli;
@@ -68,7 +78,10 @@ async function openForm(user: ReturnType<typeof userEvent.setup>) {
 beforeEach(() => {
   addTransaction.mockReset()
   addTransaction.mockResolvedValue(undefined)
+  updateTransaction.mockReset()
+  updateTransaction.mockResolvedValue(undefined)
   mockTransactions = []
+  mockCurrentPerson = 'Can'
 })
 
 describe('ExpensesPage — kişisel kategori paylaşım uyarısı', () => {
@@ -209,5 +222,105 @@ describe('ExpensesPage — bölüşük hesap seçimi', () => {
     await user.type(screen.getByLabelText('Can %'), '100')
 
     expect(screen.queryByText(/Farklı hesaplardan bölüşerek öde/)).not.toBeInTheDocument()
+  })
+})
+
+describe('ExpensesPage — kişisel not gizliliği', () => {
+  it('baskasinin kisisel harcamasinin notu listede gorunmez, kendi notu gorunur', () => {
+    mockTransactions = [
+      {
+        id: 'tugce-1',
+        date: '2026-09-01',
+        description: 'Kuaför',
+        category: 'Kuaför/Bakım',
+        amount: 40,
+        currency: 'EUR',
+        account: 'Tuğçe-DE Girokonto',
+        note: 'sürpriz',
+      },
+      {
+        id: 'can-1',
+        date: '2026-09-02',
+        description: 'Telefon',
+        category: 'Telefon',
+        amount: 20,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        note: 'yeni kılıf',
+      },
+    ]
+    renderPage()
+
+    expect(screen.queryByText(/sürpriz/)).not.toBeInTheDocument()
+    expect(screen.getByText(/yeni kılıf/)).toBeInTheDocument()
+  })
+
+  it('baskasinin kisisel harcamasi duzenlenirken not alani gizlenir ve kaydedince silinmez', async () => {
+    const user = userEvent.setup()
+    mockTransactions = [
+      {
+        id: 'tugce-1',
+        date: '2026-09-01',
+        description: 'Kuaför',
+        category: 'Kuaför/Bakım',
+        amount: 40,
+        currency: 'EUR',
+        account: 'Tuğçe-DE Girokonto',
+        note: 'sürpriz',
+      },
+    ]
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Düzenle' }))
+
+    expect(screen.queryByLabelText('Not')).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Bu kişisel harcamanın notu yalnızca harcamayı yapan kişiye görünür.'),
+    ).toBeInTheDocument()
+
+    await user.clear(screen.getByLabelText(/^Tutar$/))
+    await user.type(screen.getByLabelText(/^Tutar$/), '45')
+    await user.click(screen.getByRole('button', { name: 'Güncelle' }))
+
+    await waitFor(() => expect(updateTransaction).toHaveBeenCalledTimes(1))
+    expect(updateTransaction.mock.calls[0][1]).not.toHaveProperty('note')
+  })
+
+  it('kendi kisisel harcamasi duzenlenirken not alani gorunur ve duzenlenebilir', async () => {
+    const user = userEvent.setup()
+    mockTransactions = [
+      {
+        id: 'can-1',
+        date: '2026-09-02',
+        description: 'Telefon',
+        category: 'Telefon',
+        amount: 20,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        note: 'yeni kılıf',
+      },
+    ]
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Düzenle' }))
+
+    expect(screen.getByLabelText('Not')).toHaveValue('yeni kılıf')
+  })
+
+  it('goruntuleyen Tuğçe ise roller ters doner', () => {
+    mockCurrentPerson = 'Tuğçe'
+    mockTransactions = [
+      {
+        id: 'can-1',
+        date: '2026-09-02',
+        description: 'Telefon',
+        category: 'Telefon',
+        amount: 20,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        note: 'gizli not',
+      },
+    ]
+    renderPage()
+
+    expect(screen.queryByText(/gizli not/)).not.toBeInTheDocument()
   })
 })

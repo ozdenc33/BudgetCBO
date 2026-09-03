@@ -1,19 +1,29 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { deleteField, type UpdateData } from 'firebase/firestore'
+import { useAuth } from '../auth/AuthContext'
 import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { addTransaction, deleteTransaction, updateTransaction } from '../lib/firestoreTransactions'
 import { saveSettings } from '../lib/firestoreSettings'
 import { fetchEurTryRateForDate } from '../lib/fetchRate'
+import { personForEmail } from '../lib/currentPerson'
 import { computeTransaction, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
 import { isFutureDated } from '../domain/futureDated'
 import { computeAccountBalances } from '../domain/balances'
+import { isNoteVisibleTo } from '../domain/notePrivacy'
 import { TransactionFilters } from '../components/TransactionFilters'
 import { AccountOptions } from '../components/AccountOptions'
-import type { ComputedTransaction, Currency, Transaction, TransactionDraft } from '../domain/types'
+import type {
+  ComputedTransaction,
+  Currency,
+  Person,
+  Settings,
+  Transaction,
+  TransactionDraft,
+} from '../domain/types'
 import { todayISO, todayMonthKey } from '../domain/dates'
 import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
 import { useWrite } from '../hooks/useWrite'
@@ -38,6 +48,8 @@ type FormState = {
   tugcePct: string
   tag: string
   note: string
+  /** Baskasinin kisisel harcamasi duzenlenirken not gizlenir (bkz. notePrivacy.ts). */
+  noteHidden: boolean
 }
 
 function emptyForm(): FormState {
@@ -54,6 +66,7 @@ function emptyForm(): FormState {
     tugcePct: '',
     tag: '',
     note: '',
+    noteHidden: false,
   }
 }
 
@@ -106,11 +119,20 @@ function formToUpdatePayload(form: FormState): UpdateData<TransactionDraft> {
     canPct: form.canPct === '' ? deleteField() : Number(form.canPct) / 100,
     tugcePct: form.tugcePct === '' ? deleteField() : Number(form.tugcePct) / 100,
     tag: form.tag.trim() ? form.tag.trim() : deleteField(),
-    note: form.note.trim() ? form.note.trim() : deleteField(),
+    // Not gizliyse (baskasinin kisisel harcamasi) alana hic dokunulmaz —
+    // deleteField() bile gonderilmez, cunku bu asil notu SILER. Anahtar
+    // nesneye hic eklenmeyince Firestore mevcut degeri korur.
+    ...(form.noteHidden ? {} : { note: form.note.trim() ? form.note.trim() : deleteField() }),
   }
 }
 
-function transactionToForm(tx: Transaction): FormState {
+function transactionToForm(
+  tx: Transaction,
+  settings: Settings,
+  currentPerson: Person | undefined,
+): FormState {
+  const computed = computeTransaction(tx, settings)
+  const noteHidden = !isNoteVisibleTo(computed, currentPerson)
   return {
     date: tx.date,
     description: tx.description,
@@ -123,11 +145,14 @@ function transactionToForm(tx: Transaction): FormState {
     canPct: tx.canPct != null ? String(Math.round(tx.canPct * 100)) : '',
     tugcePct: tx.tugcePct != null ? String(Math.round(tx.tugcePct * 100)) : '',
     tag: tx.tag ?? '',
-    note: tx.note ?? '',
+    note: noteHidden ? '' : (tx.note ?? ''),
+    noteHidden,
   }
 }
 
 export function ExpensesPage() {
+  const { user } = useAuth()
+  const currentPerson = personForEmail(user?.email)
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
   const { incomes } = useIncomes()
@@ -165,8 +190,10 @@ export function ExpensesPage() {
 
   const visibleTransactions = useMemo(
     () =>
-      filterTransactions(computedTransactions, filter).sort((a, b) => b.date.localeCompare(a.date)),
-    [computedTransactions, filter],
+      filterTransactions(computedTransactions, filter, currentPerson).sort((a, b) =>
+        b.date.localeCompare(a.date),
+      ),
+    [computedTransactions, filter, currentPerson],
   )
 
   const visibleTotalEUR = useMemo(() => sumFilteredEUR(visibleTransactions), [visibleTransactions])
@@ -278,7 +305,7 @@ export function ExpensesPage() {
   function startEdit(tx: Transaction) {
     setEditingId(tx.id)
     setFormOpen(true)
-    setForm(transactionToForm(tx))
+    setForm(transactionToForm(tx, settings, currentPerson))
   }
 
   // Hesap Hareketleri'nden "?edit=<id>" ile gelindiyse formu otomatik ac.
@@ -289,7 +316,14 @@ export function ExpensesPage() {
   function repeat(tx: Transaction) {
     setEditingId(null)
     setFormOpen(true)
-    setForm({ ...transactionToForm(tx), date: todayISO() })
+    // Yeni bir kayit olusturuluyor (guncelleme degil): not alani daima
+    // duzenlenebilir kalir — baskasinin gizli notu asla kopyalanmaz
+    // (transactionToForm zaten bos birakir), ama yeni not eklenebilir.
+    setForm({
+      ...transactionToForm(tx, settings, currentPerson),
+      date: todayISO(),
+      noteHidden: false,
+    })
   }
 
   function cancelEdit() {
@@ -483,10 +517,19 @@ export function ExpensesPage() {
             Etiket
             <input value={form.tag} onChange={(e) => setForm({ ...form, tag: e.target.value })} />
           </label>
-          <label>
-            Not
-            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-          </label>
+          {form.noteHidden ? (
+            <p className="settings-note">
+              Bu kişisel harcamanın notu yalnızca harcamayı yapan kişiye görünür.
+            </p>
+          ) : (
+            <label>
+              Not
+              <input
+                value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })}
+              />
+            </label>
+          )}
 
           {form.category && form.amount && form.account && (
             <div
@@ -580,6 +623,11 @@ export function ExpensesPage() {
                 >
                   {t.validation}
                 </span>
+                {t.note && isNoteVisibleTo(t, currentPerson) && (
+                  <span className="expense-row-note" title="Not">
+                    📝 {t.note}
+                  </span>
+                )}
                 {t.rateWarning && (
                   <span className="expense-badge expense-badge--warning" title={t.rateWarning}>
                     kur eksik
