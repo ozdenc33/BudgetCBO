@@ -30,6 +30,16 @@ vi.mock('../hooks/useComputedTransactions', () => ({
     mockTransactions.map((t) => computeTransaction(t, DEFAULT_SETTINGS)),
 }))
 
+// TL kuru otomatik cekme ozelligi firestoreSettings/fetchRate'e bagli;
+// gercek Firebase baglantisi kurulmasin diye ikisi de sahteleniyor.
+vi.mock('../lib/firestoreSettings', () => ({
+  saveSettings: vi.fn(),
+}))
+
+vi.mock('../lib/fetchRate', () => ({
+  fetchEurTryRateForDate: vi.fn(),
+}))
+
 import { ExpensesPage } from './ExpensesPage'
 import { ToastProvider } from '../components/ToastProvider'
 
