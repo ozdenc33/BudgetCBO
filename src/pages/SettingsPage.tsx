@@ -107,18 +107,23 @@ function AccountsSection({ draft, onSave }: SectionProps) {
       <ul className="settings-list">
         {draft.accounts.map((a) => (
           <li key={a.id}>
-            <span>{a.name}</span>
-            <span className="settings-list-meta">
-              {a.currency} · {a.owner}
+            <span className="settings-row-main">
+              <span className="settings-row-name">{a.name}</span>
+              <span className="settings-list-meta">
+                {a.currency} · {a.owner}
+              </span>
             </span>
-            <input
-              className="settings-list-inline-input"
-              type="number"
-              step="0.01"
-              aria-label={`${a.name} başlangıç bakiyesi`}
-              defaultValue={a.startingBalanceEUR}
-              onBlur={(e) => setStartingBalance(a.id, Number(e.target.value) || 0)}
-            />
+            <label className="settings-field">
+              <span className="settings-field-label">Başlangıç bakiyesi €</span>
+              <input
+                className="settings-list-inline-input"
+                type="number"
+                step="0.01"
+                key={a.startingBalanceEUR}
+                defaultValue={a.startingBalanceEUR}
+                onBlur={(e) => setStartingBalance(a.id, Number(e.target.value) || 0)}
+              />
+            </label>
             <button onClick={() => removeAccount(a.id)} aria-label={`${a.name} sil`}>
               Sil
             </button>
@@ -126,7 +131,8 @@ function AccountsSection({ draft, onSave }: SectionProps) {
         ))}
       </ul>
       <p className="settings-note">
-        Başlangıç bakiyesi (EUR): uygulamayı kullanmaya başlamadan önceki hesap bakiyesi.
+        Başlangıç bakiyesi: uygulamayı kullanmaya başlamadan önceki bakiye. Hesap Bakiyeleri
+        sayfasındaki toplama eklenir.
       </p>
       <form className="settings-add-form" onSubmit={addAccount}>
         <input
@@ -187,17 +193,22 @@ function CategoriesSection({ draft, onSave }: SectionProps) {
       <ul className="settings-list settings-list--scroll">
         {draft.categories.map((c) => (
           <li key={c.id}>
-            <span>{c.name}</span>
-            <span className="settings-list-meta">{c.budgetType}</span>
+            <span className="settings-row-main">
+              <span className="settings-row-name">{c.name}</span>
+              <span className="settings-list-meta">{c.budgetType}</span>
+            </span>
             {LIMIT_ELIGIBLE.includes(c.budgetType) && (
-              <input
-                className="settings-list-inline-input"
-                type="number"
-                step="0.01"
-                aria-label={`${c.name} aylık limit`}
-                defaultValue={c.monthlyLimitEUR ?? 0}
-                onBlur={(e) => setCategoryLimit(c.id, Number(e.target.value) || 0)}
-              />
+              <label className="settings-field">
+                <span className="settings-field-label">Aylık limit €</span>
+                <input
+                  className="settings-list-inline-input"
+                  type="number"
+                  step="0.01"
+                  key={c.monthlyLimitEUR ?? 0}
+                  defaultValue={c.monthlyLimitEUR ?? 0}
+                  onBlur={(e) => setCategoryLimit(c.id, Number(e.target.value) || 0)}
+                />
+              </label>
             )}
             <button onClick={() => removeCategory(c.id)} aria-label={`${c.name} sil`}>
               Sil
@@ -206,8 +217,9 @@ function CategoriesSection({ draft, onSave }: SectionProps) {
         ))}
       </ul>
       <p className="settings-note">
-        Limit (EUR): yalnızca Ortak-Ev/Ortak-Dışarı/Mike kategorilerinde anlamlıdır, aya göre
-        değişmez. Kişisel limitler Faz 6'da eklenecek.
+        Aylık limit yalnızca Ortak-Ev, Ortak-Dışarı ve Mike kategorilerinde girilir; Ay Panosu'ndaki
+        "Limit / Kalan / Kullanım" kolonlarında kullanılır. Kişisel harcamalar için plan, Kişisel
+        Bütçe sayfasından girilir.
       </p>
       <form className="settings-add-form" onSubmit={addCategory}>
         <input
@@ -390,7 +402,7 @@ function SperrkontoSection({ draft, onSave }: SectionProps) {
       </label>
       <p className="settings-note">
         Toplam çekilen ve kalan bakiye, Gelirler sayfasındaki Sperrkonto kayıtlarından otomatik
-        hesaplanacak (Faz 3).
+        hesaplanır.
       </p>
     </section>
   )

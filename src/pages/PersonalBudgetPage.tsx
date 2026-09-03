@@ -6,6 +6,8 @@ import { useTransfers } from '../hooks/useTransfers'
 import { useRecurring } from '../hooks/useRecurring'
 import { saveSettings } from '../lib/firestoreSettings'
 import { computePersonalBudget } from '../domain/personalBudget'
+import { personForEmail } from '../lib/currentPerson'
+import { useAuth } from '../auth/AuthContext'
 import type { Person, PersonalBudgetPlan } from '../domain/types'
 
 const PERSONS: Person[] = ['Can', 'Tuğçe']
@@ -36,8 +38,12 @@ export function PersonalBudgetPage() {
   const { incomes, loading: incomesLoading } = useIncomes()
   const { transfers, loading: transfersLoading } = useTransfers()
   const { items: recurring, loading: recurringLoading } = useRecurring()
-  const [person, setPerson] = useState<Person>('Can')
+  const { user } = useAuth()
+  const currentPerson = personForEmail(user?.email)
+  const [person, setPerson] = useState<Person>(() => personForEmail(user?.email) ?? 'Can')
   const [month, setMonth] = useState(todayMonthKey)
+  // Baskasinin butcesinde ilk degisiklikte bir kez onay istenir.
+  const [otherPersonConfirmed, setOtherPersonConfirmed] = useState(false)
 
   const loading = settingsLoading || txLoading || incomesLoading || transfersLoading || recurringLoading
   const today = useMemo(() => new Date(), [])
@@ -52,11 +58,25 @@ export function PersonalBudgetPage() {
     [loading, person, month, plan, transactions, incomes, transfers, recurring, settings, today],
   )
 
+  const editingOtherPerson = currentPerson != null && currentPerson !== person
+
   async function setPlan(next: PersonalBudgetPlan) {
+    if (editingOtherPerson && !otherPersonConfirmed) {
+      const ok = window.confirm(
+        `${currentPerson} olarak giriş yaptın ama ${person} kişisinin bütçe planını değiştiriyorsun. Devam edilsin mi?`,
+      )
+      if (!ok) return
+      setOtherPersonConfirmed(true)
+    }
     await saveSettings({
       ...settings,
       personalPlans: { ...settings.personalPlans, [person]: next },
     })
+  }
+
+  function selectPerson(next: Person) {
+    setPerson(next)
+    setOtherPersonConfirmed(false)
   }
 
   function setIncomePlanValue(source: string, value: number) {
@@ -79,7 +99,7 @@ export function PersonalBudgetPage() {
             <button
               key={p}
               className={p === person ? 'person-toggle-btn person-toggle-btn--active' : 'person-toggle-btn'}
-              onClick={() => setPerson(p)}
+              onClick={() => selectPerson(p)}
             >
               {p}
             </button>
@@ -90,6 +110,13 @@ export function PersonalBudgetPage() {
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </label>
       </div>
+
+      {editingOtherPerson && (
+        <p className="warn-note">
+          {currentPerson} olarak giriş yaptın, {person} kişisinin bütçesini görüntülüyorsun. Plan
+          değiştirirsen onay istenecek.
+        </p>
+      )}
 
       <section className="dashboard-section">
         <h2>1. Gelir</h2>
@@ -113,6 +140,7 @@ export function PersonalBudgetPage() {
                       className="settings-list-inline-input"
                       type="number"
                       step="0.01"
+                      key={`${person}-${row.plannedEUR}`}
                       defaultValue={row.plannedEUR}
                       onBlur={(e) => setIncomePlanValue(row.source, Number(e.target.value) || 0)}
                     />
@@ -148,6 +176,7 @@ export function PersonalBudgetPage() {
               className="settings-list-inline-input"
               type="number"
               step="0.01"
+              key={`${person}-${plan.sharedContributionPlanEUR}`}
               defaultValue={plan.sharedContributionPlanEUR}
               onBlur={(e) => setPlan({ ...plan, sharedContributionPlanEUR: Number(e.target.value) || 0 })}
             />
@@ -203,6 +232,7 @@ export function PersonalBudgetPage() {
                       className="settings-list-inline-input"
                       type="number"
                       step="0.01"
+                      key={`${person}-${row.plannedEUR}`}
                       defaultValue={row.plannedEUR}
                       onBlur={(e) => setCategoryPlanValue(row.category, Number(e.target.value) || 0)}
                     />
@@ -242,6 +272,7 @@ export function PersonalBudgetPage() {
               className="settings-list-inline-input"
               type="number"
               step="0.01"
+              key={`${person}-${plan.savingsPlanEUR}`}
               defaultValue={plan.savingsPlanEUR}
               onBlur={(e) => setPlan({ ...plan, savingsPlanEUR: Number(e.target.value) || 0 })}
             />

@@ -69,7 +69,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="stack">
+    <div className="stack home-stack">
       <RemindersBanner />
 
       <section className="hero-card">

@@ -43,6 +43,10 @@
   --shadow-sm: 0 1px 2px rgba(16, 32, 51, 0.06), 0 1px 3px rgba(16, 32, 51, 0.05);
   --shadow-md: 0 4px 16px rgba(16, 32, 51, 0.08);
 
+  /* Grafik serileri (dataviz dogrulayicisi: acik temada tum kontroller PASS) */
+  --chart-1: #0065bd;
+  --chart-2: #7c8500;
+
   --radius: 12px;
   --radius-sm: 8px;
 
@@ -79,6 +83,10 @@
 
   --shadow-sm: none;
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  /* Koyu temada ayri adimlar (otomatik cevirme degil), yine PASS */
+  --chart-1: #4392d4;
+  --chart-2: #8c9a33;
 }
 
 * {
@@ -1848,6 +1856,307 @@ h1, h2, h3 {
   cursor: not-allowed;
 }
 
+/* ---------- Grafikler ----------
+   Renkler dataviz dogrulayicisindan gecirildi: acik temada
+   #0065BD + #7C8500, koyu temada #4392D4 + #8C9A33 (aydinlik bandi,
+   kroma tabani, renk korlugu ayrimi ve zemin kontrasti: hepsi PASS). */
+
+.chart-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chart-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.chart-swatch--1 {
+  background: var(--chart-1);
+}
+
+.chart-swatch--2 {
+  background: var(--chart-2);
+}
+
+.chart-svg {
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  display: block;
+}
+
+.chart-grid {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+.chart-axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-tick {
+  fill: var(--text-muted);
+  font-size: 11px;
+}
+
+.chart-value {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chart-bar--1 {
+  fill: var(--chart-1);
+}
+
+.chart-bar--2 {
+  fill: var(--chart-2);
+}
+
+.chart-note {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* Yatay cubuk listesi (kategori kirilimi, tek seri) */
+
+.bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem 0.75rem;
+}
+
+.bar-row-label {
+  font-size: 0.82rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-row-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bar-track {
+  grid-column: 1 / -1;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--chart-1);
+  /* Veri ucu yuvarlak, taban (sol) kare */
+  border-radius: 0 4px 4px 0;
+}
+
+/* ---------- Yazdirma / PDF ---------- */
+
+.btn-quiet {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar,
+  .tab-bar,
+  .app-bar,
+  .offline-banner,
+  .no-print,
+  .reminders-banner {
+    display: none !important;
+  }
+
+  .app-main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .print-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+  }
+
+  .dashboard-section,
+  .panel {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+    margin-bottom: 0.75rem;
+  }
+
+  .table-scroll {
+    overflow: visible;
+  }
+
+  .dashboard-table {
+    white-space: normal;
+    font-size: 9pt;
+  }
+
+  /* Yazdirmada her zaman acik tema renkleri kullanilir */
+  :root,
+  [data-theme='dark'] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-alt: #f2f4f7;
+    --text: #000000;
+    --text-muted: #444444;
+    --border: #999999;
+    --border-subtle: #cccccc;
+    --chart-1: #0065bd;
+    --chart-2: #7c8500;
+    --shadow-sm: none;
+    --shadow-md: none;
+  }
+}
+
+/* ---------- Uyari notu ---------- */
+
+.warn-note {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  color: var(--warning-text);
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+/* ---------- Ayarlar satiri: etiketli alanlar ---------- */
+
+/* Dar ekranda ad ustte, alan + sil altta; genis ekranda tek satir */
+.settings-list li {
+  flex-wrap: wrap;
+}
+
+.settings-list li > span.settings-row-main {
+  flex: 1 1 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+@media (min-width: 480px) {
+  .settings-list li > span.settings-row-main {
+    flex: 1 1 45%;
+  }
+}
+
+.settings-row-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-field .settings-list-inline-input {
+  width: 100%;
+  max-width: 120px;
+}
+
+.settings-field-label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ---------- Hizli giris: tarih ---------- */
+
+.quick-entry-date-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.quick-entry-date {
+  flex: 1;
+}
+
+.quick-entry-today {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---------- Masaustu kenar cubugu (mobilde gizli) ---------- */
+
+.sidebar {
+  display: none;
+}
+
+.app-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
 /* ---------- Genis ekran ---------- */
 
 @media (min-width: 720px) {
@@ -1859,7 +2168,188 @@ h1, h2, h3 {
     font-size: 2.4rem;
   }
 
-  .expense-form {
-    max-width: 560px;
+  .form-details {
+    max-width: 640px;
+  }
+}
+
+/* Masaustu: alt sekme cubugu yerine kalici kenar cubugu, genis icerik */
+@media (min-width: 1024px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 252px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .tab-bar {
+    display: none;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    padding: 1rem 0.75rem;
+    gap: 1rem;
+    background: var(--surface);
+    border-right: 1px solid var(--border-subtle);
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 0.4rem;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .sidebar-brand-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+  }
+
+  .sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.85rem;
+  }
+
+  .sidebar-group-title {
+    margin: 0 0 0.15rem 0.55rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .side-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: background-color 0.12s ease, color 0.12s ease;
+  }
+
+  .side-link:hover {
+    background: var(--surface-hover);
+  }
+
+  .side-link--active {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+
+  .side-link-icon {
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+  }
+
+  .side-link--active .side-link-icon {
+    color: var(--accent-strong);
+  }
+
+  .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .sidebar-user {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 0.4rem;
+  }
+
+  .sidebar-signout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .sidebar-signout:hover {
+    background: var(--surface-hover);
+  }
+
+  .app-bar {
+    box-shadow: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .app-main {
+    max-width: 1180px;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  /* Uzun-ince gorunumu kir: listeler ve kartlar cok kolonlu aksin */
+  .expenses-list,
+  .balances-list,
+  .goals-list,
+  .draft-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .home-stack {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .home-stack > .reminders-banner,
+  .home-stack > .hero-card {
+    grid-column: 1 / -1;
+  }
+
+  .settings-page {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .shortcut-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }

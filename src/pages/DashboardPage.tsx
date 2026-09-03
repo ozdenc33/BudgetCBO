@@ -11,6 +11,7 @@ import {
   computeMonthSummary,
   computeMonthlyProgress,
 } from '../domain/dashboard'
+import { CategoryBars, MonthlyColumns } from '../components/charts'
 
 function todayMonthKey(): string {
   return new Date().toISOString().slice(0, 7)
@@ -67,7 +68,12 @@ export function DashboardPage() {
           Ay
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </label>
+        <button type="button" className="btn btn-quiet no-print" onClick={() => window.print()}>
+          PDF / Yazdır
+        </button>
       </div>
+
+      <p className="print-only print-title">Ortak Bütçe — Ay Panosu · {month}</p>
 
       <section className="dashboard-section">
         <h2>Ay Özeti</h2>
@@ -148,6 +154,17 @@ export function DashboardPage() {
         {categoryRows.length === 0 ? (
           <p className="expenses-empty">Bu ayda henüz harcama yok.</p>
         ) : (
+          <>
+          <CategoryBars
+            rows={categoryRows.slice(0, 8).map((r) => ({
+              key: r.category.id,
+              label: r.category.name,
+              value: r.spentEUR,
+            }))}
+          />
+          {categoryRows.length > 8 && (
+            <p className="chart-note">Grafikte en yüksek 8 kategori var; tamamı aşağıdaki tabloda.</p>
+          )}
           <div className="table-scroll">
             <table className="dashboard-table">
               <thead>
@@ -170,6 +187,7 @@ export function DashboardPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
 
@@ -192,6 +210,17 @@ export function DashboardPage() {
         {progress.length === 0 ? (
           <p className="expenses-empty">Henüz veri yok.</p>
         ) : (
+          <>
+          <MonthlyColumns
+            labelA="Harcama"
+            labelB="Gelir"
+            rows={progress.slice(-12).map((row) => ({
+              key: row.monthKey,
+              label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
+              a: row.totalEUR,
+              b: row.incomeEUR,
+            }))}
+          />
           <div className="table-scroll">
             <table className="dashboard-table">
               <thead>
@@ -220,6 +249,7 @@ export function DashboardPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </section>
     </div>

@@ -101,19 +101,64 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
 
   return (
     <div className="app-shell">
-      <OfflineBanner />
-
-      <header className="app-bar">
-        <div className="app-bar-text">
-          <h1 className="app-bar-title">{title}</h1>
-          {subtitle && <p className="app-bar-subtitle">{subtitle}</p>}
+      {/* Masaustu: kalici kenar cubugu. Mobilde gizli, yerine alt sekme cubugu var. */}
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <span className="sidebar-brand-mark">OB</span>
+          <span>Ortak Bütçe</span>
         </div>
-        <div className="app-bar-actions">
-          <ThemeToggle />
+        <nav className="sidebar-nav" aria-label="Modüller">
+          <NavLink to="/" end className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}>
+            <span className="side-link-icon"><IconHome size={18} /></span>
+            Özet
+          </NavLink>
+          <NavLink
+            to="/hizli-giris"
+            className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}
+          >
+            <span className="side-link-icon"><IconPlus size={18} /></span>
+            Hızlı giriş
+          </NavLink>
+          {MENU_GROUPS.map((group) => (
+            <div key={group.title} className="sidebar-group">
+              <p className="sidebar-group-title">{group.title}</p>
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}
+                >
+                  <span className="side-link-icon">{item.icon}</span>
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          {user?.email && <span className="sidebar-user">{user.email}</span>}
+          <button type="button" className="sidebar-signout" onClick={() => signOut()}>
+            <IconLogout size={16} />
+            Çıkış
+          </button>
         </div>
-      </header>
+      </aside>
 
-      <main className="app-main">{children}</main>
+      <div className="app-body">
+        <OfflineBanner />
+
+        <header className="app-bar">
+          <div className="app-bar-text">
+            <h1 className="app-bar-title">{title}</h1>
+            {subtitle && <p className="app-bar-subtitle">{subtitle}</p>}
+          </div>
+          <div className="app-bar-actions">
+            <ThemeToggle />
+          </div>
+        </header>
+
+        <main className="app-main">{children}</main>
+      </div>
 
       <nav className="tab-bar" aria-label="Ana gezinme">
         {TABS.slice(0, 2).map((t) => (

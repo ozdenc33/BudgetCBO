@@ -20,6 +20,7 @@ export function QuickEntryPage() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
 
+  const [date, setDate] = useState(todayIso)
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [account, setAccount] = useState('')
@@ -42,7 +43,7 @@ export function QuickEntryPage() {
   }, [settings.accounts])
 
   const draft: TransactionDraft = {
-    date: todayIso(),
+    date,
     description: description.trim(),
     category,
     amount: Number(amount),
@@ -53,7 +54,7 @@ export function QuickEntryPage() {
   const preview = useMemo(
     () => computeTransaction({ id: 'preview', ...draft }, settings),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [amount, category, account, settings],
+    [date, amount, category, account, settings],
   )
 
   const canSubmit =
@@ -93,6 +94,18 @@ export function QuickEntryPage() {
   return (
     <div className="quick-entry-page">
       <form className="quick-entry-form" onSubmit={handleSubmit}>
+        <div className="quick-entry-date-row">
+          <label className="quick-entry-date">
+            Tarih
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          </label>
+          {date !== todayIso() && (
+            <button type="button" className="quick-entry-today" onClick={() => setDate(todayIso())}>
+              Bugüne dön
+            </button>
+          )}
+        </div>
+
         <input
           className="quick-entry-amount"
           type="number"

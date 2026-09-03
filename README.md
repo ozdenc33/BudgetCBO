@@ -158,6 +158,35 @@ push bildirimleri (yukarıda açıklandığı gibi).
   metodlarıyla yapılıyor; mevcut input tipleri/kısıtları değiştirilmedi,
   yalnızca görsel (className/CSS) katman güncellendi.
 
+**Sonraki tur düzeltmeler ve eklemeler:**
+
+- **İki hata düzeltildi.** Ayarlar'daki hesap/kategori kutuları ve Kişisel
+  Bütçe'deki plan kutuları `defaultValue` (kontrolsüz input) kullanıyordu;
+  React bunları yalnızca ilk render'da doldurduğu için (a) kişi değiştirince
+  eski kişinin değerleri ekranda kalıyor, (b) Firestore'dan veri geç geldiği
+  için sayfa yenilendiğinde kaydedilmiş değer yerine 0 görünüyordu. Inputlara
+  değere/kişiye bağlı `key` verilerek ikisi de düzeltildi.
+- **İsimsiz kutulara etiket.** Ayarlar'da hesabın yanındaki kutu "Başlangıç
+  bakiyesi €", kategorinin yanındaki "Aylık limit €" olarak etiketlendi
+  (önceden yalnızca görünmez `aria-label` vardı).
+- **Grafikler.** Ay Panosu'na kategori kırılımı (yatay çubuk, tek seri) ve
+  aylık gelişim (gruplu sütun: harcama/gelir) grafikleri eklendi;
+  `src/components/charts.tsx`, harici kütüphane yok, inline SVG + CSS.
+  Seri renkleri dataviz doğrulayıcısından geçirildi (aydınlık bandı, kroma
+  tabanı, renk körlüğü ayrımı, zemin kontrastı: açık ve koyu temada tümü
+  PASS). Her grafiğin altında aynı verinin tablosu duruyor.
+- **PDF / yazdırma.** Ay Panosu'nda "PDF / Yazdır" düğmesi; yazdırma CSS'i
+  gezinmeyi gizler, her zaman açık tema renklerini kullanır ve bölümleri
+  sayfa sonunda bölmez.
+- **Masaüstü düzeni.** 1024px üstünde alt sekme çubuğu yerine kalıcı kenar
+  çubuğu, 1180px içerik genişliği; listeler ve ayar bölümleri çok kolona
+  akar (site artık "uzun ince" değil).
+- **Hızlı girişte tarih.** Varsayılan bugün, istenirse geçmiş tarih seçilir
+  ("Bugüne dön" kısayoluyla).
+- **Kişi uyarısı.** Can hesabıyla Tuğçe'nin (veya tersi) bütçe planı
+  değiştirilirken uyarı şeridi + tek seferlik onay (`src/lib/currentPerson.ts`).
+- Arayüzdeki "Faz 2 / Faz 3..." etiketleri ve gereksiz uzun notlar temizlendi.
+
 Tema tercihi `localStorage`'da cihaza özel tutulur (`src/lib/localPrefs.ts`,
 `butce.theme` anahtarı — Firestore'a yazılmaz). `index.html` içindeki küçük
 başlangıç script'i, React yüklenmeden önce doğru temayı `<html data-theme>`
