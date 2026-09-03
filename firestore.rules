@@ -7,8 +7,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function allowedUids() {
       return [
-        'REPLACE_WITH_CAN_BERK_UID',
-        'REPLACE_WITH_TUGCE_UID'
+        'Ml3QFPvFMGV9w9SfPWOR97xKxnQ2', // Can Berk
+        'Zo4l8zyn0TSKyf3ylXqQFELlG2R2'  // Tuğçe
       ];
     }
 
