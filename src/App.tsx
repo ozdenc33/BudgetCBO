@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { RequireAuth } from './auth/RequireAuth'
@@ -14,112 +15,128 @@ import { GoalsPage } from './pages/GoalsPage'
 import { PersonalBudgetPage } from './pages/PersonalBudgetPage'
 import { ImportExportPage } from './pages/ImportExportPage'
 import { QuickEntryPage } from './pages/QuickEntryPage'
-import { OfflineBanner } from './components/OfflineBanner'
-import { ThemeToggle } from './components/ThemeToggle'
+import { AppShell } from './components/AppShell'
+
+// Kimlik dogrulamasi gereken her sayfa ayni kabuga (ust baslik + alt
+// sekme cubugu + menu) sarilir; boylece modul degistirmek icin her
+// seferinde ana sayfaya donmek gerekmez.
+function Shell({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string
+  subtitle?: string
+  children: ReactNode
+}) {
+  return (
+    <RequireAuth>
+      <AppShell title={title} subtitle={subtitle}>
+        {children}
+      </AppShell>
+    </RequireAuth>
+  )
+}
 
 export function App() {
   return (
     <AuthProvider>
-      <div className="app-topbar">
-        <ThemeToggle />
-      </div>
-      <OfflineBanner />
       <Routes>
         <Route path="/giris" element={<LoginPage />} />
         <Route
           path="/"
           element={
-            <RequireAuth>
+            <Shell title="Ortak Bütçe" subtitle="Bu ayın özeti">
               <HomePage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/ayarlar"
           element={
-            <RequireAuth>
+            <Shell title="Ayarlar" subtitle="Hesaplar, kategoriler, kur">
               <SettingsPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/harcamalar"
           element={
-            <RequireAuth>
+            <Shell title="Harcamalar" subtitle="Kayıt gir, düzenle, listele">
               <ExpensesPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/gelirler"
           element={
-            <RequireAuth>
+            <Shell title="Gelirler" subtitle="Maaş, burs, Sperrkonto">
               <IncomesPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/transferler"
           element={
-            <RequireAuth>
+            <Shell title="Transferler" subtitle="Ortak Kasa, tasarruf, hedef">
               <TransfersPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/hesaplar"
           element={
-            <RequireAuth>
+            <Shell title="Hesap Bakiyeleri" subtitle="Bakiyeler ve katkı özeti">
               <BalancesPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/pano"
           element={
-            <RequireAuth>
+            <Shell title="Ay Panosu" subtitle="Özet, kırılım, kontroller">
               <DashboardPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/sabit-giderler"
           element={
-            <RequireAuth>
+            <Shell title="Sabit Giderler" subtitle="Kira, sigorta, abonelikler">
               <RecurringPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/hedefler"
           element={
-            <RequireAuth>
+            <Shell title="Hedefler" subtitle="Birikim hedefleri">
               <GoalsPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/kisisel-butce"
           element={
-            <RequireAuth>
+            <Shell title="Kişisel Bütçe" subtitle="Can ve Tuğçe planı">
               <PersonalBudgetPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/ice-disa-aktar"
           element={
-            <RequireAuth>
+            <Shell title="İçe/Dışa Aktar" subtitle="Excel yedek ve aktarım">
               <ImportExportPage />
-            </RequireAuth>
+            </Shell>
           }
         />
         <Route
           path="/hizli-giris"
           element={
-            <RequireAuth>
+            <Shell title="Hızlı Giriş" subtitle="Tek ekranda harcama kaydı">
               <QuickEntryPage />
-            </RequireAuth>
+            </Shell>
           }
         />
       </Routes>

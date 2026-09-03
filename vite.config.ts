@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Ortak Bütçe',
         short_name: 'Bütçe',
         description: 'Can Berk ve Tuğçe için ortak bütçe uygulaması',
-        theme_color: '#181715',
-        background_color: '#181715',
+        theme_color: '#0065bd',
+        background_color: '#15181c',
         display: 'standalone',
         start_url: '/',
         icons: [

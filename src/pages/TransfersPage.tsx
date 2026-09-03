@@ -1,5 +1,4 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useSettings } from '../hooks/useSettings'
 import { useTransfers } from '../hooks/useTransfers'
@@ -87,6 +86,7 @@ export function TransfersPage() {
   const { transfers, loading: transfersLoading } = useTransfers()
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
   const [month, setMonth] = useState(() => todayIso().slice(0, 7))
   const [saving, setSaving] = useState(false)
 
@@ -126,6 +126,7 @@ export function TransfersPage() {
 
   function startEdit(transfer: Transfer) {
     setEditingId(transfer.id)
+    setFormOpen(true)
     setForm(transferToForm(transfer))
   }
 
@@ -145,14 +146,15 @@ export function TransfersPage() {
 
   return (
     <div className="expenses-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Transferler</h1>
-      </header>
-
-      <form className="expense-form" onSubmit={handleSubmit}>
+      <details
+        className="form-details"
+        open={formOpen}
+        onToggle={(e) => setFormOpen(e.currentTarget.open)}
+      >
+        <summary className="form-summary">
+          {editingId ? 'Transferi düzenle' : '+ Yeni transfer'}
+        </summary>
+        <form className="expense-form" onSubmit={handleSubmit}>
         <label>
           Tarih
           <input
@@ -286,6 +288,7 @@ export function TransfersPage() {
           )}
         </div>
       </form>
+      </details>
 
       <div className="expenses-list-header">
         <label>

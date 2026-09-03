@@ -1,5 +1,4 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransfers } from '../hooks/useTransfers'
 import { useGoals } from '../hooks/useGoals'
@@ -55,6 +54,7 @@ export function GoalsPage() {
   const { goals, loading: goalsLoading } = useGoals()
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
 
   const loading = settingsLoading || transfersLoading || goalsLoading
   const today = useMemo(() => new Date(), [])
@@ -89,6 +89,7 @@ export function GoalsPage() {
 
   function startEdit(goal: Goal) {
     setEditingId(goal.id)
+    setFormOpen(true)
     setForm(goalToForm(goal))
   }
 
@@ -108,13 +109,6 @@ export function GoalsPage() {
 
   return (
     <div className="goals-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Tasarruf Hedefleri</h1>
-      </header>
-
       <p className="balances-note">
         Hedefe para ayırınca Transferler sayfasına Tip = Tasarruf, Alıcı = hedef adı olarak girin.
         Biriken otomatik hesaplanır.
@@ -163,7 +157,15 @@ export function GoalsPage() {
         </div>
       )}
 
-      <form className="expense-form" onSubmit={handleSubmit}>
+      <details
+        className="form-details"
+        open={formOpen}
+        onToggle={(e) => setFormOpen(e.currentTarget.open)}
+      >
+        <summary className="form-summary">
+          {editingId ? 'Hedefi düzenle' : '+ Yeni hedef'}
+        </summary>
+        <form className="expense-form" onSubmit={handleSubmit}>
         <h2>{editingId ? 'Hedefi Düzenle' : 'Yeni Hedef'}</h2>
         <label>
           Hedef
@@ -217,6 +219,7 @@ export function GoalsPage() {
           )}
         </div>
       </form>
+      </details>
     </div>
   )
 }

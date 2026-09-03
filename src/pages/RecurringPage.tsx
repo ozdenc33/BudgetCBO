@@ -1,5 +1,4 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useRecurring } from '../hooks/useRecurring'
@@ -107,6 +106,7 @@ export function RecurringPage() {
   const [month, setMonth] = useState(todayMonthKey)
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
   const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
 
   const loading = settingsLoading || txLoading || itemsLoading || skipsLoading
@@ -155,6 +155,7 @@ export function RecurringPage() {
 
   function startEdit(item: RecurringItem) {
     setEditingId(item.id)
+    setFormOpen(true)
     setForm(itemToForm(item))
   }
 
@@ -176,13 +177,6 @@ export function RecurringPage() {
 
   return (
     <div className="recurring-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Sabit Giderler</h1>
-      </header>
-
       <div className="expenses-list-header">
         <label>
           Ay
@@ -286,7 +280,15 @@ export function RecurringPage() {
         </div>
       </section>
 
-      <form className="expense-form" onSubmit={handleSubmit}>
+      <details
+        className="form-details"
+        open={formOpen}
+        onToggle={(e) => setFormOpen(e.currentTarget.open)}
+      >
+        <summary className="form-summary">
+          {editingId ? 'Sabit gideri düzenle' : '+ Yeni sabit gider'}
+        </summary>
+        <form className="expense-form" onSubmit={handleSubmit}>
         <h2>{editingId ? 'Sabit Gideri Düzenle' : 'Yeni Sabit Gider'}</h2>
         <label>
           Kalem
@@ -398,6 +400,7 @@ export function RecurringPage() {
           )}
         </div>
       </form>
+      </details>
     </div>
   )
 }

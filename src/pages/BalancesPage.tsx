@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -39,13 +38,6 @@ export function BalancesPage() {
 
   return (
     <div className="balances-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Hesap Bakiyeleri</h1>
-      </header>
-
       <p className="balances-note">
         Tüm zamanların toplamı, EUR eşdeğer. Sperrkonto burada değil, aylık serbest tutar gelir
         olarak Girokonto bakiyesine eklenir.

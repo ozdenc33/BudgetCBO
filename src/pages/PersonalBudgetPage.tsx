@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -74,13 +73,6 @@ export function PersonalBudgetPage() {
 
   return (
     <div className="personal-budget-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Kişisel Bütçe</h1>
-      </header>
-
       <div className="expenses-list-header personal-budget-controls">
         <div className="person-toggle">
           {PERSONS.map((p) => (

@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { saveSettings } from '../lib/firestoreSettings'
 import type {
@@ -56,13 +55,6 @@ export function SettingsPage() {
 
   return (
     <div className="settings-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Ayarlar</h1>
-      </header>
-
       <AccountsSection draft={draft} onSave={persist} />
       <CategoriesSection draft={draft} onSave={persist} />
       <IncomeSourcesSection draft={draft} onSave={persist} />

@@ -119,29 +119,50 @@ içe aktarma ("ikinci aşama işi" olarak tanımlanmıştı), fiş fotoğrafı
 (Storage'ın ücretsiz katmanda uygunluğu doğrulanmadan eklenmedi), gerçek
 push bildirimleri (yukarıda açıklandığı gibi).
 
-**Görsel tasarım + açık/koyu tema** (roadmap dışı, ek istek üzerine):
-Tüm renkler `src/styles.css` içinde CSS custom property olarak tanımlandı
-(`:root` = açık tema, `[data-theme='dark']` = koyu tema); Tailwind
-eklenmedi, projenin mevcut elle yazılmış CSS yaklaşımı korundu. Koyu
-temada saf siyah değil antrasit tonlar (`#181715` arka plan, `#232120`
-yüzey) kullanılıyor, parlak/neon renk yok. Vurgu rengi her iki temada da
-sıcak amber/altın tonu — jenerik SaaS mavi/mor paletinden bilinçli olarak
-uzaklaşıldı. Metin/arka plan kontrastları WCAG AA hedefiyle seçildi (ana
-metin ve "muted" metin dahil tüm kombinasyonlar ≥4.5:1); yalnızca kart/
-tablo kenarlıkları gibi salt gösterge amaçlı ayrımlar daha düşük kontrastta
-(~1.8-2:1) bırakıldı, çünkü asıl öncelik veri metninin okunabilirliği.
-Sağ üstte sabit bir `ThemeToggle` düğmesi (`src/components/ThemeToggle.tsx`)
-tüm sayfalarda görünür; tema tercihi `localStorage`'da cihaza özel tutulur
-(`src/lib/localPrefs.ts`, `butce.theme` anahtarı — Firestore'a yazılmaz,
-diğer kişisel-cihaz tercihleriyle aynı mantık). `index.html` içindeki küçük
-başlangıç script'i, React yüklenmeden önce doğru temayı `<html
-data-theme>` olarak yazarak "yanlış temayla an içinde görünme" (FOUC)
-sorununu önler; kullanıcı tercih belirlemediyse `prefers-color-scheme`
-sistem ayarı kullanılır. `src/hooks/useTheme.ts` state mantığını taşır.
-Güvenlik: hiçbir yerde `dangerouslySetInnerHTML` kullanılmadı (proje
-genelinde zaten yoktu), tüm render React'in normal (kaçışlı) JSX
-metodlarıyla yapılıyor; mevcut input tipleri/kısıtları değiştirilmedi,
-yalnızca görsel (className/CSS) katman güncellendi.
+**Arayüz ve tema** (roadmap dışı, ek istek üzerine):
+
+- **TUM renk paleti.** Tüm renkler `src/styles.css` içinde CSS custom
+  property olarak tanımlı (`:root` = açık tema, `[data-theme='dark']` =
+  koyu tema); Tailwind eklenmedi, projenin elle yazılmış CSS yaklaşımı
+  korundu. Ana renk TUM Mavi `#0065BD` (koyu temada okunabilirlik için
+  TUM Açık Mavi `#64A0C8`), vurgular TUM Turuncu `#E37222` ve TUM Yeşil
+  `#A2AD00` ailesinden. Koyu temada saf siyah değil soğuk antrasit
+  (`#15181c` zemin, `#1e2228` yüzey), neon/parlama yok. Metin-zemin
+  kontrastları WCAG AA hedefiyle hesaplanarak seçildi (tüm metin
+  kombinasyonları ≥4.5:1, çoğu 6-15:1); yalnızca kart/tablo kenarlıkları
+  gibi salt gösterge amaçlı çizgiler daha düşük kontrastta (~2:1)
+  bırakıldı, çünkü öncelik veri metninin okunabilirliği.
+- **Kalıcı gezinme.** Eskiden her modüle ana sayfadan gidiliyor, her
+  sayfada yalnızca "← Ana sayfa" bağlantısı bulunuyordu. Artık tüm
+  sayfalar ortak bir kabuğa (`src/components/AppShell.tsx`) sarılı: üstte
+  başlık çubuğu + tema düğmesi, altta 5 yuvalı sekme çubuğu (Özet, Pano,
+  ortada Hızlı giriş, Harcama, Menü) ve menüden açılan, işleve göre
+  gruplanmış (Kayıt / Plan / Rapor / Sistem) tam modül listesi.
+- **Ana sayfa artık gerçek bir özet.** Aynı tipte kart ızgarası yerine:
+  bu ayın harcama/gelir/net/tasarruf özeti (mevcut `computeMonthSummary`
+  ile), son 5 kayıt, hatırlatmalar ve kısayollar.
+- **Açılır form.** Harcama/gelir/transfer/hedef/sabit gider sayfalarında
+  uzun form artık varsayılan olarak kapalı (`<details>`); liste hemen
+  görünüyor, "Düzenle"ye basılınca form otomatik açılıp doluyor.
+- **Okunabilirlik.** Tablolarda zebra satır, yapışkan başlık ve ilk
+  kolon, `tabular-nums` ile hizalı rakamlar; liste satırlarında tutar
+  vurgusu ve etiket rozetleri.
+- **Hesaplama katmanına dokunulmadı.** `src/domain/` altındaki hiçbir
+  dosya değişmedi (git ile doğrulandı); sayfalarda yalnızca eski başlık
+  bloğu kaldırıldı ve form `<details>` içine alındı. 131/131 test geçiyor,
+  ayrıca tarayıcıda 12 sayfa iki temada tek tek kontrol edildi (konsol
+  hatası yok, yatay taşma yok, hesaplama önizlemesi ve kayıt akışı
+  çalışıyor).
+- **Güvenlik.** Hiçbir yerde `dangerouslySetInnerHTML` kullanılmadı (proje
+  genelinde zaten yoktu), tüm render React'in normal (kaçışlı) JSX
+  metodlarıyla yapılıyor; mevcut input tipleri/kısıtları değiştirilmedi,
+  yalnızca görsel (className/CSS) katman güncellendi.
+
+Tema tercihi `localStorage`'da cihaza özel tutulur (`src/lib/localPrefs.ts`,
+`butce.theme` anahtarı — Firestore'a yazılmaz). `index.html` içindeki küçük
+başlangıç script'i, React yüklenmeden önce doğru temayı `<html data-theme>`
+olarak yazarak FOUC'u önler; kullanıcı tercih belirlemediyse
+`prefers-color-scheme` sistem ayarı kullanılır (`src/hooks/useTheme.ts`).
 
 ## Kurulum
 

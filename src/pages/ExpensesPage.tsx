@@ -1,5 +1,4 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
@@ -101,6 +100,7 @@ export function ExpensesPage() {
   const { transactions, loading: txLoading } = useTransactions()
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
   const [month, setMonth] = useState(() => todayIso().slice(0, 7))
   const [saving, setSaving] = useState(false)
 
@@ -150,6 +150,7 @@ export function ExpensesPage() {
 
   function startEdit(tx: Transaction) {
     setEditingId(tx.id)
+    setFormOpen(true)
     setForm(transactionToForm(tx))
   }
 
@@ -169,14 +170,15 @@ export function ExpensesPage() {
 
   return (
     <div className="expenses-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Harcamalar</h1>
-      </header>
-
-      <form className="expense-form" onSubmit={handleSubmit}>
+      <details
+        className="form-details"
+        open={formOpen}
+        onToggle={(e) => setFormOpen(e.currentTarget.open)}
+      >
+        <summary className="form-summary">
+          {editingId ? 'Harcamayı düzenle' : '+ Yeni harcama'}
+        </summary>
+        <form className="expense-form" onSubmit={handleSubmit}>
         <label>
           Tarih
           <input
@@ -319,6 +321,7 @@ export function ExpensesPage() {
           )}
         </div>
       </form>
+      </details>
 
       <div className="expenses-list-header">
         <label>

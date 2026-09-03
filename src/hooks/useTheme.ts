@@ -5,8 +5,8 @@ export type Theme = 'light' | 'dark'
 
 // PWA manifest'teki tonlarla eslesir (bkz. vite.config.ts).
 const THEME_COLOR: Record<Theme, string> = {
-  light: '#f6f4f0',
-  dark: '#181715',
+  light: '#ffffff',
+  dark: '#1e2228',
 }
 
 function systemPrefersDark(): boolean {

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { addTransaction } from '../lib/firestoreTransactions'
@@ -93,13 +92,6 @@ export function QuickEntryPage() {
 
   return (
     <div className="quick-entry-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>Hızlı Giriş</h1>
-      </header>
-
       <form className="quick-entry-form" onSubmit={handleSubmit}>
         <input
           className="quick-entry-amount"

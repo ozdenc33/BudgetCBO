@@ -1,5 +1,4 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -87,13 +86,6 @@ export function ImportExportPage() {
 
   return (
     <div className="import-export-page">
-      <header className="page-header">
-        <Link to="/" className="back-link">
-          ← Ana sayfa
-        </Link>
-        <h1>İçe / Dışa Aktarma</h1>
-      </header>
-
       <section className="dashboard-section">
         <h2>Dışa Aktar (yedek)</h2>
         <p className="settings-note">
