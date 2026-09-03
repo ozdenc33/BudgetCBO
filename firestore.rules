@@ -1,13 +1,15 @@
 rules_version = '2';
 
-// Yalnizca iki kimligi dogrulanmis kullanici (Can Berk, Tugce) okuyup
-// yazabilir. UID'ler Firebase Console > Authentication > Users altindan
-// alinir ve asagidaki listeye elle yazilir. Bkz. README.md "Kurulum" bolumu.
+// Yalnizca iki kisi (Can Berk, Tugce) okuyup yazabilir. Can Berk icin
+// bir de yedek hesap UID'si eklendi. UID'ler Firebase Console >
+// Authentication > Users altindan alinir ve asagidaki listeye elle
+// yazilir. Bkz. README.md "Kurulum" bolumu.
 service cloud.firestore {
   match /databases/{database}/documents {
     function allowedUids() {
       return [
         'Ml3QFPvFMGV9w9SfPWOR97xKxnQ2', // Can Berk
+        'D16mt0oyGyUJ2QgYAMDR996Rt7D2', // Can Berk (yedek hesap)
         'Zo4l8zyn0TSKyf3ylXqQFELlG2R2'  // Tuğçe
       ];
     }

@@ -34,7 +34,11 @@ if (import.meta.env.DEV && import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, '127.0.0.1', 8080)
 }
 
+// VITE_ALLOWED_EMAIL_3 opsiyoneldir; Can Berk'in yedek hesabi gibi ek
+// bir giris icin kullanilir (asil yetki kontrolu firestore.rules'taki
+// UID beyaz listesidir, bu yalnizca giris ekranindaki ek kontroldur).
 export const ALLOWED_EMAILS = [
   import.meta.env.VITE_ALLOWED_EMAIL_1,
   import.meta.env.VITE_ALLOWED_EMAIL_2,
+  import.meta.env.VITE_ALLOWED_EMAIL_3,
 ].filter(Boolean)
