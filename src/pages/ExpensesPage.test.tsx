@@ -324,3 +324,40 @@ describe('ExpensesPage — kişisel not gizliliği', () => {
     expect(screen.queryByText(/gizli not/)).not.toBeInTheDocument()
   })
 })
+
+describe('ExpensesPage — kategori seçilince akıllı varsayılanlar', () => {
+  it('Kişisel kategoride giren kisinin kendi hesabi otomatik secilir, oran hemen gorunur', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await openForm(user)
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Kişisel Market')
+
+    expect(screen.getByLabelText(/^Hesap$/)).toHaveValue('Can-DE Girokonto')
+    // Tutar hic girilmeden, sadece kategori+hesap ile oran gorunur.
+    expect(screen.getByText('Can %100 / Tuğçe %0')).toBeInTheDocument()
+  })
+
+  it('Mike kategorisinde bolusuk odeme otomatik acilir, ikisinin de hesabi dolar', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await openForm(user)
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Mama')
+
+    expect(screen.getByText('Can %50 / Tuğçe %50')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Farklı hesaplardan bölüşerek öde/)).toBeChecked()
+    expect(screen.getByLabelText('Hesap (Can payı)')).toHaveValue('Can-DE Girokonto')
+    expect(screen.getByLabelText('Hesap (Tuğçe payı)')).toHaveValue('Tuğçe-DE Girokonto')
+  })
+
+  it('Kira gibi Ortak-Ev kategorisinde Ortak Kasa otomatik secilir', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await openForm(user)
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Kira (Kaltmiete)')
+
+    expect(screen.getByLabelText(/^Hesap$/)).toHaveValue('Ortak Kasa')
+  })
+})

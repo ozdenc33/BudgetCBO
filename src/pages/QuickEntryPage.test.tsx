@@ -30,6 +30,14 @@ vi.mock('../hooks/useTransfers', () => ({
   useTransfers: () => ({ transfers: [], loading: false, error: null }),
 }))
 
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: () => ({ user: { email: 'can@test.dev' }, loading: false, error: null }),
+}))
+
+vi.mock('../lib/currentPerson', () => ({
+  personForEmail: () => 'Can',
+}))
+
 import { QuickEntryPage } from './QuickEntryPage'
 import { ToastProvider } from '../components/ToastProvider'
 
@@ -184,5 +192,38 @@ describe('QuickEntryPage — bölüşük hesap seçimi', () => {
 
     await user.selectOptions(screen.getByLabelText(/^Hesap \(Can payı\)$/), 'Ortak Kasa')
     expect(screen.getByLabelText('Hesap (Tuğçe payı)')).toHaveValue('Ortak Kasa')
+  })
+})
+
+describe('QuickEntryPage — kategori seçilince akıllı varsayılanlar', () => {
+  it('Kişisel kategoride giren kisinin kendi hesabi otomatik secilir, oran hemen gorunur', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Kişisel Market')
+
+    expect(screen.getByLabelText(/^Hesap$/)).toHaveValue('Can-DE Girokonto')
+    expect(screen.getByText('Can %100 / Tuğçe %0')).toBeInTheDocument()
+  })
+
+  it('Mike kategorisinde bolusuk odeme otomatik acilir, ikisinin de hesabi dolar', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Mama')
+
+    expect(screen.getByText('Can %50 / Tuğçe %50')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Farklı hesaplardan bölüşerek öde/)).toBeChecked()
+    expect(screen.getByLabelText('Hesap (Can payı)')).toHaveValue('Can-DE Girokonto')
+    expect(screen.getByLabelText('Hesap (Tuğçe payı)')).toHaveValue('Tuğçe-DE Girokonto')
+  })
+
+  it('Kira gibi Ortak-Ev kategorisinde Ortak Kasa otomatik secilir', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Kira (Kaltmiete)')
+
+    expect(screen.getByLabelText(/^Hesap$/)).toHaveValue('Ortak Kasa')
   })
 })

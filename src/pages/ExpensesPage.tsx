@@ -14,6 +14,7 @@ import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../d
 import { isFutureDated } from '../domain/futureDated'
 import { computeAccountBalances } from '../domain/balances'
 import { isNoteVisibleTo } from '../domain/notePrivacy'
+import { defaultAccountsForCategory } from '../domain/expenseDefaults'
 import { TransactionFilters } from '../components/TransactionFilters'
 import { AccountOptions } from '../components/AccountOptions'
 import type {
@@ -406,7 +407,11 @@ export function ExpensesPage() {
             Kategori
             <select
               value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              onChange={(e) => {
+                const category = e.target.value
+                const defaults = defaultAccountsForCategory(category, settings, currentPerson)
+                setForm((f) => ({ ...f, category, ...defaults }))
+              }}
               required
             >
               <option value="" disabled>
@@ -419,6 +424,12 @@ export function ExpensesPage() {
               ))}
             </select>
           </label>
+          {form.category && preview.ratio != null && (
+            <p className="settings-note">
+              Can %{Math.round(preview.ratio * 100)} / Tuğçe %
+              {Math.round((1 - preview.ratio) * 100)}
+            </p>
+          )}
           <label>
             Tutar
             <input
@@ -430,6 +441,25 @@ export function ExpensesPage() {
               required
             />
           </label>
+
+          {isSplitRatio && (
+            <label className="settings-checkbox-label">
+              <input
+                type="checkbox"
+                checked={form.splitAccounts}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    splitAccounts: e.target.checked,
+                    secondAccount: e.target.checked ? form.account : '',
+                  })
+                }
+              />
+              Farklı hesaplardan bölüşerek öde (örn. %{Math.round((preview.ratio ?? 0) * 100)} Can
+              hesabından, %{Math.round((1 - (preview.ratio ?? 0)) * 100)} Tuğçe hesabından)
+            </label>
+          )}
+
           <label>
             {isSplitRatio && form.splitAccounts ? 'Hesap (Can payı)' : 'Hesap'}
             <select value={form.account} onChange={(e) => setCanAccount(e.target.value)} required>
@@ -440,38 +470,16 @@ export function ExpensesPage() {
             </select>
           </label>
 
-          {isSplitRatio && (
-            <>
-              <label className="settings-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={form.splitAccounts}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      splitAccounts: e.target.checked,
-                      secondAccount: e.target.checked ? form.account : '',
-                    })
-                  }
-                />
-                Farklı hesaplardan bölüşerek öde (örn. %{Math.round((preview.ratio ?? 0) * 100)} Can
-                hesabından, %{Math.round((1 - (preview.ratio ?? 0)) * 100)} Tuğçe hesabından)
-              </label>
-              {form.splitAccounts && (
-                <label>
-                  Hesap (Tuğçe payı)
-                  <select
-                    value={form.secondAccount}
-                    onChange={(e) => setTugceAccount(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Seçin
-                    </option>
-                    <AccountOptions accounts={settings.accounts} balances={accountBalances} />
-                  </select>
-                </label>
-              )}
-            </>
+          {isSplitRatio && form.splitAccounts && (
+            <label>
+              Hesap (Tuğçe payı)
+              <select value={form.secondAccount} onChange={(e) => setTugceAccount(e.target.value)}>
+                <option value="" disabled>
+                  Seçin
+                </option>
+                <AccountOptions accounts={settings.accounts} balances={accountBalances} />
+              </select>
+            </label>
           )}
 
           <label>

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useAuth } from '../auth/AuthContext'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
 import { useTransfers } from '../hooks/useTransfers'
 import { addTransaction } from '../lib/firestoreTransactions'
+import { personForEmail } from '../lib/currentPerson'
 import { computeTransaction, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { computeAccountBalances } from '../domain/balances'
+import { defaultAccountsForCategory } from '../domain/expenseDefaults'
 import { AccountOptions } from '../components/AccountOptions'
 import {
   getDefaultAccount,
@@ -32,6 +35,8 @@ function effectiveSecondAccount(splitAccounts: boolean, account: string, secondA
 }
 
 export function QuickEntryPage() {
+  const { user } = useAuth()
+  const currentPerson = personForEmail(user?.email)
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
   const { incomes } = useIncomes()
@@ -110,6 +115,15 @@ export function QuickEntryPage() {
     category !== '' &&
     account !== '' &&
     (preview.validation === 'OK' || preview.validation === '' || isPaylaşımEksik)
+
+  function handleCategoryChange(name: string) {
+    setCategory(name)
+    const defaults = defaultAccountsForCategory(name, settings, currentPerson)
+    if (!defaults) return
+    setAccount(defaults.account)
+    setSplitAccounts(defaults.splitAccounts)
+    setSecondAccount(defaults.secondAccount)
+  }
 
   function setCanAccount(name: string) {
     // "Biri Ortak seçildiğinde diğeri de otomatik Ortak olsun."
@@ -206,7 +220,7 @@ export function QuickEntryPage() {
                 type="button"
                 key={c}
                 className={c === category ? 'chip chip--active' : 'chip'}
-                onClick={() => setCategory(c)}
+                onClick={() => handleCategoryChange(c)}
               >
                 {c}
               </button>
@@ -216,7 +230,7 @@ export function QuickEntryPage() {
 
         <label>
           {recentCategories.length > 0 ? 'Diğer kategori' : 'Kategori'}
-          <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+          <select value={category} onChange={(e) => handleCategoryChange(e.target.value)} required>
             <option value="" disabled>
               Seçin
             </option>
@@ -227,6 +241,26 @@ export function QuickEntryPage() {
             ))}
           </select>
         </label>
+        {category && preview.ratio != null && (
+          <p className="settings-note">
+            Can %{Math.round(preview.ratio * 100)} / Tuğçe %{Math.round((1 - preview.ratio) * 100)}
+          </p>
+        )}
+
+        {isSplitRatio && (
+          <label className="settings-checkbox-label">
+            <input
+              type="checkbox"
+              checked={splitAccounts}
+              onChange={(e) => {
+                setSplitAccounts(e.target.checked)
+                setSecondAccount(e.target.checked ? account : '')
+              }}
+            />
+            Farklı hesaplardan bölüşerek öde (örn. %{Math.round((preview.ratio ?? 0) * 100)} Can
+            hesabından, %{Math.round((1 - (preview.ratio ?? 0)) * 100)} Tuğçe hesabından)
+          </label>
+        )}
 
         <label>
           {isSplitRatio && splitAccounts ? 'Hesap (Can payı)' : 'Hesap'}
@@ -235,66 +269,53 @@ export function QuickEntryPage() {
           </select>
         </label>
 
+        {isSplitRatio && splitAccounts && (
+          <label>
+            Hesap (Tuğçe payı)
+            <select
+              value={secondAccount}
+              onChange={(e) => setTugceAccount(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Seçin
+              </option>
+              <AccountOptions accounts={settings.accounts} balances={accountBalances} />
+            </select>
+          </label>
+        )}
+
         {isSplitRatio && (
-          <>
-            <label className="settings-checkbox-label">
+          <div className="expense-form-row">
+            <label>
+              Can %
               <input
-                type="checkbox"
-                checked={splitAccounts}
+                type="number"
+                min="0"
+                max="100"
+                placeholder="—"
+                value={canPct}
                 onChange={(e) => {
-                  setSplitAccounts(e.target.checked)
-                  setSecondAccount(e.target.checked ? account : '')
+                  setCanPct(e.target.value)
+                  setTugcePct('')
                 }}
               />
-              Farklı hesaplardan bölüşerek öde (örn. %{Math.round((preview.ratio ?? 0) * 100)} Can
-              hesabından, %{Math.round((1 - (preview.ratio ?? 0)) * 100)} Tuğçe hesabından)
             </label>
-            {splitAccounts && (
-              <label>
-                Hesap (Tuğçe payı)
-                <select
-                  value={secondAccount}
-                  onChange={(e) => setTugceAccount(e.target.value)}
-                  required
-                >
-                  <option value="" disabled>
-                    Seçin
-                  </option>
-                  <AccountOptions accounts={settings.accounts} balances={accountBalances} />
-                </select>
-              </label>
-            )}
-            <div className="expense-form-row">
-              <label>
-                Can %
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="—"
-                  value={canPct}
-                  onChange={(e) => {
-                    setCanPct(e.target.value)
-                    setTugcePct('')
-                  }}
-                />
-              </label>
-              <label>
-                Tuğçe %
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="—"
-                  value={tugcePct}
-                  onChange={(e) => {
-                    setTugcePct(e.target.value)
-                    setCanPct('')
-                  }}
-                />
-              </label>
-            </div>
-          </>
+            <label>
+              Tuğçe %
+              <input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="—"
+                value={tugcePct}
+                onChange={(e) => {
+                  setTugcePct(e.target.value)
+                  setCanPct('')
+                }}
+              />
+            </label>
+          </div>
         )}
 
         <label>
