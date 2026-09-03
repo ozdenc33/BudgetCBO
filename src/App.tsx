@@ -13,6 +13,7 @@ import { RecurringPage } from './pages/RecurringPage'
 import { GoalsPage } from './pages/GoalsPage'
 import { PersonalBudgetPage } from './pages/PersonalBudgetPage'
 import { ImportExportPage } from './pages/ImportExportPage'
+import { QuickEntryPage } from './pages/QuickEntryPage'
 import { OfflineBanner } from './components/OfflineBanner'
 
 export function App() {
@@ -106,6 +107,14 @@ export function App() {
           element={
             <RequireAuth>
               <ImportExportPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/hizli-giris"
+          element={
+            <RequireAuth>
+              <QuickEntryPage />
             </RequireAuth>
           }
         />

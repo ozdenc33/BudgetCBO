@@ -5,7 +5,7 @@ alan, Firebase üzerinde ücretsiz katmanda çalışan web uygulaması. Kapsam v
 iş kuralları `docs/proje-talimatlari.md` dosyasındadır (bkz. yol haritası,
 bölüm 9).
 
-## Durum: Faz 7
+## Durum: Faz 8
 
 **Faz 1-6** tamamlandı: iskelet/Auth/kurallar, ayarlar/harcama girişi,
 gelirler/transferler/hesap bakiyeleri, ay panosu/kategori kırılımı, sabit
@@ -69,8 +69,53 @@ giderler/otomatik taslak üretimi, kişisel bütçeler/hedefler/katkı özeti.
 - **PWA**: Faz 1'den beri kurulu olan service worker ve manifest
   doğrulandı; ana paket artık `exceljs` hariç ~800 KB önbelleğe alınıyor.
 
-Sonraki adım Faz 8 (hızlı giriş ekranı, hatırlatmalar); roadmap'teki tüm
-ana modüller artık tamamlandı.
+**Faz 8** bu asamada eklendi — hızlı giriş ekranı, hatırlatmalar, mükerrer
+kayıt uyarısı. **Roadmap'teki tüm 8 faz tamamlandı.**
+
+- **Hızlı Giriş** (`/hizli-giris`): proje talimatları bölüm 6.3'teki "max 5
+  dokunuş" gereksinimine karşılık gelen tek ekran — tutar, kategori (son
+  kullanılanlar üstte çip olarak, tam liste yedek `select` içinde), hesap
+  (cihazda hatırlanan varsayılan), açıklama (opsiyonel), kaydet. Tarih
+  otomatik bugün, para birimi sabit EUR. Ana sayfada büyük bir "+ Hızlı
+  harcama girişi" düğmesiyle öne çıkarıldı. `src/lib/localPrefs.ts` son
+  kategorileri ve varsayılan hesabı `localStorage`'da tutar — bilerek
+  Firestore'a yazılmaz, çünkü bunlar **cihaza özel** kullanım kolaylığıdır
+  (iki kullanıcı, iki telefon), Excel'de karşılığı yoktur.
+- **Mükerrer kayıt uyarısı**: `src/domain/duplicates.ts`
+  (`findDuplicateTransaction`) aynı gün+tutar+kategoride bir kayıt varsa
+  tespit eder, **engellemez, sadece uyarır** (proje talimatları bölüm
+  6.6). Hızlı Giriş'te ekran içi "Yine de kaydet / Vazgeç" olarak,
+  Harcamalar (`/harcamalar`) sayfasında ise `window.confirm` olarak
+  gösterilir. Excel'de karşılığı yoktur, uygulamanın eklediği bir
+  otomasyondur.
+- **Hatırlatmalar**: `src/domain/reminders.ts` (`computeReminders`) iki
+  durumu hesaplar — (1) önümüzdeki 7 gün içinde ödemesi gelen aktif sabit
+  giderler, (2) ay sonuna 5 gün veya daha az kalmışken o ay hâlâ
+  "girildi" durumuna geçmemiş (onaylanmamış) sabit giderler. Ana sayfada
+  `RemindersBanner` bileşeni bunları listeler, tıklanınca Sabit Giderler
+  sayfasına yönlendirir. **Bilinçli olarak push bildirim değil, sadece
+  uygulama içi uyarı** uygulandı: gerçek push bildirim, uygulama kapalıyken
+  tetiklenmesi için bir Cloud Function/sunucu taraflı zamanlanmış tetikleyici
+  gerektirir, bu hem projenin "istemci tarafında, uygulama açıldığında"
+  mimarisiyle çelişir hem de ücretsiz katman sınırlarının ayrıca
+  doğrulanmasını gerektirir (proje talimatları bölüm 6.2 ve bölüm 11.1).
+  İleride istenirse ayrı bir araştırma konusu olarak ele alınabilir.
+- `src/domain/duplicates.test.ts` (5 test), `reminders.test.ts` (5 test):
+  toplam **131/131 test** geçiyor (13 test dosyası).
+- Uçtan uca akış (hatırlatma şeridi, hızlı giriş kaydı, mükerrer uyarı
+  hem Hızlı Giriş'te hem Harcamalar'da, son kategori çipinin sayfa
+  yenilemede kalıcılığı) Firebase emülatörlerinde gerçek tarayıcıda test
+  edildi.
+
+Roadmap'teki tüm 8 faz (proje talimatları bölüm 9) artık tamamlandı:
+iskelet/Auth/kurallar, ayarlar/harcama girişi, gelirler/transferler/hesap
+bakiyeleri, ay panosu/kategori kırılımı, sabit giderler/otomatik taslak
+üretimi, kişisel bütçeler/hedefler/katkı özeti, Excel içe/dışa aktarma ve
+offline/PWA, hızlı giriş/hatırlatmalar. Kapsam dışı bırakılan ve bilinçli
+olarak ertelenen konular (proje talimatları bölüm 6): banka ekstresi CSV
+içe aktarma ("ikinci aşama işi" olarak tanımlanmıştı), fiş fotoğrafı
+(Storage'ın ücretsiz katmanda uygunluğu doğrulanmadan eklenmedi), gerçek
+push bildirimleri (yukarıda açıklandığı gibi).
 
 ## Kurulum
 

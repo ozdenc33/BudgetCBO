@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { RemindersBanner } from '../components/RemindersBanner'
 
 const AVAILABLE_MODULES = [
   { title: 'Harcamalar', phase: 'Faz 2', to: '/harcamalar' },
@@ -27,9 +28,15 @@ export function HomePage() {
         <button onClick={() => signOut()}>Çıkış</button>
       </header>
 
+      <Link to="/hizli-giris" className="quick-entry-cta">
+        + Hızlı harcama girişi
+      </Link>
+
+      <RemindersBanner />
+
       <p className="home-note">
-        Faz 7: Excel içe/dışa aktarma, offline çalışma ve PWA hazır. Faz 8
-        (hızlı giriş ekranı, hatırlatmalar) sırada.
+        Faz 8: hızlı giriş ekranı ve hatırlatmalar hazır. Roadmap'teki tüm
+        fazlar (1-8) tamamlandı.
       </p>
 
       <div className="module-grid">

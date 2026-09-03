@@ -9,6 +9,7 @@ import {
   updateTransaction,
 } from '../lib/firestoreTransactions'
 import { computeTransaction, monthKeyOf } from '../domain/transactions'
+import { findDuplicateTransaction } from '../domain/duplicates'
 import type { Currency, Transaction, TransactionDraft } from '../domain/types'
 
 function todayIso(): string {
@@ -124,6 +125,15 @@ export function ExpensesPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
+    if (!editingId) {
+      const duplicate = findDuplicateTransaction(formToDraft(form), transactions)
+      if (duplicate) {
+        const label = duplicate.description || duplicate.category
+        if (!window.confirm(`${form.date} tarihinde, aynı tutar ve kategoride "${label}" adlı bir kayıt zaten var. Yine de kaydedilsin mi?`)) {
+          return
+        }
+      }
+    }
     setSaving(true)
     try {
       if (editingId) {
