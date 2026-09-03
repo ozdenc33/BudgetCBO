@@ -10,10 +10,16 @@ import { computeTransaction } from './transactions'
 import { computeIncome } from './incomes'
 import { computeTransfer } from './transfers'
 
-// Hesaplar sayfasinin birebir karsiligi: her hesap icin
-// Bakiye = Baslangic + Gelirler - Harcamalar - Transfer Cikis + Transfer Giris.
+// Hesaplar sayfasinin karsiligi: her hesap icin
+// Bakiye = Gelirler - Harcamalar - Transfer Cikis + Transfer Giris.
 // Excel'deki SUMIFS gibi, dogrulama (Kontrol) durumuna bakilmaksizin
 // tutari olan her kayit toplama girer.
+//
+// NOT (Excel'den sapma, kullanici istegiyle): Excel'de bu formulun basinda
+// bir "Baslangic" sutunu vardi. Kaldirildi; acilis bakiyesi artik normal
+// bir gelir kaydi olarak girilir (uygulamayi kullanmaya baslamadan onceki
+// bir tarihle). Sonuc bakiye ayni, ancak o kayit girildigi ayin gelir
+// raporlarinda da gorunur.
 
 function sumEUR<T>(items: T[], matches: (item: T) => boolean, amountEUR: (item: T) => number | undefined): number {
   return items.filter(matches).reduce((sum, item) => sum + (amountEUR(item) ?? 0), 0)
@@ -51,8 +57,7 @@ export function computeAccountBalances(
       (t) => t.toAccount === account.name,
       (t) => t.amountEUR,
     )
-    const balanceEUR =
-      account.startingBalanceEUR + incomesEUR - expensesEUR - transfersOutEUR + transfersInEUR
+    const balanceEUR = incomesEUR - expensesEUR - transfersOutEUR + transfersInEUR
 
     return { account, incomesEUR, expensesEUR, transfersOutEUR, transfersInEUR, balanceEUR }
   })

@@ -11,7 +11,7 @@ import {
   computeMonthSummary,
   computeMonthlyProgress,
 } from '../domain/dashboard'
-import { CategoryBars, MonthlyColumns } from '../components/charts'
+import { CategoryBars, MonthlyColumns, NetTrend } from '../components/charts'
 
 function todayMonthKey(): string {
   return new Date().toISOString().slice(0, 7)
@@ -219,6 +219,14 @@ export function DashboardPage() {
               label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
               a: row.totalEUR,
               b: row.incomeEUR,
+            }))}
+          />
+          <p className="chart-note">Net (gelir − harcama) trendi</p>
+          <NetTrend
+            rows={progress.slice(-12).map((row) => ({
+              key: row.monthKey,
+              label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
+              net: row.netEUR,
             }))}
           />
           <div className="table-scroll">

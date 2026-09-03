@@ -7,8 +7,10 @@ import {
   deleteTransaction,
   updateTransaction,
 } from '../lib/firestoreTransactions'
-import { computeTransaction, monthKeyOf } from '../domain/transactions'
+import { computeTransaction } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
+import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
+import { TransactionFilters } from '../components/TransactionFilters'
 import type { Currency, Transaction, TransactionDraft } from '../domain/types'
 
 function todayIso(): string {
@@ -101,7 +103,9 @@ export function ExpensesPage() {
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [month, setMonth] = useState(() => todayIso().slice(0, 7))
+  const [filter, setFilter] = useState<TransactionFilter>(() => ({
+    monthKey: todayIso().slice(0, 7),
+  }))
   const [saving, setSaving] = useState(false)
 
   const preview = useMemo(
@@ -109,12 +113,12 @@ export function ExpensesPage() {
     [form, settings],
   )
 
-  const monthTransactions = useMemo(() => {
-    return transactions
-      .filter((t) => monthKeyOf(t.date) === month)
-      .map((t) => computeTransaction(t, settings))
-      .sort((a, b) => a.date.localeCompare(b.date))
-  }, [transactions, settings, month])
+  const visibleTransactions = useMemo(() => {
+    const computed = transactions.map((t) => computeTransaction(t, settings))
+    return filterTransactions(computed, filter).sort((a, b) => b.date.localeCompare(a.date))
+  }, [transactions, settings, filter])
+
+  const visibleTotalEUR = useMemo(() => sumFilteredEUR(visibleTransactions), [visibleTransactions])
 
   const canSubmit =
     form.category !== '' &&
@@ -152,6 +156,14 @@ export function ExpensesPage() {
     setEditingId(tx.id)
     setFormOpen(true)
     setForm(transactionToForm(tx))
+  }
+
+  // "Tekrarla": ayni kayittan bugune yenisini hazirlar (kaydetmez, form
+  // acilir ki tutari degistirebilesin).
+  function repeat(tx: Transaction) {
+    setEditingId(null)
+    setFormOpen(true)
+    setForm({ ...transactionToForm(tx), date: todayIso() })
   }
 
   function cancelEdit() {
@@ -323,20 +335,21 @@ export function ExpensesPage() {
       </form>
       </details>
 
-      <div className="expenses-list-header">
-        <label>
-          Ay
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
-        </label>
-      </div>
+      <TransactionFilters
+        filter={filter}
+        onChange={setFilter}
+        settings={settings}
+        resultCount={visibleTransactions.length}
+        resultTotalEUR={visibleTotalEUR}
+      />
 
       {txLoading ? (
         <p>Yükleniyor...</p>
-      ) : monthTransactions.length === 0 ? (
-        <p className="expenses-empty">Bu ayda henüz harcama yok.</p>
+      ) : visibleTransactions.length === 0 ? (
+        <p className="expenses-empty">Bu filtreye uyan kayıt yok.</p>
       ) : (
         <ul className="expenses-list">
-          {monthTransactions.map((t) => (
+          {visibleTransactions.map((t) => (
             <li key={t.id} className="expense-row">
               <div className="expense-row-main">
                 <span className="expense-row-date">{t.date}</span>
@@ -359,6 +372,7 @@ export function ExpensesPage() {
               </div>
               <div className="expense-row-actions">
                 <button onClick={() => startEdit(t)}>Düzenle</button>
+                <button onClick={() => repeat(t)}>Tekrarla</button>
                 <button onClick={() => handleDelete(t.id)}>Sil</button>
               </div>
             </li>

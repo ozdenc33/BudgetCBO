@@ -58,7 +58,6 @@ export function BalancesPage() {
             </div>
             <div className="balance-row-meta">
               <span>{b.account.owner}</span>
-              <span>Başlangıç {formatEUR(b.account.startingBalanceEUR)} €</span>
               <span>Gelir +{formatEUR(b.incomesEUR)} €</span>
               <span>Harcama -{formatEUR(b.expensesEUR)} €</span>
               <span>Transfer çıkış -{formatEUR(b.transfersOutEUR)} €</span>

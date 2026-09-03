@@ -68,6 +68,79 @@ function columnPath(x: number, yTop: number, w: number, yBase: number): string {
 }
 
 /**
+ * Net trend cizgisi: tek seri (gelir - harcama), sifir cizgisi vurgulu.
+ * Tek seri oldugu icin lejant yok; son noktanin degeri dogrudan yazilir.
+ */
+export function NetTrend({ rows }: { rows: { key: string; label: string; net: number }[] }) {
+  if (rows.length < 2) return null
+
+  const W = 420
+  const H = 160
+  const ML = 42
+  const MR = 10
+  const MT = 14
+  const MB = 26
+  const plotW = W - ML - MR
+  const plotH = H - MT - MB
+
+  const values = rows.map((r) => r.net)
+  const rawMax = Math.max(...values, 0)
+  const rawMin = Math.min(...values, 0)
+  const span = Math.max(rawMax - rawMin, 1)
+  const pad = span * 0.12
+  const top = rawMax + pad
+  const bottom = rawMin - pad
+
+  const x = (i: number) => ML + (plotW / Math.max(rows.length - 1, 1)) * i
+  const y = (v: number) => MT + plotH - ((v - bottom) / (top - bottom)) * plotH
+
+  const path = rows.map((r, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(r.net)}`).join(' ')
+  const last = rows[rows.length - 1]
+
+  return (
+    <div className="chart-block">
+      <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Aylık net trend grafiği">
+        {/* Sifir cizgisi: artiyi eksiden ayiran esik */}
+        <line className="chart-axis" x1={ML} x2={W - MR} y1={y(0)} y2={y(0)} />
+        <text className="chart-tick" x={ML - 8} y={y(0) + 4} textAnchor="end">
+          0
+        </text>
+
+        <path className="chart-line" d={path} />
+
+        {rows.map((r, i) => (
+          <circle
+            key={r.key}
+            className={r.net < 0 ? 'chart-dot chart-dot--negative' : 'chart-dot'}
+            cx={x(i)}
+            cy={y(r.net)}
+            r="4"
+          >
+            <title>{`${r.label}: ${fmtEUR(r.net)} €`}</title>
+          </circle>
+        ))}
+
+        {/* Dogrudan etiket yalnizca son noktada */}
+        <text
+          className="chart-value"
+          x={x(rows.length - 1)}
+          y={y(last.net) + (last.net < 0 ? 16 : -10)}
+          textAnchor="end"
+        >
+          {fmtAxis(last.net)}
+        </text>
+
+        {rows.map((r, i) => (
+          <text key={r.key} className="chart-tick" x={x(i)} y={H - 8} textAnchor="middle">
+            {r.label}
+          </text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+/**
  * Gruplu sutun: iki seri (harcama ve gelir). Ikisi de EUR oldugu icin
  * tek eksen kullanilir (cift eksen yanilticidir). Lejant her zaman var;
  * dogrudan etiket yalnizca son ayda, kalabalik olmasin diye.

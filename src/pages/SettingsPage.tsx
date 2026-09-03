@@ -82,7 +82,6 @@ function AccountsSection({ draft, onSave }: SectionProps) {
       name: name.trim(),
       currency,
       owner,
-      startingBalanceEUR: 0,
     }
     onSave({ ...draft, accounts: [...draft.accounts, account] })
     setName('')
@@ -90,15 +89,6 @@ function AccountsSection({ draft, onSave }: SectionProps) {
 
   function removeAccount(id: string) {
     onSave({ ...draft, accounts: draft.accounts.filter((a) => a.id !== id) })
-  }
-
-  function setStartingBalance(id: string, value: number) {
-    onSave({
-      ...draft,
-      accounts: draft.accounts.map((a) =>
-        a.id === id ? { ...a, startingBalanceEUR: value } : a,
-      ),
-    })
   }
 
   return (
@@ -113,17 +103,6 @@ function AccountsSection({ draft, onSave }: SectionProps) {
                 {a.currency} · {a.owner}
               </span>
             </span>
-            <label className="settings-field">
-              <span className="settings-field-label">Başlangıç bakiyesi €</span>
-              <input
-                className="settings-list-inline-input"
-                type="number"
-                step="0.01"
-                key={a.startingBalanceEUR}
-                defaultValue={a.startingBalanceEUR}
-                onBlur={(e) => setStartingBalance(a.id, Number(e.target.value) || 0)}
-              />
-            </label>
             <button onClick={() => removeAccount(a.id)} aria-label={`${a.name} sil`}>
               Sil
             </button>
@@ -131,8 +110,8 @@ function AccountsSection({ draft, onSave }: SectionProps) {
         ))}
       </ul>
       <p className="settings-note">
-        Başlangıç bakiyesi: uygulamayı kullanmaya başlamadan önceki bakiye. Hesap Bakiyeleri
-        sayfasındaki toplama eklenir.
+        Bir hesabın açılış bakiyesini Gelirler sayfasından, uygulamayı kullanmaya başladığın
+        tarihten önceki bir günle gelir olarak gir.
       </p>
       <form className="settings-add-form" onSubmit={addAccount}>
         <input

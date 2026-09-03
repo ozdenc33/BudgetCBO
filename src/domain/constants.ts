@@ -8,14 +8,14 @@ import type { Account, Category, IncomeSource, Settings } from './types'
 // Ayarlar ekranindan ekleyip cikarabilir.
 
 export const DEFAULT_ACCOUNTS: Account[] = [
-  { id: 'can-de-girokonto', name: 'Can-DE Girokonto', currency: 'EUR', owner: 'Can', startingBalanceEUR: 0 },
-  { id: 'can-tr-banka', name: 'Can-TR Banka', currency: 'TRY', owner: 'Can', startingBalanceEUR: 0 },
-  { id: 'can-tasarruf', name: 'Can-Tasarruf', currency: 'EUR', owner: 'Can', startingBalanceEUR: 0 },
-  { id: 'can-nakit', name: 'Can-Nakit', currency: 'EUR', owner: 'Can', startingBalanceEUR: 0 },
-  { id: 'tugce-de-girokonto', name: 'Tuğçe-DE Girokonto', currency: 'EUR', owner: 'Tuğçe', startingBalanceEUR: 0 },
-  { id: 'tugce-tasarruf', name: 'Tuğçe-Tasarruf', currency: 'EUR', owner: 'Tuğçe', startingBalanceEUR: 0 },
-  { id: 'tugce-nakit', name: 'Tuğçe-Nakit', currency: 'EUR', owner: 'Tuğçe', startingBalanceEUR: 0 },
-  { id: 'ortak-kasa', name: 'Ortak Kasa', currency: 'EUR', owner: 'Ortak Kasa', startingBalanceEUR: 0 },
+  { id: 'can-de-girokonto', name: 'Can-DE Girokonto', currency: 'EUR', owner: 'Can' },
+  { id: 'can-tr-banka', name: 'Can-TR Banka', currency: 'TRY', owner: 'Can' },
+  { id: 'can-tasarruf', name: 'Can-Tasarruf', currency: 'EUR', owner: 'Can' },
+  { id: 'can-nakit', name: 'Can-Nakit', currency: 'EUR', owner: 'Can' },
+  { id: 'tugce-de-girokonto', name: 'Tuğçe-DE Girokonto', currency: 'EUR', owner: 'Tuğçe' },
+  { id: 'tugce-tasarruf', name: 'Tuğçe-Tasarruf', currency: 'EUR', owner: 'Tuğçe' },
+  { id: 'tugce-nakit', name: 'Tuğçe-Nakit', currency: 'EUR', owner: 'Tuğçe' },
+  { id: 'ortak-kasa', name: 'Ortak Kasa', currency: 'EUR', owner: 'Ortak Kasa' },
 ]
 
 export const DEFAULT_CATEGORIES: Category[] = [

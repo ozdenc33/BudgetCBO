@@ -187,6 +187,48 @@ push bildirimleri (yukarıda açıklandığı gibi).
   değiştirilirken uyarı şeridi + tek seferlik onay (`src/lib/currentPerson.ts`).
 - Arayüzdeki "Faz 2 / Faz 3..." etiketleri ve gereksiz uzun notlar temizlendi.
 
+**Filtreler, kişi özeti ve gerçek kullanım simülasyonu:**
+
+- **Başlangıç bakiyesi kaldırıldı (Excel'den bilinçli sapma).** Excel'de
+  Hesaplar formülü `Bakiye = Başlangıç + Gelirler − Harcamalar − Transfer
+  Çıkış + Transfer Giriş` şeklindeydi. `Başlangıç` sütunu tamamen
+  kaldırıldı; açılış bakiyesi artık uygulamayı kullanmaya başlamadan
+  önceki bir tarihle **normal gelir kaydı** olarak girilir. Bakiye sonucu
+  aynı kalır. **Değişen tek şey:** o kayıt, girildiği ayın gelir
+  raporlarında da görünür (bu yüzden kullanıma başlamadan önceki bir aya
+  tarihlemek gerekir). Ay Panosu'ndaki "Ortak Kasa bakiye farkı" kontrolü
+  de buna göre güncellendi (artık hesabın kendi gelirlerini de sayar).
+- **Filtreler** (`src/domain/filters.ts` + `TransactionFilters`):
+  serbest metin araması (açıklama, kategori, hesap, etiket, not — Türkçe
+  İ/ı duyarlı), ay, kategori, hesap, bütçe tipi ve tutar aralığı. Başlıkta
+  "N kayıt · X €" özeti. Kayıt sayısı büyüdükçe liste kullanılabilir kalsın
+  diye eklendi.
+- **Ortak / Can / Tuğçe özeti** (`src/domain/personSummary.ts`): ana
+  sayfada kapsam seçici. Kişi kapsamında harcama = o kişinin payı
+  (Islemler'deki "Can Payı"/"Tuğçe Payı" kolonlarının toplamı), gelir =
+  o kişiye ait gelirler. Yeni iş kuralı yok; test: iki kişinin payı
+  toplamı ortak toplama eşit.
+- **Haftalık özet**: bu hafta (Pazartesi–bugün) harcaması ve geçen haftayla
+  farkı.
+- **Limit uyarıları** (`src/domain/budgetAlerts.ts`): bütçe tipi limitinin
+  %80'ine gelince "yaklaşıldı", aşılınca "aşıldı". Ayrıca **eksiye düşen
+  hesap uyarısı** (özellikle Ortak Kasa).
+- **Tekrarla düğmesi**: bir kaydı bugüne kopyalar (form açılır, tutar
+  değiştirilebilir).
+- **Net trend grafiği**: aylık gelir−harcama çizgisi, sıfır çizgisi vurgulu.
+- **Hızlı girişte tarih**, kısayollarda Hesaplar.
+
+**Gerçek kullanım simülasyonu** (2 aylık, 82 harcama + gelir/transfer/sabit
+gider/hedef ile emülatörde uçtan uca): sayılar tutarlı çıktı — bütçe tipi
+toplamı = kategori kırılımı toplamı = Ay Özeti toplam harcaması (1.479,54 €),
+Can payı + Tuğçe payı = ortak toplam, katkı özeti kontrolü 0,00 €. Hızlı
+giriş 3 dokunuş. Simülasyonun ortaya çıkardığı ve düzeltilen iki sorun:
+(1) limit uyarıları yalnızca "Ortak" kapsamında görünüyordu, yani kendi
+hesabıyla giren kişi ev limitlerini hiç görmüyordu — artık her kapsamda
+görünüyor; (2) ana sayfada uyarı/hatırlatma şeritleri özet kartının önüne
+yığılıyordu — özet kartı en üste alındı, hatırlatmalar 2 ve limit uyarıları
+3 ile sınırlandı, kalanı "+N daha" satırında toplanıyor.
+
 Tema tercihi `localStorage`'da cihaza özel tutulur (`src/lib/localPrefs.ts`,
 `butce.theme` anahtarı — Firestore'a yazılmaz). `index.html` içindeki küçük
 başlangıç script'i, React yüklenmeden önce doğru temayı `<html data-theme>`

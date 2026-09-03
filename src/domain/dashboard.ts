@@ -34,7 +34,7 @@ export function previousMonthKey(monthKey: string): string {
 
 // Ortak_Butce sayfasindaki gibi, bir kategorinin limiti sadece
 // Ortak-Ev / Ortak-Dışarı / Mike tipinde anlamlidir; Kişisel limitler
-// Faz 6'da Butce_Can/Butce_Tuğçe'den, Taşınma'nin limiti Excel'de de
+// Butce_Can/Butce_Tuğçe'den gelir, Taşınma'nin limiti Excel'de de
 // hep 0'dir (C12=0).
 function budgetTypeLimitEUR(budgetType: BudgetType, categories: Category[]): number {
   if (budgetType === 'Kişisel-Can' || budgetType === 'Kişisel-Tuğçe' || budgetType === 'Taşınma') {
@@ -253,11 +253,13 @@ export function computeControls(
   const katkiToplamiEUR = computedTransfers
     .filter((t) => t.type === 'Ortak Kasa Katkısı')
     .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
+  // Ortak Kasa bakiyesi, ona giren gelirler + katki transferleri eksi
+  // harcamalari kadar olmali. (Acilis bakiyesi de gelir olarak girildigi
+  // icin ortakKasa.incomesEUR burada hesaba katilir.)
   const ortakKasaDiff = ortakKasa
     ? Math.round(
         (ortakKasa.balanceEUR -
-          ortakKasa.account.startingBalanceEUR -
-          (katkiToplamiEUR - ortakKasa.expensesEUR)) *
+          (ortakKasa.incomesEUR + katkiToplamiEUR - ortakKasa.expensesEUR)) *
           100,
       ) / 100
     : 0

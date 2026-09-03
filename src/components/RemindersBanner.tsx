@@ -5,6 +5,8 @@ import { useTransactions } from '../hooks/useTransactions'
 import { useRecurring } from '../hooks/useRecurring'
 import { computeReminders } from '../domain/reminders'
 
+const MAX_VISIBLE = 2
+
 export function RemindersBanner() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
@@ -33,7 +35,9 @@ export function RemindersBanner() {
           <span>→</span>
         </Link>
       )}
-      {reminders.upcoming.map((r) => (
+      {/* Ana sayfa uyari yiginina donusmesin diye en yakin 2 odeme
+          gosterilir; kalanlar tek satirda ozetlenir. */}
+      {reminders.upcoming.slice(0, MAX_VISIBLE).map((r) => (
         <Link to="/sabit-giderler" className="reminder-card" key={r.id}>
           <span>
             <span className="reminder-card-title">{r.name}: </span>
@@ -42,6 +46,11 @@ export function RemindersBanner() {
           <span>→</span>
         </Link>
       ))}
+      {reminders.upcoming.length > MAX_VISIBLE && (
+        <Link to="/sabit-giderler" className="reminder-more">
+          +{reminders.upcoming.length - MAX_VISIBLE} yaklaşan ödeme daha
+        </Link>
+      )}
     </div>
   )
 }

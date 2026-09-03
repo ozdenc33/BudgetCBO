@@ -2057,6 +2057,216 @@ h1, h2, h3 {
   }
 }
 
+/* ---------- Kapsam secici (Ortak / Can / Tuğçe) ---------- */
+
+.scope-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-alt);
+  border-radius: 999px;
+}
+
+.scope-btn {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.scope-btn--active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* ---------- Butce limiti uyarilari ---------- */
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  color: var(--warning-text);
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+
+.alert-card strong {
+  color: var(--text);
+}
+
+.alert-pct {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Haftalik ozet ---------- */
+
+.panel-note {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.week-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.week-amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.week-delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.week-delta--up {
+  color: var(--negative);
+}
+
+.week-delta--down {
+  color: var(--positive);
+}
+
+/* ---------- Filtreler ---------- */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filters-top {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters-search {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.7rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.filters-search:focus {
+  border-color: var(--accent);
+}
+
+.filters-toggle {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.filters-toggle--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.filters-panel {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.filters-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.filters-panel input,
+.filters-panel select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.filters-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.filters-clear {
+  justify-self: start;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.filters-result {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Net trend cizgisi ---------- */
+
+.chart-line {
+  fill: none;
+  stroke: var(--chart-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-dot {
+  fill: var(--chart-1);
+  /* Yuzey rengi halka: cizgiyle kesistigi yerde okunur kalir */
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.chart-dot--negative {
+  fill: var(--negative);
+}
+
 /* ---------- Uyari notu ---------- */
 
 .warn-note {
@@ -2352,4 +2562,23 @@ h1, h2, h3 {
   .shortcut-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
+}
+
+.alert-card--danger {
+  background: rgba(var(--negative-rgb), 0.1);
+  border-color: rgba(var(--negative-rgb), 0.4);
+  color: var(--negative);
+}
+
+.reminder-more {
+  display: block;
+  padding: 0.4rem 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.reminder-more:hover {
+  color: var(--accent);
 }

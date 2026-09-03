@@ -28,7 +28,6 @@ export type Account = {
   currency: Currency
   owner: AccountOwner
   /** Hesaplar!Başlangıç (EUR). Girilmemisse 0 sayilir. */
-  startingBalanceEUR: number
 }
 
 export type Category = {
