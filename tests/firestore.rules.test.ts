@@ -5,7 +5,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 // firestore.rules dosyasinin gercekten dedigini yaptigini dogrular.
@@ -229,6 +229,54 @@ describe('atlanan sabit giderler', () => {
     await assertFails(
       setDoc(doc(db, 'recurringSkips/s2'), { recurringId: 'r1', monthKey: '2026-7' }),
     )
+  })
+})
+
+// Kurallar yayina alinmadan ONCE yazilmis kayitlar ne olacak?
+// Bu testler goc riskini kayit altina alir: okuma ve silme her zaman
+// calisir; DUZENLEME ise ancak kayit yeni semaya uyuyorsa calisir.
+describe('eski bicimli kayitlar (goc riski)', () => {
+  async function seedRaw(path: string, data: Record<string, unknown>) {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), path), data)
+    })
+  }
+
+  it('eksik alanli eski kayit OKUNABILIR', async () => {
+    await seedRaw('transactions/eski', { date: '2025-01-05', category: 'Market (Ev)' })
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertSucceeds(getDoc(doc(db, 'transactions/eski')))
+  })
+
+  it('eksik alanli eski kayit SILINEBILIR', async () => {
+    await seedRaw('transactions/eski2', { date: '2025-01-05', category: 'Market (Ev)' })
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertSucceeds(deleteDoc(doc(db, 'transactions/eski2')))
+  })
+
+  it('eksik alanli eski kayit DUZENLENEMEZ (kural reddeder)', async () => {
+    await seedRaw('transactions/eski3', { date: '2025-01-05', category: 'Market (Ev)' })
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertFails(updateDoc(doc(db, 'transactions/eski3'), { description: 'yeni' }))
+  })
+
+  it('duzenleme sirasinda eksik alanlar tamamlanirsa KABUL EDILIR', async () => {
+    await seedRaw('transactions/eski4', { date: '2025-01-05', category: 'Market (Ev)' })
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertSucceeds(
+      updateDoc(doc(db, 'transactions/eski4'), {
+        amount: 12.5,
+        currency: 'EUR',
+        account: 'Ortak Kasa',
+      }),
+    )
+  })
+
+  it('uygulamanin kendi yazdigi kayitlar yeni semaya zaten uyuyor', async () => {
+    // Formlarin urettigi TransactionDraft'in birebir sekli.
+    await seedRaw('transactions/normal', validTransaction)
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertSucceeds(updateDoc(doc(db, 'transactions/normal'), { description: 'guncellendi' }))
   })
 })
 

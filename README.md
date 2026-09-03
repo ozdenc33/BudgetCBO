@@ -42,7 +42,9 @@ npm run lint          # ESLint
 npm run format        # Prettier
 npm test              # birim testleri (vitest)
 npm run test:rules    # Firestore kural testleri (emulator + Java gerektirir)
-npm run deploy        # build + firebase deploy
+npm run deploy        # build + tumunu yayinla (hosting + kurallar)
+npm run deploy:rules  # yalnizca firestore.rules
+npm run deploy:hosting # yalnizca uygulama (build + hosting)
 ```
 
 ## Kurulum
@@ -97,12 +99,34 @@ bölüm 8).
 ### 5. Yayına alma (deploy)
 
 ```bash
-npx firebase login
-npx firebase deploy
+npx firebase login          # tarayici acar, bir kez yeterli
+npm run test:rules          # kurallari emulatorde dogrula
+npm run deploy:rules        # once kurallar
+npm run deploy:hosting      # sonra uygulama
 ```
 
-Bu komut hem `firestore.rules`'u hem de `npm run build` çıktısını
-(Firebase Hosting) yayınlar.
+`npm run deploy` ikisini tek adımda yapar. Sıra önemli değil ama kuralları
+önce yayınlamak, yeni uygulamanın eski (gevşek) kurallarla çalıştığı bir
+aralık bırakmaz.
+
+**`.env` derleme anında okunur.** Vite `VITE_*` değişkenlerini paketin
+içine gömer, yani `npm run build`'i çalıştırdığınız makinede gerçek
+`.env` dosyası bulunmalıdır. `.env` git'e girmez.
+
+#### Kural şeması ve eski kayıtlar
+
+`firestore.rules` alan tiplerini doğrular. Bunun mevcut verilere etkisi
+`tests/firestore.rules.test.ts` içinde ölçülmüştür:
+
+| Eski, eksik alanlı bir kayıt | Sonuç                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------- |
+| Okuma                        | Çalışır                                                                   |
+| Silme                        | Çalışır                                                                   |
+| Düzenleme                    | **Reddedilir** (eksik alanlar aynı düzenlemede doldurulursa kabul edilir) |
+
+Uygulamanın kendi formlarının ve Excel içe aktarmasının ürettiği kayıtlar
+yeni şemaya zaten uyar; eksik alanlı bir kayıt varsa listede "Eksik alan"
+doğrulamasıyla zaten işaretli görünür.
 
 ## Teknik notlar
 
