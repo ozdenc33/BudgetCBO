@@ -25,6 +25,20 @@ function currentMonthKey(today: Date): string {
 export type Reminders = {
   upcoming: ComputedRecurringItem[]
   unconfirmedNearMonthEnd: ComputedRecurringItem[]
+  /**
+   * Odeme gunu gecmis ama bu ay hala girilmemis kalemler. Onceden
+   * yalnizca ay sonuna 5 gun kala uyariliyordu; oysa ayin 1'inde odenmesi
+   * gereken kira ayin 10'unda hala girilmemisse bunu ay sonunu beklemeden
+   * bilmek gerekir.
+   */
+  overdue: ComputedRecurringItem[]
+}
+
+/** Kalemin bu ayki odeme gunu (ayin kaci). */
+function dueDayOfMonth(item: ComputedRecurringItem): number | undefined {
+  if (!item.firstPaymentDate) return undefined
+  const day = Number(item.firstPaymentDate.slice(8, 10))
+  return Number.isFinite(day) ? day : undefined
 }
 
 export function computeReminders(
@@ -45,5 +59,13 @@ export function computeReminders(
       ? computed.filter((r) => r.monthStatus === 'eksik')
       : []
 
-  return { upcoming, unconfirmedNearMonthEnd }
+  const overdue = computed
+    .filter((r) => {
+      if (r.monthStatus !== 'eksik') return false
+      const due = dueDayOfMonth(r)
+      return due != null && due <= today.getDate()
+    })
+    .sort((a, b) => (dueDayOfMonth(a) ?? 0) - (dueDayOfMonth(b) ?? 0))
+
+  return { upcoming, unconfirmedNearMonthEnd, overdue }
 }

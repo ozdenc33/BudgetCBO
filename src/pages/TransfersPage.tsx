@@ -4,6 +4,8 @@ import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useSettings } from '../hooks/useSettings'
 import { useTransfers } from '../hooks/useTransfers'
 import { useGoals } from '../hooks/useGoals'
+import { personForEmail } from '../lib/currentPerson'
+import { useAuth } from '../auth/AuthContext'
 import { addTransfer, deleteTransfer, updateTransfer } from '../lib/firestoreTransfers'
 import { computeTransfer } from '../domain/transfers'
 import { monthKeyOf } from '../domain/rate'
@@ -87,6 +89,8 @@ export function TransfersPage() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transfers, loading: transfersLoading } = useTransfers()
   const { goals } = useGoals()
+  const { user } = useAuth()
+  const currentPerson = personForEmail(user?.email)
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -127,6 +131,22 @@ export function TransfersPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
+
+    // Baskasinin hesabina para aktarirken onay iste (iki yonlu: Can
+    // Tugce'nin hesabina, Tugce Can'in hesabina).
+    const target = settings.accounts.find((a) => a.name === form.toAccount)
+    if (
+      currentPerson &&
+      target &&
+      target.owner !== 'Ortak Kasa' &&
+      target.owner !== currentPerson
+    ) {
+      const ok = window.confirm(
+        `"${form.toAccount}" hesabı ${target.owner} adına. ${currentPerson} olarak bu hesaba ${form.amount} ${form.currency} aktarmak üzeresin. Devam edilsin mi?`,
+      )
+      if (!ok) return
+    }
+
     setSaving(true)
     try {
       if (editingId) {

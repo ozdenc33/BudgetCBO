@@ -254,6 +254,29 @@ yığılıyordu — özet kartı en üste alındı, hatırlatmalar 2 ve limit uy
 - Ana sayfa metni: "Bu ay Can payı" yerine "Can bu ay ne harcadı",
   başlıkta "Eylül 2026 · Can'in payı".
 
+**Hesap hareketleri, tasarruf kırılımı, gecikmiş sabit gider uyarısı:**
+
+- **Hesap hareketleri** (`/hesaplar/:accountId`): Hesap Bakiyeleri'nde bir
+  hesaba tıklayınca o hesabın ekstresi açılır — tüm harcama, gelir ve
+  transfer hareketleri, yürütülen bakiyeyle birlikte, ay filtresiyle.
+  `src/domain/accountLedger.ts`; yeni iş kuralı yok, Hesap Bakiyeleri'ndeki
+  toplamların hangi kayıtlardan oluştuğunu satır satır gösterir (test:
+  son yürütülen bakiye = Hesap Bakiyeleri'ndeki bakiye).
+- **Tasarruf hesabında "bu para ne için?" kırılımı**: hesaba gelen Tasarruf
+  transferleri hedefe ve **parayı gönderen kişiye** göre kırılır (ör.
+  Can-Tasarruf 950 € = Acil Durum Fonu 650 € [Can 400 + Tuğçe 250] +
+  Kamera Lens 300 € [Can 300]). Hedefe atanmamış bakiye ayrıca gösterilir.
+  **Not:** her hedef için ayrı hesap açmak yerine bu yol seçildi — hesap
+  sayısı şişmez, bakiyeler tek yerde kalır, ama "hangi para ne için ve kim
+  koydu" sorusu yine cevaplanır.
+- **Gecikmiş sabit gider uyarısı**: önceden yalnızca ay sonuna 5 gün kala
+  uyarılıyordu; artık ödeme günü geçmiş ama o ay hâlâ girilmemiş kalemler
+  ay sonunu beklemeden ana sayfada kırmızı şeritle görünür
+  (`reminders.ts` → `overdue`).
+- **Başkasının hesabına transferde onay**: Can, Tuğçe'nin hesabına (veya
+  tersi) para aktarırken "bu hesap X adına, devam edilsin mi?" onayı
+  çıkar. Ortak Kasa'ya aktarımda çıkmaz.
+
 Tema tercihi `localStorage`'da cihaza özel tutulur (`src/lib/localPrefs.ts`,
 `butce.theme` anahtarı — Firestore'a yazılmaz). `index.html` içindeki küçük
 başlangıç script'i, React yüklenmeden önce doğru temayı `<html data-theme>`

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -46,6 +47,7 @@ export function BalancesPage() {
       <ul className="balances-list">
         {balances.map((b) => (
           <li key={b.account.id} className="balance-row">
+            <Link to={`/hesaplar/${b.account.id}`} className="balance-row-link">
             <div className="balance-row-main">
               <span className="balance-row-name">{b.account.name}</span>
               <span
@@ -62,7 +64,9 @@ export function BalancesPage() {
               <span>Harcama -{formatEUR(b.expensesEUR)} €</span>
               <span>Transfer çıkış -{formatEUR(b.transfersOutEUR)} €</span>
               <span>Transfer giriş +{formatEUR(b.transfersInEUR)} €</span>
+              <span className="balance-row-more">Hareketler →</span>
             </div>
+            </Link>
           </li>
         ))}
       </ul>

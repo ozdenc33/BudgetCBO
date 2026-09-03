@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { computeReminders } from './reminders'
 import { DEFAULT_SETTINGS } from './constants'
-import type { RecurringItem } from './types'
+import type { RecurringItem, Transaction } from './types'
 
 function item(partial: Partial<RecurringItem>): RecurringItem {
   return {
@@ -57,5 +57,50 @@ describe('computeReminders — ay sonunda onaylanmamis taslaklar', () => {
     ]
     const { unconfirmedNearMonthEnd } = computeReminders([girildi], transactions, DEFAULT_SETTINGS, today)
     expect(unconfirmedNearMonthEnd).toHaveLength(0)
+  })
+})
+
+describe('computeReminders — gecikmis (odeme gunu gecmis, hala girilmemis)', () => {
+  const kira = (over: Partial<RecurringItem> = {}): RecurringItem => ({
+    id: 'r1',
+    name: 'Kira',
+    budgetType: 'Ortak-Ev',
+    category: 'Kira (Kaltmiete)',
+    amount: 720,
+    frequencyMonths: 1,
+    account: 'Ortak Kasa',
+    firstPaymentDate: '2026-07-01',
+    active: true,
+    ...over,
+  })
+
+  it('ayin 1inde odenmesi gereken kalem ayin 10unda girilmemisse gecikmis sayilir', () => {
+    const r = computeReminders([kira()], [], DEFAULT_SETTINGS, new Date('2026-09-10T12:00:00'))
+    expect(r.overdue.map((x) => x.name)).toEqual(['Kira'])
+  })
+
+  it('odeme gunu henuz gelmediyse gecikmis sayilmaz', () => {
+    const r = computeReminders(
+      [kira({ firstPaymentDate: '2026-07-20' })],
+      [],
+      DEFAULT_SETTINGS,
+      new Date('2026-09-10T12:00:00'),
+    )
+    expect(r.overdue).toEqual([])
+  })
+
+  it('o ay girildiyse gecikmis sayilmaz', () => {
+    const entered: Transaction[] = [
+      { id: 't1', date: '2026-09-01', description: 'Kira', category: 'Kira (Kaltmiete)', amount: 720, currency: 'EUR', account: 'Ortak Kasa' },
+    ]
+    const r = computeReminders([kira()], entered, DEFAULT_SETTINGS, new Date('2026-09-10T12:00:00'))
+    expect(r.overdue).toEqual([])
+  })
+
+  it('ay sonu beklenmez: ayin 10unda da uyarir (eski davranista bos kalirdi)', () => {
+    const today = new Date('2026-09-10T12:00:00')
+    const r = computeReminders([kira()], [], DEFAULT_SETTINGS, today)
+    expect(r.unconfirmedNearMonthEnd).toEqual([])
+    expect(r.overdue.length).toBe(1)
   })
 })

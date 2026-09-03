@@ -9,6 +9,7 @@ import { ExpensesPage } from './pages/ExpensesPage'
 import { IncomesPage } from './pages/IncomesPage'
 import { TransfersPage } from './pages/TransfersPage'
 import { BalancesPage } from './pages/BalancesPage'
+import { AccountDetailPage } from './pages/AccountDetailPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { RecurringPage } from './pages/RecurringPage'
 import { GoalsPage } from './pages/GoalsPage'
@@ -88,6 +89,14 @@ export function App() {
           element={
             <Shell title="Hesap Bakiyeleri" subtitle="Bakiyeler ve katkı özeti">
               <BalancesPage />
+            </Shell>
+          }
+        />
+        <Route
+          path="/hesaplar/:accountId"
+          element={
+            <Shell title="Hesap Hareketleri" subtitle="Tüm giriş ve çıkışlar">
+              <AccountDetailPage />
             </Shell>
           }
         />

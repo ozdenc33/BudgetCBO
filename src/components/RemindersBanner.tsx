@@ -20,12 +20,33 @@ export function RemindersBanner() {
     [loading, recurring, transactions, settings, today],
   )
 
-  if (!reminders || (reminders.upcoming.length === 0 && reminders.unconfirmedNearMonthEnd.length === 0)) {
+  if (
+    !reminders ||
+    (reminders.upcoming.length === 0 &&
+      reminders.unconfirmedNearMonthEnd.length === 0 &&
+      reminders.overdue.length === 0)
+  ) {
     return null
   }
 
   return (
     <div className="reminders-banner">
+      {/* Odeme gunu gecmis ama girilmemis kalemler: ay sonu beklenmeden
+          uyarilir, en ustte ve belirgin renkte. */}
+      {reminders.overdue.slice(0, MAX_VISIBLE).map((r) => (
+        <Link to="/sabit-giderler" className="reminder-card reminder-card--overdue" key={`od-${r.id}`}>
+          <span>
+            <span className="reminder-card-title">{r.name}: </span>
+            ödeme günü geçti, bu ay hâlâ girilmedi
+          </span>
+          <span>→</span>
+        </Link>
+      ))}
+      {reminders.overdue.length > MAX_VISIBLE && (
+        <Link to="/sabit-giderler" className="reminder-more">
+          +{reminders.overdue.length - MAX_VISIBLE} gecikmiş sabit gider daha
+        </Link>
+      )}
       {reminders.unconfirmedNearMonthEnd.length > 0 && (
         <Link to="/sabit-giderler" className="reminder-card">
           <span>
