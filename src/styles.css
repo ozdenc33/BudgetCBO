@@ -1,12 +1,73 @@
+/*
+ * Tema degiskenleri. Varsayilan (:root) acik tema; [data-theme='dark']
+ * koyu temayi ustune yazar. Tema secimi src/hooks/useTheme.ts tarafindan
+ * <html data-theme="..."> olarak uygulanir ve index.html'deki kucuk
+ * script sayfa boyanmadan once ayni degeri yazarak "yanlis temayla an
+ * icin gorunme" (FOUC) sorununu onler.
+ *
+ * Koyu temada saf siyah yerine antrasit (sicak, mavimsi olmayan gri-siyah)
+ * kullanilir; parlak/neon tonlardan kaciniliyor. Renk ciftleri WCAG AA
+ * (metin icin >=4.5:1) hedefiyle secildi.
+ */
+
 :root {
-  color-scheme: dark;
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --border: #334155;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
+  color-scheme: light;
+
+  --bg: #f6f4f0;
+  --surface: #ffffff;
+  --surface-alt: #efe9de;
+  --surface-hover: #e6ded0;
+  --border: #cabfae;
+  --border-subtle: #e3dcce;
+  --text: #221f1a;
+  --text-muted: #6f6656;
+
+  --accent: #c3781f;
+  --accent-strong: #a3630f;
+  --accent-rgb: 195, 120, 31;
+  --on-accent: #221f1a;
+
+  --positive: #166a3f;
+  --positive-rgb: 22, 106, 63;
+  --negative: #a3231b;
+  --negative-rgb: 163, 35, 27;
+
+  --warning-bg: #fdf1d6;
+  --warning-border: #e8c874;
+  --warning-text: #6b4d05;
+
+  --shadow-sm: 0 1px 2px rgba(40, 32, 16, 0.06), 0 1px 1px rgba(40, 32, 16, 0.04);
+
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #181715;
+  --surface: #232120;
+  --surface-alt: #2b2925;
+  --surface-hover: #332f2a;
+  --border: #4d4840;
+  --border-subtle: #322f2b;
+  --text: #f0ece3;
+  --text-muted: #a89e8d;
+
+  --accent: #e0a94f;
+  --accent-strong: #eebb6c;
+  --accent-rgb: 224, 169, 79;
+  --on-accent: #1b1310;
+
+  --positive: #7bc99a;
+  --positive-rgb: 123, 201, 154;
+  --negative: #e8968d;
+  --negative-rgb: 232, 150, 141;
+
+  --warning-bg: rgba(224, 169, 79, 0.14);
+  --warning-border: rgba(224, 169, 79, 0.4);
+  --warning-text: #e0a94f;
+
+  --shadow-sm: none;
 }
 
 * {
@@ -18,10 +79,22 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 button {
   font: inherit;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Klavye ile gezinirken gorunur odak halkasi (renkten bagimsiz erisilebilirlik) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .page-loading {
@@ -29,6 +102,36 @@ button {
   place-items: center;
   min-height: 100dvh;
   color: var(--text-muted);
+}
+
+/* Ust cubuk: tema gecis dugmesi */
+
+.app-topbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.6rem 0.75rem 0;
+}
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-hover);
+}
+
+.theme-toggle:active {
+  transform: scale(0.92);
 }
 
 .auth-page {
@@ -48,6 +151,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .auth-card h1 {
@@ -76,7 +180,7 @@ button {
 .auth-card button {
   margin-top: 0.5rem;
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border: none;
   border-radius: 8px;
   padding: 0.75rem;
@@ -89,7 +193,7 @@ button {
 }
 
 .auth-error {
-  color: #f87171;
+  color: var(--negative);
   font-size: 0.85rem;
   margin: 0;
 }
@@ -132,7 +236,7 @@ button {
   display: block;
   margin: 0 0 1rem;
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   text-decoration: none;
   text-align: center;
   font-weight: 700;
@@ -164,6 +268,13 @@ button {
   min-height: 80px;
   color: inherit;
   text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.module-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
 }
 
 .module-card--soon {
@@ -238,7 +349,7 @@ button {
   align-items: center;
   gap: 0.6rem;
   padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
   background: var(--surface);
 }
 
@@ -297,7 +408,7 @@ button {
 
 .settings-add-form button {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border: none;
   border-radius: 8px;
   padding: 0.5rem 1rem;
@@ -381,13 +492,13 @@ button {
 }
 
 .expense-preview--ok {
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
+  background: rgba(var(--positive-rgb), 0.12);
+  color: var(--positive);
 }
 
 .expense-preview--error {
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
+  background: rgba(var(--negative-rgb), 0.12);
+  color: var(--negative);
 }
 
 .expense-form-actions {
@@ -405,7 +516,7 @@ button {
 
 .expense-form-actions button[type='submit'] {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   flex: 1;
 }
 
@@ -466,6 +577,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .expense-row-main {
@@ -494,11 +606,11 @@ button {
 }
 
 .expense-badge {
-  color: #f87171;
+  color: var(--negative);
 }
 
 .expense-badge--ok {
-  color: #4ade80;
+  color: var(--positive);
 }
 
 .expense-row-actions {
@@ -548,6 +660,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .balance-row-main {
@@ -557,11 +670,11 @@ button {
 }
 
 .balance-row-amount {
-  color: #4ade80;
+  color: var(--positive);
 }
 
 .balance-row-amount--negative {
-  color: #f87171;
+  color: var(--negative);
 }
 
 .balance-row-meta {
@@ -618,6 +731,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .summary-label {
@@ -631,11 +745,11 @@ button {
 }
 
 .summary-value--positive {
-  color: #4ade80;
+  color: var(--positive);
 }
 
 .summary-value--negative {
-  color: #f87171;
+  color: var(--negative);
 }
 
 .table-scroll {
@@ -655,7 +769,7 @@ button {
 .dashboard-table td {
   padding: 0.5rem 0.7rem;
   text-align: right;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .dashboard-table th:first-child,
@@ -670,6 +784,7 @@ button {
   color: var(--text-muted);
   font-weight: 600;
   background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
 .dashboard-table tbody tr:last-child td {
@@ -677,11 +792,11 @@ button {
 }
 
 .dashboard-table tr.row-current td {
-  background: rgba(56, 189, 248, 0.08);
+  background: rgba(var(--accent-rgb), 0.1);
 }
 
 .cell-negative {
-  color: #f87171;
+  color: var(--negative);
 }
 
 .controls-list {
@@ -700,7 +815,7 @@ button {
   gap: 0.75rem;
   padding: 0.6rem 0.85rem;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
   font-size: 0.85rem;
 }
 
@@ -709,13 +824,13 @@ button {
 }
 
 .control-badge {
-  color: #f87171;
+  color: var(--negative);
   font-size: 0.8rem;
   text-align: right;
 }
 
 .control-badge--ok {
-  color: #4ade80;
+  color: var(--positive);
 }
 
 /* Sabit giderler */
@@ -744,6 +859,7 @@ button {
   justify-content: space-between;
   align-items: center;
   gap: 0.6rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .draft-row-main {
@@ -778,7 +894,7 @@ button {
 
 .draft-row-actions button {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border: none;
   border-radius: 6px;
   padding: 0.4rem 0.7rem;
@@ -830,6 +946,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .goal-card-header {
@@ -850,7 +967,7 @@ button {
 .goal-progress-track {
   height: 8px;
   border-radius: 4px;
-  background: var(--bg);
+  background: var(--surface-alt);
   overflow: hidden;
 }
 
@@ -903,7 +1020,7 @@ button {
 
 .person-toggle-btn--active {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
@@ -913,8 +1030,9 @@ button {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: #78350f;
-  color: #fde68a;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-bottom: 1px solid var(--warning-border);
   text-align: center;
   padding: 0.5rem 1rem;
   font-size: 0.8rem;
@@ -948,7 +1066,7 @@ button {
   justify-content: space-between;
   padding: 0.5rem 0.85rem;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
   font-size: 0.85rem;
 }
 
@@ -964,7 +1082,7 @@ button {
 
 .import-export-actions button {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border: none;
   border-radius: 8px;
   padding: 0.7rem 1.2rem;
@@ -1055,14 +1173,14 @@ button {
 
 .chip--active {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border-color: var(--accent);
   font-weight: 600;
 }
 
 .quick-entry-submit {
   background: var(--accent);
-  color: #0f172a;
+  color: var(--on-accent);
   border: none;
   border-radius: 10px;
   padding: 1rem;
@@ -1084,12 +1202,12 @@ button {
 }
 
 .reminder-card {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
   border-radius: 10px;
   padding: 0.65rem 0.85rem;
   font-size: 0.85rem;
-  color: #fde68a;
+  color: var(--warning-text);
   display: flex;
   justify-content: space-between;
   align-items: center;

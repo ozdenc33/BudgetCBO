@@ -15,10 +15,14 @@ import { PersonalBudgetPage } from './pages/PersonalBudgetPage'
 import { ImportExportPage } from './pages/ImportExportPage'
 import { QuickEntryPage } from './pages/QuickEntryPage'
 import { OfflineBanner } from './components/OfflineBanner'
+import { ThemeToggle } from './components/ThemeToggle'
 
 export function App() {
   return (
     <AuthProvider>
+      <div className="app-topbar">
+        <ThemeToggle />
+      </div>
       <OfflineBanner />
       <Routes>
         <Route path="/giris" element={<LoginPage />} />

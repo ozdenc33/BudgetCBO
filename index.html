@@ -3,10 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#f6f4f0" />
     <link rel="icon" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <title>Ortak Bütçe</title>
+    <script>
+      // Tema, React yuklenmeden once <html> uzerine yazilir; boylece
+      // sayfa once yanlis (varsayilan) temayla boyanip sonra dogru
+      // temaya gecmez (FOUC). src/hooks/useTheme.ts ayni anahtari/
+      // mantigi kullanarak devralir. Herhangi bir kullanici girdisi
+      // islenmez, sabit bir script'tir.
+      ;(function () {
+        try {
+          var stored = window.localStorage.getItem('butce.theme')
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light')
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -117,6 +117,30 @@ içe aktarma ("ikinci aşama işi" olarak tanımlanmıştı), fiş fotoğrafı
 (Storage'ın ücretsiz katmanda uygunluğu doğrulanmadan eklenmedi), gerçek
 push bildirimleri (yukarıda açıklandığı gibi).
 
+**Görsel tasarım + açık/koyu tema** (roadmap dışı, ek istek üzerine):
+Tüm renkler `src/styles.css` içinde CSS custom property olarak tanımlandı
+(`:root` = açık tema, `[data-theme='dark']` = koyu tema); Tailwind
+eklenmedi, projenin mevcut elle yazılmış CSS yaklaşımı korundu. Koyu
+temada saf siyah değil antrasit tonlar (`#181715` arka plan, `#232120`
+yüzey) kullanılıyor, parlak/neon renk yok. Vurgu rengi her iki temada da
+sıcak amber/altın tonu — jenerik SaaS mavi/mor paletinden bilinçli olarak
+uzaklaşıldı. Metin/arka plan kontrastları WCAG AA hedefiyle seçildi (ana
+metin ve "muted" metin dahil tüm kombinasyonlar ≥4.5:1); yalnızca kart/
+tablo kenarlıkları gibi salt gösterge amaçlı ayrımlar daha düşük kontrastta
+(~1.8-2:1) bırakıldı, çünkü asıl öncelik veri metninin okunabilirliği.
+Sağ üstte sabit bir `ThemeToggle` düğmesi (`src/components/ThemeToggle.tsx`)
+tüm sayfalarda görünür; tema tercihi `localStorage`'da cihaza özel tutulur
+(`src/lib/localPrefs.ts`, `butce.theme` anahtarı — Firestore'a yazılmaz,
+diğer kişisel-cihaz tercihleriyle aynı mantık). `index.html` içindeki küçük
+başlangıç script'i, React yüklenmeden önce doğru temayı `<html
+data-theme>` olarak yazarak "yanlış temayla an içinde görünme" (FOUC)
+sorununu önler; kullanıcı tercih belirlemediyse `prefers-color-scheme`
+sistem ayarı kullanılır. `src/hooks/useTheme.ts` state mantığını taşır.
+Güvenlik: hiçbir yerde `dangerouslySetInnerHTML` kullanılmadı (proje
+genelinde zaten yoktu), tüm render React'in normal (kaçışlı) JSX
+metodlarıyla yapılıyor; mevcut input tipleri/kısıtları değiştirilmedi,
+yalnızca görsel (className/CSS) katman güncellendi.
+
 ## Kurulum
 
 ### 1. Firebase projesi

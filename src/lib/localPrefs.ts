@@ -7,6 +7,7 @@
 
 const RECENT_CATEGORIES_KEY = 'butce.recentCategories'
 const DEFAULT_ACCOUNT_KEY = 'butce.defaultAccount'
+const THEME_KEY = 'butce.theme'
 const MAX_RECENT = 8
 
 export function getRecentCategories(): string[] {
@@ -41,6 +42,25 @@ export function getDefaultAccount(): string | null {
 export function setDefaultAccount(name: string): void {
   try {
     localStorage.setItem(DEFAULT_ACCOUNT_KEY, name)
+  } catch {
+    // yoksay
+  }
+}
+
+// Acik/koyu tema tercihi de cihaza ozeldir (index.html'deki baslangic
+// scripti ile ayni anahtari kullanir, bkz. src/hooks/useTheme.ts).
+export function getThemePreference(): 'light' | 'dark' | null {
+  try {
+    const raw = localStorage.getItem(THEME_KEY)
+    return raw === 'light' || raw === 'dark' ? raw : null
+  } catch {
+    return null
+  }
+}
+
+export function setThemePreference(theme: 'light' | 'dark'): void {
+  try {
+    localStorage.setItem(THEME_KEY, theme)
   } catch {
     // yoksay
   }
