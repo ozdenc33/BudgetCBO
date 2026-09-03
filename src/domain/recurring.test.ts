@@ -104,7 +104,15 @@ describe('nextPaymentDate — Sabit_Giderler!J (TODAY=2026-09-02)', () => {
 describe('computeRecurringItems — Sabit_Giderler!M (secili ay: 2026-10)', () => {
   it('Kira bu ay girildi (Islemler eslesmesi var)', () => {
     const transactions: Transaction[] = [
-      { id: 't1', date: '2026-10-01', description: 'Ekim kira', category: 'Kira (Kaltmiete)', amount: 950, currency: 'EUR', account: 'Ortak Kasa' },
+      {
+        id: 't1',
+        date: '2026-10-01',
+        description: 'Ekim kira',
+        category: 'Kira (Kaltmiete)',
+        amount: 950,
+        currency: 'EUR',
+        account: 'Ortak Kasa',
+      },
     ]
     const [c] = computeRecurringItems([KIRA], '2026-10', transactions, DEFAULT_SETTINGS, TODAY)
     expect(c.monthStatus).toBe('girildi')
@@ -127,15 +135,35 @@ describe('computeRecurringItems — Sabit_Giderler!M (secili ay: 2026-10)', () =
   })
 
   it('pasif kalem her zaman "pasif" doner', () => {
-    const [c] = computeRecurringItems([item({ active: false })], '2026-10', [], DEFAULT_SETTINGS, TODAY)
+    const [c] = computeRecurringItems(
+      [item({ active: false })],
+      '2026-10',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+    )
     expect(c.monthStatus).toBe('pasif')
   })
 
   it('ayni Butce+Kategori ikilisini paylasan iki kalemden biri girilirse ikisi de "girildi" sayilir', () => {
     const transactions: Transaction[] = [
-      { id: 't1', date: '2026-10-05', description: 'TK sigorta', category: 'Sigorta', amount: 45, currency: 'EUR', account: 'Can-DE Girokonto' },
+      {
+        id: 't1',
+        date: '2026-10-05',
+        description: 'TK sigorta',
+        category: 'Sigorta',
+        amount: 45,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+      },
     ]
-    const computed = computeRecurringItems([TK, PRIVATHAFTPFLICHT], '2026-10', transactions, DEFAULT_SETTINGS, TODAY)
+    const computed = computeRecurringItems(
+      [TK, PRIVATHAFTPFLICHT],
+      '2026-10',
+      transactions,
+      DEFAULT_SETTINGS,
+      TODAY,
+    )
     // Privathaftpflicht 12 ayda bir, ilk odeme 2026-10-01 -> bu ay vadesi geliyor.
     expect(computed.find((c) => c.id === 'tk')!.monthStatus).toBe('girildi')
     expect(computed.find((c) => c.id === 'privathaftpflicht')!.monthStatus).toBe('girildi')
@@ -148,7 +176,15 @@ describe('draftTransactionsForMonth — Sabit_Giderler!Q:X (secili ay: 2026-10)'
       [KIRA, NEBENKOSTEN],
       '2026-10',
       [
-        { id: 't1', date: '2026-10-01', description: 'Ekim kira', category: 'Kira (Kaltmiete)', amount: 950, currency: 'EUR', account: 'Ortak Kasa' },
+        {
+          id: 't1',
+          date: '2026-10-01',
+          description: 'Ekim kira',
+          category: 'Kira (Kaltmiete)',
+          amount: 950,
+          currency: 'EUR',
+          account: 'Ortak Kasa',
+        },
       ],
       DEFAULT_SETTINGS,
       TODAY,
@@ -195,7 +231,14 @@ describe('draftTransactionsForMonth — Sabit_Giderler!Q:X (secili ay: 2026-10)'
 
   it('tutar bossa taslakta 0 gelir, kullanici elle doldurur', () => {
     const noAmount = item({ id: 'no-amount', name: 'Tutar yok', category: 'Internet' })
-    const drafts = draftTransactionsForMonth([noAmount], '2026-10', [], DEFAULT_SETTINGS, TODAY, new Set())
+    const drafts = draftTransactionsForMonth(
+      [noAmount],
+      '2026-10',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+      new Set(),
+    )
     expect(drafts[0].draft.amount).toBe(0)
   })
 })

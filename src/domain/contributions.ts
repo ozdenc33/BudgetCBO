@@ -1,4 +1,12 @@
-import type { Account, ContributionRow, Income, Person, Settings, Transaction, Transfer } from './types'
+import type {
+  Account,
+  ContributionRow,
+  Income,
+  Person,
+  Settings,
+  Transaction,
+  Transfer,
+} from './types'
 import { computeTransaction } from './transactions'
 import { computeTransfer } from './transfers'
 import { computeAccountBalances } from './balances'
@@ -31,7 +39,13 @@ export function computeContributionSummary(
 ): ContributionRow[] {
   const computedTx = transactions.map((t) => computeTransaction(t, settings))
   const computedTransfers = transfers.map((t) => computeTransfer(t, settings))
-  const sharedAccountBalanceEUR = ortakKasaBalanceEUR(accounts, transactions, incomes, transfers, settings)
+  const sharedAccountBalanceEUR = ortakKasaBalanceEUR(
+    accounts,
+    transactions,
+    incomes,
+    transfers,
+    settings,
+  )
 
   return PERSONS.map((person) => {
     const directlyPaidEUR = computedTx
@@ -49,20 +63,27 @@ export function computeContributionSummary(
       .filter((t) => t.type === 'Kişiden Kişiye' && t.to === person)
       .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
 
-    const totalContributionEUR = directlyPaidEUR + paidIntoSharedAccountEUR + sentToOther - receivedFromOther
+    const totalContributionEUR =
+      directlyPaidEUR + paidIntoSharedAccountEUR + sentToOther - receivedFromOther
 
     const shareColumn = person === 'Can' ? 'canShare' : 'tugceShare'
     const ownShareEUR = computedTx.reduce((sum, t) => sum + (t[shareColumn] ?? 0), 0)
 
     const diffEUR = totalContributionEUR - ownShareEUR - sharedAccountBalanceEUR / 2
 
-    return { person, directlyPaidEUR, paidIntoSharedAccountEUR, totalContributionEUR, ownShareEUR, diffEUR }
+    return {
+      person,
+      directlyPaidEUR,
+      paidIntoSharedAccountEUR,
+      totalContributionEUR,
+      ownShareEUR,
+      diffEUR,
+    }
   })
 }
 
 export type ContributionStatus =
-  | { balanced: true }
-  | { balanced: false; aheadPerson: Person; amountEUR: number }
+  { balanced: true } | { balanced: false; aheadPerson: Person; amountEUR: number }
 
 /** Hesaplar!B28 (Durum) — "borç" dili kullanmadan sadece kim onde bilgisi. */
 export function contributionStatus(rows: ContributionRow[]): ContributionStatus {

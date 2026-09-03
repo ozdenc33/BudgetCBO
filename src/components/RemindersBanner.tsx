@@ -35,7 +35,11 @@ export function RemindersBanner() {
       {/* Odeme gunu gecmis ama girilmemis kalemler: ay sonu beklenmeden
           uyarilir, en ustte ve belirgin renkte. */}
       {reminders.overdue.slice(0, MAX_VISIBLE).map((r) => (
-        <Link to="/sabit-giderler" className="reminder-card reminder-card--overdue" key={`od-${r.id}`}>
+        <Link
+          to="/sabit-giderler"
+          className="reminder-card reminder-card--overdue"
+          key={`od-${r.id}`}
+        >
           <span>
             <span className="reminder-card-title">{r.name}: </span>
             ödeme günü geçti, bu ay hâlâ girilmedi

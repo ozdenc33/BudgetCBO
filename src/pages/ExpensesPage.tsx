@@ -3,11 +3,7 @@ import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
-import {
-  addTransaction,
-  deleteTransaction,
-  updateTransaction,
-} from '../lib/firestoreTransactions'
+import { addTransaction, deleteTransaction, updateTransaction } from '../lib/firestoreTransactions'
 import { computeTransaction } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
@@ -17,6 +13,7 @@ import type { Currency, Transaction, TransactionDraft } from '../domain/types'
 import { todayISO, todayMonthKey } from '../domain/dates'
 import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
 import { useWrite } from '../hooks/useWrite'
+import { useComputedTransactions } from '../hooks/useComputedTransactions'
 import { useToast } from '../components/ToastProvider'
 
 type FormState = {
@@ -112,16 +109,18 @@ export function ExpensesPage() {
   const today = useToday()
   const runWrite = useWrite()
   const { showToast } = useToast()
+  const computedTransactions = useComputedTransactions()
 
   const preview = useMemo(
     () => computeTransaction({ id: 'preview', ...formToDraft(form) }, settings),
     [form, settings],
   )
 
-  const visibleTransactions = useMemo(() => {
-    const computed = transactions.map((t) => computeTransaction(t, settings))
-    return filterTransactions(computed, filter).sort((a, b) => b.date.localeCompare(a.date))
-  }, [transactions, settings, filter])
+  const visibleTransactions = useMemo(
+    () =>
+      filterTransactions(computedTransactions, filter).sort((a, b) => b.date.localeCompare(a.date)),
+    [computedTransactions, filter],
+  )
 
   const visibleTotalEUR = useMemo(() => sumFilteredEUR(visibleTransactions), [visibleTransactions])
 
@@ -138,7 +137,11 @@ export function ExpensesPage() {
       const duplicate = findDuplicateTransaction(formToDraft(form), transactions)
       if (duplicate) {
         const label = duplicate.description || duplicate.category
-        if (!window.confirm(`${form.date} tarihinde, aynı tutar ve kategoride "${label}" adlı bir kayıt zaten var. Yine de kaydedilsin mi?`)) {
+        if (
+          !window.confirm(
+            `${form.date} tarihinde, aynı tutar ve kategoride "${label}" adlı bir kayıt zaten var. Yine de kaydedilsin mi?`,
+          )
+        ) {
           return
         }
       }
@@ -203,154 +206,154 @@ export function ExpensesPage() {
           {editingId ? 'Harcamayı düzenle' : '+ Yeni harcama'}
         </summary>
         <form className="expense-form" onSubmit={handleSubmit}>
-        <label>
-          Tarih
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Açıklama
-          <input
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-        </label>
-        <label>
-          Kategori
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.categories.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Tutar
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Hesap
-          <select
-            value={form.account}
-            onChange={(e) => setForm({ ...form, account: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Para Birimi
-          <select
-            value={form.currency}
-            onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
-          >
-            <option value="EUR">EUR</option>
-            <option value="TRY">TRY</option>
-          </select>
-        </label>
-        <div className="expense-form-row">
           <label>
-            Can %
+            Tarih
             <input
-              type="number"
-              min="0"
-              max="100"
-              placeholder="—"
-              value={form.canPct}
-              onChange={(e) => setForm({ ...form, canPct: e.target.value, tugcePct: '' })}
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
             />
           </label>
           <label>
-            Tuğçe %
+            Açıklama
             <input
-              type="number"
-              min="0"
-              max="100"
-              placeholder="—"
-              value={form.tugcePct}
-              onChange={(e) => setForm({ ...form, tugcePct: e.target.value, canPct: '' })}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
           </label>
-        </div>
-        <label>
-          Etiket
-          <input value={form.tag} onChange={(e) => setForm({ ...form, tag: e.target.value })} />
-        </label>
-        <label>
-          Not
-          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        </label>
+          <label>
+            Kategori
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
+              </option>
+              {settings.categories.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Tutar
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Hesap
+            <select
+              value={form.account}
+              onChange={(e) => setForm({ ...form, account: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
+              </option>
+              {settings.accounts.map((a) => (
+                <option key={a.id} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Para Birimi
+            <select
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
+            >
+              <option value="EUR">EUR</option>
+              <option value="TRY">TRY</option>
+            </select>
+          </label>
+          <div className="expense-form-row">
+            <label>
+              Can %
+              <input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="—"
+                value={form.canPct}
+                onChange={(e) => setForm({ ...form, canPct: e.target.value, tugcePct: '' })}
+              />
+            </label>
+            <label>
+              Tuğçe %
+              <input
+                type="number"
+                min="0"
+                max="100"
+                placeholder="—"
+                value={form.tugcePct}
+                onChange={(e) => setForm({ ...form, tugcePct: e.target.value, canPct: '' })}
+              />
+            </label>
+          </div>
+          <label>
+            Etiket
+            <input value={form.tag} onChange={(e) => setForm({ ...form, tag: e.target.value })} />
+          </label>
+          <label>
+            Not
+            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </label>
 
-        {form.category && form.amount && form.account && (
-          <div
-            className={
-              preview.validation === 'OK'
-                ? 'expense-preview expense-preview--ok'
-                : 'expense-preview expense-preview--error'
-            }
-          >
-            {preview.validation === 'OK' ? (
-              <>
-                <span>{preview.budgetType}</span>
-                <span>
-                  {preview.amountEUR?.toFixed(2)} EUR
-                  {preview.rateSource === 'default' && form.currency === 'TRY'
-                    ? ' (varsayılan kur ile)'
-                    : ''}
-                </span>
-                <span>
-                  Can {preview.canShare?.toFixed(2)} / Tuğçe {preview.tugceShare?.toFixed(2)}
-                </span>
-              </>
-            ) : (
-              <span>{preview.validation}</span>
+          {form.category && form.amount && form.account && (
+            <div
+              className={
+                preview.validation === 'OK'
+                  ? 'expense-preview expense-preview--ok'
+                  : 'expense-preview expense-preview--error'
+              }
+            >
+              {preview.validation === 'OK' ? (
+                <>
+                  <span>{preview.budgetType}</span>
+                  <span>
+                    {preview.amountEUR?.toFixed(2)} EUR
+                    {preview.rateSource === 'default' && form.currency === 'TRY'
+                      ? ' (varsayılan kur ile)'
+                      : ''}
+                  </span>
+                  <span>
+                    Can {preview.canShare?.toFixed(2)} / Tuğçe {preview.tugceShare?.toFixed(2)}
+                  </span>
+                </>
+              ) : (
+                <span>{preview.validation}</span>
+              )}
+            </div>
+          )}
+
+          {preview.rateWarning && (
+            <div className="expense-preview expense-preview--warning">
+              <span>{preview.rateWarning}</span>
+            </div>
+          )}
+
+          <div className="expense-form-actions">
+            <button type="submit" disabled={!canSubmit || saving}>
+              {editingId ? 'Güncelle' : 'Kaydet'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit}>
+                İptal
+              </button>
             )}
           </div>
-        )}
-
-        {preview.rateWarning && (
-          <div className="expense-preview expense-preview--warning">
-            <span>{preview.rateWarning}</span>
-          </div>
-        )}
-
-        <div className="expense-form-actions">
-          <button type="submit" disabled={!canSubmit || saving}>
-            {editingId ? 'Güncelle' : 'Kaydet'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit}>
-              İptal
-            </button>
-          )}
-        </div>
-      </form>
+        </form>
       </details>
 
       <TransactionFilters

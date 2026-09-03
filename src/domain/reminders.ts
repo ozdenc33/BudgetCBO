@@ -51,7 +51,13 @@ export function computeReminders(
   const computed = computeRecurringItems(recurring, monthKey, transactions, settings, today)
 
   const upcoming = computed
-    .filter((r) => r.active && r.remainingDays != null && r.remainingDays >= 0 && r.remainingDays <= UPCOMING_DAYS_THRESHOLD)
+    .filter(
+      (r) =>
+        r.active &&
+        r.remainingDays != null &&
+        r.remainingDays >= 0 &&
+        r.remainingDays <= UPCOMING_DAYS_THRESHOLD,
+    )
     .sort((a, b) => (a.remainingDays ?? 0) - (b.remainingDays ?? 0))
 
   const unconfirmedNearMonthEnd =

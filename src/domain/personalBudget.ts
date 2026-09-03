@@ -87,7 +87,10 @@ export function computePersonalBudget(
       .reduce((sum, r) => sum + (monthlyEquivalentEUR(r) ?? 0), 0)
   const sharedFixedMonthlyEUR = activeFixedMonthlyEUR(['Ortak-Ev', 'Mike'])
   const sharedCategoryLimitTotalEUR = settings.categories
-    .filter((c) => c.budgetType === 'Ortak-Ev' || c.budgetType === 'Ortak-Dışarı' || c.budgetType === 'Mike')
+    .filter(
+      (c) =>
+        c.budgetType === 'Ortak-Ev' || c.budgetType === 'Ortak-Dışarı' || c.budgetType === 'Mike',
+    )
     .reduce((sum, c) => sum + (c.monthlyLimitEUR ?? 0), 0)
 
   // 3. KISISEL HARCAMALAR
@@ -97,7 +100,9 @@ export function computePersonalBudget(
     const actualEUR = computedTx
       .filter(
         (t) =>
-          t.monthKey === monthKey && t.budgetType === personalBudgetType && t.category === category.name,
+          t.monthKey === monthKey &&
+          t.budgetType === personalBudgetType &&
+          t.category === category.name,
       )
       .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
     return {
@@ -119,18 +124,23 @@ export function computePersonalBudget(
     .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
 
   // 5. SONUÇ
-  const netPlannedEUR = incomePlannedEUR - sharedPlannedEUR - categoriesPlannedEUR - savingsPlannedEUR
+  const netPlannedEUR =
+    incomePlannedEUR - sharedPlannedEUR - categoriesPlannedEUR - savingsPlannedEUR
   const netActualEUR = incomeActualEUR - sharedActualEUR - categoriesActualEUR - savingsActualEUR
 
   const unassignedStatus =
     netPlannedEUR > 0.005 ? 'dagitilmadi' : netPlannedEUR < -0.005 ? 'asildi' : 'tamam'
 
   const spendableThisMonthEUR =
-    incomePlannedEUR === 0 ? undefined : incomePlannedEUR - sharedActualEUR - categoriesActualEUR - savingsActualEUR
+    incomePlannedEUR === 0
+      ? undefined
+      : incomePlannedEUR - sharedActualEUR - categoriesActualEUR - savingsActualEUR
 
   const remainingDays = remainingDaysInMonth(monthKey, today)
   const dailySpendableEUR =
-    spendableThisMonthEUR == null || !remainingDays ? undefined : spendableThisMonthEUR / remainingDays
+    spendableThisMonthEUR == null || !remainingDays
+      ? undefined
+      : spendableThisMonthEUR / remainingDays
 
   return {
     person,

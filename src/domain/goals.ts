@@ -30,18 +30,23 @@ function computeOne(
 
   const remainingEUR = goal.targetAmount != null ? goal.targetAmount - accumulatedEUR : undefined
   const progressPct =
-    goal.targetAmount != null && goal.targetAmount !== 0 ? accumulatedEUR / goal.targetAmount : undefined
+    goal.targetAmount != null && goal.targetAmount !== 0
+      ? accumulatedEUR / goal.targetAmount
+      : undefined
 
   let remainingMonths: number | undefined
   if (goal.targetDate) {
     const target = new Date(goal.targetDate + 'T00:00:00Z')
-    const diffDays = (target.getTime() - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) / 86_400_000
+    const diffDays =
+      (target.getTime() - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) /
+      86_400_000
     remainingMonths = Math.max(0, Math.round(diffDays / DAYS_PER_MONTH))
   }
 
   let monthlyRequiredEUR: number | undefined
   if (remainingEUR != null && remainingMonths != null) {
-    monthlyRequiredEUR = remainingMonths === 0 ? remainingEUR : Math.max(0, remainingEUR / remainingMonths)
+    monthlyRequiredEUR =
+      remainingMonths === 0 ? remainingEUR : Math.max(0, remainingEUR / remainingMonths)
   }
 
   return {
@@ -56,7 +61,12 @@ function computeOne(
   }
 }
 
-export function computeGoal(goal: Goal, transfers: Transfer[], settings: Settings, today: Date): ComputedGoal {
+export function computeGoal(
+  goal: Goal,
+  transfers: Transfer[],
+  settings: Settings,
+  today: Date,
+): ComputedGoal {
   const computedTransfers = transfers.map((t) => computeTransfer(t, settings))
   return computeOne(goal, computedTransfers, today)
 }

@@ -50,7 +50,12 @@
   --radius: 12px;
   --radius-sm: 8px;
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 [data-theme='dark'] {
@@ -98,7 +103,9 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 button {
@@ -116,7 +123,9 @@ a {
   border-radius: 4px;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   line-height: 1.25;
 }
 
@@ -225,7 +234,9 @@ h1, h2, h3 {
   font-size: 0.68rem;
   font-weight: 500;
   text-decoration: none;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .tab:hover {
@@ -336,7 +347,9 @@ h1, h2, h3 {
   border-radius: var(--radius-sm);
   color: inherit;
   text-decoration: none;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .sheet-link:hover {
@@ -413,7 +426,9 @@ h1, h2, h3 {
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--text);
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
 }
 
 .theme-toggle:hover {
@@ -433,8 +448,7 @@ h1, h2, h3 {
   place-items: center;
   padding: 1rem;
   background:
-    radial-gradient(1200px 500px at 50% -10%, var(--accent-soft), transparent 70%),
-    var(--bg);
+    radial-gradient(1200px 500px at 50% -10%, var(--accent-soft), transparent 70%), var(--bg);
 }
 
 .auth-toggle {
@@ -763,7 +777,9 @@ h1, h2, h3 {
   font-size: 0.78rem;
   font-weight: 600;
   text-align: center;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .shortcut:hover {
@@ -2475,7 +2491,9 @@ h1, h2, h3 {
     text-decoration: none;
     font-size: 0.88rem;
     font-weight: 500;
-    transition: background-color 0.12s ease, color 0.12s ease;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
   }
 
   .side-link:hover {
@@ -2880,4 +2898,46 @@ h1, h2, h3 {
     bottom: 1.25rem;
     width: min(24rem, calc(100vw - 2.5rem));
   }
+}
+
+/* Hata siniri ekrani (bkz. src/components/ErrorBoundary.tsx) */
+.error-boundary {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.error-boundary h1 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.error-boundary-detail {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.error-boundary-actions button {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-weight: 600;
 }

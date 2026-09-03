@@ -35,7 +35,7 @@ giderler/otomatik taslak üretimi, kişisel bütçeler/hedefler/katkı özeti.
   (Excel'de de Hesaplar sayfasının bir bölümü). Kim doğrudan ödedi, kim
   Ortak Kasa'ya koydu, toplam katkı, kendi payı, fark — "borç" dili
   kullanılmadan, sadece "toplamda kim önde" bilgisi. `src/domain/
-  contributions.ts` içinde hesaplanır.
+contributions.ts` içinde hesaplanır.
 - `src/domain/goals.test.ts`, `personalBudget.test.ts`,
   `contributions.test.ts`: Hedefler/Butce_Can/Butce_Tugce/Hesaplar
   sayfalarındaki gerçek rakamlarla (ör. Can net gerçekleşen 319,15 €,
@@ -191,7 +191,7 @@ push bildirimleri (yukarıda açıklandığı gibi).
 
 - **Başlangıç bakiyesi kaldırıldı (Excel'den bilinçli sapma).** Excel'de
   Hesaplar formülü `Bakiye = Başlangıç + Gelirler − Harcamalar − Transfer
-  Çıkış + Transfer Giriş` şeklindeydi. `Başlangıç` sütunu tamamen
+Çıkış + Transfer Giriş` şeklindeydi. `Başlangıç` sütunu tamamen
   kaldırıldı; açılış bakiyesi artık uygulamayı kullanmaya başlamadan
   önceki bir tarihle **normal gelir kaydı** olarak girilir. Bakiye sonucu
   aynı kalır. **Değişen tek şey:** o kayıt, girildiği ayın gelir

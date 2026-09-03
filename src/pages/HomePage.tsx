@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useToday } from '../hooks/useToday'
+import { useComputedTransactions } from '../hooks/useComputedTransactions'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -9,7 +10,6 @@ import { computeBudgetTypeSummary } from '../domain/dashboard'
 import { computeBudgetAlerts, findNegativeBalances } from '../domain/budgetAlerts'
 import { computeAccountBalances } from '../domain/balances'
 import { computeScopeSummary, computeWeekSummary, type PersonScope } from '../domain/personSummary'
-import { computeTransaction } from '../domain/transactions'
 import { personForEmail } from '../lib/currentPerson'
 import { useAuth } from '../auth/AuthContext'
 import { RemindersBanner } from '../components/RemindersBanner'
@@ -34,8 +34,18 @@ function fmt(value: number | undefined): string {
 }
 
 const MONTH_NAMES = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+  'Ocak',
+  'Şubat',
+  'Mart',
+  'Nisan',
+  'Mayıs',
+  'Haziran',
+  'Temmuz',
+  'Ağustos',
+  'Eylül',
+  'Ekim',
+  'Kasım',
+  'Aralık',
 ]
 
 function monthLabel(monthKey: string): string {
@@ -62,6 +72,9 @@ export function HomePage() {
   const { incomes, loading: incomesLoading } = useIncomes()
   const { transfers, loading: transfersLoading } = useTransfers()
   const { user } = useAuth()
+  // Tek yerde hesaplanmis islemler (bkz. DataProvider); ana sayfa
+  // bunu eskiden kendi icinde bastan hesapliyordu.
+  const computedTransactions = useComputedTransactions()
 
   // Varsayilan kapsam: giris yapan kisi kendi ozetini gorur, yoksa Ortak.
   const [scope, setScope] = useState<PersonScope>(() => personForEmail(user?.email) ?? 'Ortak')
@@ -99,13 +112,14 @@ export function HomePage() {
   )
 
   const recent = useMemo(() => {
-    const computed = transactions.map((t) => computeTransaction(t, settings))
     const inScope =
       scope === 'Ortak'
-        ? computed
-        : computed.filter((t) => ((scope === 'Can' ? t.canShare : t.tugceShare) ?? 0) > 0)
-    return inScope.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
-  }, [transactions, settings, scope])
+        ? computedTransactions
+        : computedTransactions.filter(
+            (t) => ((scope === 'Can' ? t.canShare : t.tugceShare) ?? 0) > 0,
+          )
+    return [...inScope].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
+  }, [computedTransactions, scope])
 
   if (loading) {
     return <div className="page-loading">Yükleniyor...</div>
@@ -140,9 +154,7 @@ export function HomePage() {
         </div>
         <div className="hero-main">
           <span className="hero-label">
-            {scope === 'Ortak'
-              ? 'Bu ay toplam harcama'
-              : `${scope} bu ay ne harcadı`}
+            {scope === 'Ortak' ? 'Bu ay toplam harcama' : `${scope} bu ay ne harcadı`}
           </span>
           <span className="hero-amount">{fmt(summary.expenseEUR)} €</span>
         </div>
@@ -200,7 +212,6 @@ export function HomePage() {
         </div>
       )}
 
-
       <section className="panel">
         <div className="panel-head">
           <h2>Bu hafta</h2>
@@ -211,9 +222,7 @@ export function HomePage() {
         <div className="week-row">
           <span className="week-amount">{fmt(week.expenseEUR)} €</span>
           <span
-            className={
-              weekDiff > 0 ? 'week-delta week-delta--up' : 'week-delta week-delta--down'
-            }
+            className={weekDiff > 0 ? 'week-delta week-delta--up' : 'week-delta week-delta--down'}
           >
             {weekDiff === 0
               ? 'geçen haftayla aynı'
@@ -248,7 +257,7 @@ export function HomePage() {
                   {fmt(
                     scope === 'Ortak'
                       ? t.amountEUR
-                      : (scope === 'Can' ? t.canShare : t.tugceShare) ?? 0,
+                      : ((scope === 'Can' ? t.canShare : t.tugceShare) ?? 0),
                   )}{' '}
                   €
                 </span>

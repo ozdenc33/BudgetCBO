@@ -1,11 +1,4 @@
-import type {
-  Account,
-  AccountBalance,
-  Income,
-  Settings,
-  Transaction,
-  Transfer,
-} from './types'
+import type { Account, AccountBalance, Income, Settings, Transaction, Transfer } from './types'
 import { computeTransaction } from './transactions'
 import { computeIncome } from './incomes'
 import { computeTransfer } from './transfers'
@@ -21,7 +14,11 @@ import { computeTransfer } from './transfers'
 // bir tarihle). Sonuc bakiye ayni, ancak o kayit girildigi ayin gelir
 // raporlarinda da gorunur.
 
-function sumEUR<T>(items: T[], matches: (item: T) => boolean, amountEUR: (item: T) => number | undefined): number {
+function sumEUR<T>(
+  items: T[],
+  matches: (item: T) => boolean,
+  amountEUR: (item: T) => number | undefined,
+): number {
   return items.filter(matches).reduce((sum, item) => sum + (amountEUR(item) ?? 0), 0)
 }
 

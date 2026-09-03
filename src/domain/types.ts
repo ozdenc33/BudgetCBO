@@ -6,21 +6,11 @@ export type AccountOwner = Person | 'Ortak Kasa'
 // Kategoriye atanan ham butce tipi. "Kisisel" kategoriler, paylasim
 // oranina gore Kisisel-Can / Kisisel-Tugce olarak cozumlenir (bkz.
 // src/domain/transactions.ts computeTransaction).
-export type CategoryBudgetType =
-  | 'Ortak-Ev'
-  | 'Ortak-Dışarı'
-  | 'Mike'
-  | 'Kişisel'
-  | 'Taşınma'
+export type CategoryBudgetType = 'Ortak-Ev' | 'Ortak-Dışarı' | 'Mike' | 'Kişisel' | 'Taşınma'
 
 // Bir islemin cozumlenmis (nihai) butce tipi.
 export type BudgetType =
-  | 'Ortak-Ev'
-  | 'Ortak-Dışarı'
-  | 'Mike'
-  | 'Kişisel-Can'
-  | 'Kişisel-Tuğçe'
-  | 'Taşınma'
+  'Ortak-Ev' | 'Ortak-Dışarı' | 'Mike' | 'Kişisel-Can' | 'Kişisel-Tuğçe' | 'Taşınma'
 
 export type Account = {
   id: string
@@ -206,7 +196,8 @@ export type RecurringItem = {
 export type RecurringItemDraft = Omit<RecurringItem, 'id'>
 
 // Sabit_Giderler!Seçili Ay Durumu kolonunun karsiligi.
-export type RecurringMonthStatus = 'pasif' | 'tarih-sıklık-eksik' | 'vadesi-degil' | 'girildi' | 'eksik'
+export type RecurringMonthStatus =
+  'pasif' | 'tarih-sıklık-eksik' | 'vadesi-degil' | 'girildi' | 'eksik'
 
 export type ComputedRecurringItem = RecurringItem & {
   monthlyEquivalentEUR: number | undefined

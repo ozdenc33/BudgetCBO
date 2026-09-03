@@ -24,10 +24,13 @@ export function useToday(): Date {
       const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
       // +1 sn: zamanlayicilar erken tetiklenebilir, gun sinirini
       // kesin gectigimizden emin olalim.
-      timer = setTimeout(() => {
-        setToday(new Date())
-        scheduleNextMidnight()
-      }, nextMidnight.getTime() - now.getTime() + 1000)
+      timer = setTimeout(
+        () => {
+          setToday(new Date())
+          scheduleNextMidnight()
+        },
+        nextMidnight.getTime() - now.getTime() + 1000,
+      )
     }
 
     // Telefon uykudayken setTimeout duraklar; uygulama one geldiginde

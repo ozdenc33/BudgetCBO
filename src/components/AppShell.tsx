@@ -31,16 +31,36 @@ const MENU_GROUPS: {
   {
     title: 'Kayıt',
     items: [
-      { to: '/harcamalar', label: 'Harcamalar', icon: <IconReceipt />, hint: 'Harcama gir ve düzenle' },
+      {
+        to: '/harcamalar',
+        label: 'Harcamalar',
+        icon: <IconReceipt />,
+        hint: 'Harcama gir ve düzenle',
+      },
       { to: '/gelirler', label: 'Gelirler', icon: <IconIncome />, hint: 'Maaş, burs, Sperrkonto' },
-      { to: '/transferler', label: 'Transferler', icon: <IconTransfer />, hint: 'Ortak Kasa, tasarruf, hedef' },
+      {
+        to: '/transferler',
+        label: 'Transferler',
+        icon: <IconTransfer />,
+        hint: 'Ortak Kasa, tasarruf, hedef',
+      },
     ],
   },
   {
     title: 'Plan',
     items: [
-      { to: '/sabit-giderler', label: 'Sabit Giderler', icon: <IconRepeat />, hint: 'Kira, sigorta, abonelik' },
-      { to: '/kisisel-butce', label: 'Kişisel Bütçe', icon: <IconPerson />, hint: 'Can ve Tuğçe planı' },
+      {
+        to: '/sabit-giderler',
+        label: 'Sabit Giderler',
+        icon: <IconRepeat />,
+        hint: 'Kira, sigorta, abonelik',
+      },
+      {
+        to: '/kisisel-butce',
+        label: 'Kişisel Bütçe',
+        icon: <IconPerson />,
+        hint: 'Can ve Tuğçe planı',
+      },
       { to: '/hedefler', label: 'Hedefler', icon: <IconTarget />, hint: 'Birikim hedefleri' },
     ],
   },
@@ -48,14 +68,24 @@ const MENU_GROUPS: {
     title: 'Rapor',
     items: [
       { to: '/pano', label: 'Ay Panosu', icon: <IconChart />, hint: 'Özet, kırılım, kontroller' },
-      { to: '/hesaplar', label: 'Hesap Bakiyeleri', icon: <IconWallet />, hint: 'Bakiye ve katkı özeti' },
+      {
+        to: '/hesaplar',
+        label: 'Hesap Bakiyeleri',
+        icon: <IconWallet />,
+        hint: 'Bakiye ve katkı özeti',
+      },
     ],
   },
   {
     title: 'Sistem',
     items: [
       { to: '/ayarlar', label: 'Ayarlar', icon: <IconSettings />, hint: 'Hesap, kategori, kur' },
-      { to: '/ice-disa-aktar', label: 'İçe/Dışa Aktar', icon: <IconExchange />, hint: 'Excel yedek ve aktarım' },
+      {
+        to: '/ice-disa-aktar',
+        label: 'İçe/Dışa Aktar',
+        icon: <IconExchange />,
+        hint: 'Excel yedek ve aktarım',
+      },
     ],
   },
 ]
@@ -108,15 +138,23 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
           <span>BudgetCBO</span>
         </div>
         <nav className="sidebar-nav" aria-label="Modüller">
-          <NavLink to="/" end className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}>
-            <span className="side-link-icon"><IconHome size={18} /></span>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}
+          >
+            <span className="side-link-icon">
+              <IconHome size={18} />
+            </span>
             Özet
           </NavLink>
           <NavLink
             to="/hizli-giris"
             className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}
           >
-            <span className="side-link-icon"><IconPlus size={18} /></span>
+            <span className="side-link-icon">
+              <IconPlus size={18} />
+            </span>
             Hızlı giriş
           </NavLink>
           {MENU_GROUPS.map((group) => (
@@ -126,7 +164,9 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  className={({ isActive }) => (isActive ? 'side-link side-link--active' : 'side-link')}
+                  className={({ isActive }) =>
+                    isActive ? 'side-link side-link--active' : 'side-link'
+                  }
                 >
                   <span className="side-link-icon">{item.icon}</span>
                   {item.label}
@@ -175,7 +215,9 @@ export function AppShell({ title, subtitle, children }: AppShellProps) {
 
         <NavLink
           to="/hizli-giris"
-          className={({ isActive }) => (isActive ? 'tab tab-quick tab-quick--active' : 'tab tab-quick')}
+          className={({ isActive }) =>
+            isActive ? 'tab tab-quick tab-quick--active' : 'tab tab-quick'
+          }
           aria-label="Hızlı harcama girişi"
         >
           <span className="tab-quick-circle">

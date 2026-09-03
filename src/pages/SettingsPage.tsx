@@ -163,9 +163,7 @@ function CategoriesSection({ draft, onSave }: SectionProps) {
   function setCategoryLimit(id: string, value: number) {
     onSave({
       ...draft,
-      categories: draft.categories.map((c) =>
-        c.id === id ? { ...c, monthlyLimitEUR: value } : c,
-      ),
+      categories: draft.categories.map((c) => (c.id === id ? { ...c, monthlyLimitEUR: value } : c)),
     })
   }
 

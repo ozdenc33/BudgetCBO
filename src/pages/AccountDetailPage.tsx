@@ -37,16 +37,18 @@ export function AccountDetailPage() {
 
   const balance = useMemo(() => {
     if (!account) return undefined
-    return computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings).find(
-      (b) => b.account.id === account.id,
-    )
+    return computeAccountBalances(
+      settings.accounts,
+      transactions,
+      incomes,
+      transfers,
+      settings,
+    ).find((b) => b.account.id === account.id)
   }, [account, settings, transactions, incomes, transfers])
 
   const allRows = useMemo(
     () =>
-      account
-        ? computeAccountLedger(account.name, transactions, incomes, transfers, settings)
-        : [],
+      account ? computeAccountLedger(account.name, transactions, incomes, transfers, settings) : [],
     [account, transactions, incomes, transfers, settings],
   )
 
@@ -173,7 +175,10 @@ export function AccountDetailPage() {
       ) : (
         <ul className="ledger-list">
           {rows.map((r) => (
-            <li key={r.id} className={r.amountEUR < 0 ? 'ledger-row ledger-row--out' : 'ledger-row'}>
+            <li
+              key={r.id}
+              className={r.amountEUR < 0 ? 'ledger-row ledger-row--out' : 'ledger-row'}
+            >
               <span className="ledger-main">
                 <span className="ledger-label">{r.label}</span>
                 <span className="ledger-detail">
@@ -182,9 +187,7 @@ export function AccountDetailPage() {
                 </span>
               </span>
               <span className="ledger-amounts">
-                <span
-                  className={r.amountEUR < 0 ? 'ledger-amount is-out' : 'ledger-amount is-in'}
-                >
+                <span className={r.amountEUR < 0 ? 'ledger-amount is-out' : 'ledger-amount is-in'}>
                   {r.amountEUR > 0 ? '+' : ''}
                   {fmt(r.amountEUR)} €
                 </span>

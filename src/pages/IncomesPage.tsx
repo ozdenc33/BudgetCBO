@@ -141,121 +141,119 @@ export function IncomesPage() {
         open={formOpen}
         onToggle={(e) => setFormOpen(e.currentTarget.open)}
       >
-        <summary className="form-summary">
-          {editingId ? 'Geliri düzenle' : '+ Yeni gelir'}
-        </summary>
+        <summary className="form-summary">{editingId ? 'Geliri düzenle' : '+ Yeni gelir'}</summary>
         <form className="expense-form" onSubmit={handleSubmit}>
-        <label>
-          Tarih
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Kaynak
-          <select
-            value={form.source}
-            onChange={(e) => setForm({ ...form, source: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.incomeSources.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
+          <label>
+            Tarih
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Kaynak
+            <select
+              value={form.source}
+              onChange={(e) => setForm({ ...form, source: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Kişi
-          <select
-            value={form.person}
-            onChange={(e) => setForm({ ...form, person: e.target.value as Person })}
-          >
-            <option value="Can">Can</option>
-            <option value="Tuğçe">Tuğçe</option>
-          </select>
-        </label>
-        <label>
-          Tutar
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Hesap
-          <select
-            value={form.account}
-            onChange={(e) => setForm({ ...form, account: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
+              {settings.incomeSources.map((s) => (
+                <option key={s.id} value={s.name}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Kişi
+            <select
+              value={form.person}
+              onChange={(e) => setForm({ ...form, person: e.target.value as Person })}
+            >
+              <option value="Can">Can</option>
+              <option value="Tuğçe">Tuğçe</option>
+            </select>
+          </label>
+          <label>
+            Tutar
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Hesap
+            <select
+              value={form.account}
+              onChange={(e) => setForm({ ...form, account: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Para Birimi
-          <select
-            value={form.currency}
-            onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
-          >
-            <option value="EUR">EUR</option>
-            <option value="TRY">TRY</option>
-          </select>
-        </label>
-        <label>
-          Not
-          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        </label>
+              {settings.accounts.map((a) => (
+                <option key={a.id} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Para Birimi
+            <select
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
+            >
+              <option value="EUR">EUR</option>
+              <option value="TRY">TRY</option>
+            </select>
+          </label>
+          <label>
+            Not
+            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </label>
 
-        {form.source && form.amount && form.account && (
-          <div
-            className={
-              preview.validation === 'OK'
-                ? 'expense-preview expense-preview--ok'
-                : 'expense-preview expense-preview--error'
-            }
-          >
-            {preview.validation === 'OK' ? (
-              <span>
-                {preview.amountEUR?.toFixed(2)} EUR
-                {preview.rateSource === 'default' && form.currency === 'TRY'
-                  ? ' (varsayılan kur ile)'
-                  : ''}
-              </span>
-            ) : (
-              <span>{preview.validation}</span>
+          {form.source && form.amount && form.account && (
+            <div
+              className={
+                preview.validation === 'OK'
+                  ? 'expense-preview expense-preview--ok'
+                  : 'expense-preview expense-preview--error'
+              }
+            >
+              {preview.validation === 'OK' ? (
+                <span>
+                  {preview.amountEUR?.toFixed(2)} EUR
+                  {preview.rateSource === 'default' && form.currency === 'TRY'
+                    ? ' (varsayılan kur ile)'
+                    : ''}
+                </span>
+              ) : (
+                <span>{preview.validation}</span>
+              )}
+            </div>
+          )}
+
+          <div className="expense-form-actions">
+            <button type="submit" disabled={!canSubmit || saving}>
+              {editingId ? 'Güncelle' : 'Kaydet'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit}>
+                İptal
+              </button>
             )}
           </div>
-        )}
-
-        <div className="expense-form-actions">
-          <button type="submit" disabled={!canSubmit || saving}>
-            {editingId ? 'Güncelle' : 'Kaydet'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit}>
-              İptal
-            </button>
-          )}
-        </div>
-      </form>
+        </form>
       </details>
 
       <div className="expenses-list-header">

@@ -4,6 +4,12 @@ rules_version = '2';
 // bir de yedek hesap UID'si eklendi. UID'ler Firebase Console >
 // Authentication > Users altindan alinir ve asagidaki listeye elle
 // yazilir. Bkz. README.md "Kurulum" bolumu.
+//
+// Kimlik kontrolunun ustune ASGARI bir sema dogrulamasi eklendi: alan
+// tipleri ve zorunlu alanlar. Amaci yetkili kullaniciya karsi korunmak
+// degil (ikisi de zaten her seyi yazabilir), yanlislikla bozuk bir
+// dokumanin veritabanina girmesini engellemek — ornegin tutarin metin
+// olarak yazilmasi, hesaplamalarda NaN'a yol aciyordu.
 service cloud.firestore {
   match /databases/{database}/documents {
     function allowedUids() {
@@ -18,8 +24,122 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid in allowedUids();
     }
 
-    match /{document=**} {
-      allow read, write: if isAllowedUser();
+    function data() {
+      return request.resource.data;
+    }
+
+    // YYYY-MM-DD bicimi. Uygulama her tarihi bu bicimde yazar ve
+    // siralamalar metin karsilastirmasina dayanir.
+    function isDateString(value) {
+      return value is string && value.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isMonthKey(value) {
+      return value is string && value.matches('^\\d{4}-\\d{2}$');
+    }
+
+    // Opsiyonel alan: ya hic yok, ya da dogru tipte.
+    function optionalNumber(field) {
+      return !(field in data()) || data()[field] is number;
+    }
+
+    function optionalString(field) {
+      return !(field in data()) || data()[field] is string;
+    }
+
+    function isCurrency(value) {
+      return value is string && value in ['EUR', 'TRY', ''];
+    }
+
+    match /transactions/{id} {
+      allow read, delete: if isAllowedUser();
+      allow create, update: if isAllowedUser()
+        && isDateString(data().date)
+        && data().category is string
+        && data().account is string
+        && data().amount is number
+        && isCurrency(data().currency)
+        && optionalString('description')
+        && optionalNumber('canPct')
+        && optionalNumber('tugcePct')
+        && optionalString('tag')
+        && optionalString('note')
+        && optionalString('importBatchId');
+    }
+
+    match /incomes/{id} {
+      allow read, delete: if isAllowedUser();
+      allow create, update: if isAllowedUser()
+        && isDateString(data().date)
+        && data().source is string
+        && data().person in ['Can', 'Tuğçe']
+        && data().account is string
+        && data().amount is number
+        && isCurrency(data().currency)
+        && optionalString('note')
+        && optionalString('importBatchId');
+    }
+
+    match /transfers/{id} {
+      allow read, delete: if isAllowedUser();
+      allow create, update: if isAllowedUser()
+        && isDateString(data().date)
+        && data().type in ['Ortak Kasa Katkısı', 'Kişiden Kişiye', 'Tasarruf']
+        && data().from is string
+        && data().to is string
+        && data().amount is number
+        && isCurrency(data().currency)
+        && optionalString('fromAccount')
+        && optionalString('toAccount')
+        && optionalString('goalId')
+        && optionalString('note')
+        && optionalString('importBatchId');
+    }
+
+    match /recurring/{id} {
+      allow read, delete: if isAllowedUser();
+      allow create, update: if isAllowedUser()
+        && data().name is string
+        && data().category is string
+        && data().account is string
+        && data().frequencyMonths in [1, 3, 6, 12]
+        && isDateString(data().firstPaymentDate)
+        && data().active is bool
+        && optionalNumber('amount')
+        && optionalString('note')
+        && optionalString('importBatchId');
+    }
+
+    match /goals/{id} {
+      allow read, delete: if isAllowedUser();
+      allow create, update: if isAllowedUser()
+        && data().name is string
+        && data().owner in ['Can', 'Tuğçe', 'Ortak']
+        && optionalNumber('targetAmount')
+        && optionalString('targetDate')
+        && optionalString('note')
+        && optionalString('importBatchId');
+    }
+
+    match /recurringSkips/{id} {
+      allow read, delete: if isAllowedUser();
+      allow create, update: if isAllowedUser()
+        && data().recurringId is string
+        && isMonthKey(data().monthKey);
+    }
+
+    match /settings/{id} {
+      // Ayarlar dokumani ic ice listeler ve haritalar icerir; kurallarda
+      // tamamini dogrulamak okunaksiz olurdu. Ust duzey alanlarin
+      // varligi ve tipi kontrol edilir, gerisi uygulama tarafinda
+      // (src/domain/constants.ts + Ayarlar ekrani) garanti edilir.
+      allow read: if isAllowedUser();
+      allow write: if isAllowedUser()
+        && data().accounts is list
+        && data().categories is list
+        && data().incomeSources is list
+        && data().rates is map
+        && data().defaultRate is number;
     }
   }
 }

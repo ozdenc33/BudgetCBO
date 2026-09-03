@@ -258,8 +258,7 @@ export function computeControls(
   // icin ortakKasa.incomesEUR burada hesaba katilir.)
   const ortakKasaDiff = ortakKasa
     ? Math.round(
-        (ortakKasa.balanceEUR -
-          (ortakKasa.incomesEUR + katkiToplamiEUR - ortakKasa.expensesEUR)) *
+        (ortakKasa.balanceEUR - (ortakKasa.incomesEUR + katkiToplamiEUR - ortakKasa.expensesEUR)) *
           100,
       ) / 100
     : 0
@@ -269,9 +268,7 @@ export function computeControls(
       label: 'Hatalı işlem satırı',
       ok: invalidTxCount === 0,
       message:
-        invalidTxCount === 0
-          ? 'OK'
-          : `Harcamalar sayfasında ${invalidTxCount} hatalı satır var`,
+        invalidTxCount === 0 ? 'OK' : `Harcamalar sayfasında ${invalidTxCount} hatalı satır var`,
     },
     {
       label: 'Hatalı transfer satırı',

@@ -1,10 +1,4 @@
-import {
-  collection,
-  deleteDoc,
-  doc,
-  setDoc,
-  type Unsubscribe,
-} from 'firebase/firestore'
+import { collection, deleteDoc, doc, setDoc, type Unsubscribe } from 'firebase/firestore'
 import { db } from '../firebase'
 import { subscribeCollection } from './firestoreCollection'
 import { toRecurringSkip } from './normalize'
@@ -28,6 +22,9 @@ export async function skipRecurringForMonth(recurringId: string, monthKey: strin
   await setDoc(doc(SKIPS, skipDocId(recurringId, monthKey)), { recurringId, monthKey })
 }
 
-export async function unskipRecurringForMonth(recurringId: string, monthKey: string): Promise<void> {
+export async function unskipRecurringForMonth(
+  recurringId: string,
+  monthKey: string,
+): Promise<void> {
   await deleteDoc(doc(SKIPS, skipDocId(recurringId, monthKey)))
 }

@@ -1,31 +1,9 @@
-import { useEffect, useState } from 'react'
-import { subscribeRecurring } from '../lib/firestoreRecurring'
-import type { RecurringItem } from '../domain/types'
-import { firestoreErrorMessage } from '../domain/firestoreErrors'
-import { useDataErrorToast } from './useDataErrorToast'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useRecurring() {
-  const [items, setItems] = useState<RecurringItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    return subscribeRecurring(
-      (data) => {
-        setItems(data)
-        setError(null)
-        setLoading(false)
-      },
-      (err) => {
-        // Hata gelirse yukleme durumu kapanmali; aksi halde ekran
-        // sonsuza kadar "Yükleniyor..." kalirdi.
-        setError(firestoreErrorMessage(err))
-        setLoading(false)
-      },
-    )
-  }, [])
-
-  useDataErrorToast(error, 'Sabit giderler')
-
-  return { items, loading, error }
+  const data = useData()
+  return { items: data.recurring, loading: data.loading.recurring, error: data.error }
 }

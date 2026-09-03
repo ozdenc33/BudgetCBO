@@ -24,8 +24,7 @@ function normalize(value: string): string {
 }
 
 function matchesText(tx: ComputedTransaction, needle: string): boolean {
-  const haystack = [tx.description, tx.category, tx.account, tx.tag ?? '', tx.note ?? '']
-    .join(' ')
+  const haystack = [tx.description, tx.category, tx.account, tx.tag ?? '', tx.note ?? ''].join(' ')
   return normalize(haystack).includes(normalize(needle))
 }
 

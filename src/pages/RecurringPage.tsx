@@ -4,11 +4,7 @@ import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useRecurring } from '../hooks/useRecurring'
 import { useRecurringSkips } from '../hooks/useRecurringSkips'
-import {
-  addRecurring,
-  deleteRecurring,
-  updateRecurring,
-} from '../lib/firestoreRecurring'
+import { addRecurring, deleteRecurring, updateRecurring } from '../lib/firestoreRecurring'
 import { skipRecurringForMonth, unskipRecurringForMonth } from '../lib/firestoreRecurringSkips'
 import { addTransaction } from '../lib/firestoreTransactions'
 import { computeRecurringItems, draftTransactionsForMonth } from '../domain/recurring'
@@ -130,7 +126,11 @@ export function RecurringPage() {
     [items, month, transactions, settings, today, skippedIds],
   )
 
-  async function handleConfirm(itemId: string, defaultAmount: number, draft: ReturnType<typeof draftTransactionsForMonth>[number]['draft']) {
+  async function handleConfirm(
+    itemId: string,
+    defaultAmount: number,
+    draft: ReturnType<typeof draftTransactionsForMonth>[number]['draft'],
+  ) {
     const raw = draftAmounts[itemId]
     const amount = raw !== undefined && raw !== '' ? Number(raw) : defaultAmount
     const ok = await runWrite(addTransaction({ ...draft, amount }), {
@@ -216,7 +216,9 @@ export function RecurringPage() {
                     type="number"
                     step="0.01"
                     placeholder={item.amount != null ? String(item.amount) : 'Tutar'}
-                    value={draftAmounts[item.id] ?? (item.amount != null ? String(item.amount) : '')}
+                    value={
+                      draftAmounts[item.id] ?? (item.amount != null ? String(item.amount) : '')
+                    }
                     onChange={(e) =>
                       setDraftAmounts({ ...draftAmounts, [item.id]: e.target.value })
                     }
@@ -304,117 +306,117 @@ export function RecurringPage() {
           {editingId ? 'Sabit gideri düzenle' : '+ Yeni sabit gider'}
         </summary>
         <form className="expense-form" onSubmit={handleSubmit}>
-        <h2>{editingId ? 'Sabit Gideri Düzenle' : 'Yeni Sabit Gider'}</h2>
-        <label>
-          Kalem
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Bütçe
-          <select
-            value={form.budgetType}
-            onChange={(e) => setForm({ ...form, budgetType: e.target.value as BudgetType })}
-          >
-            {BUDGET_TYPES_ORDER.map((bt) => (
-              <option key={bt} value={bt}>
-                {bt}
+          <h2>{editingId ? 'Sabit Gideri Düzenle' : 'Yeni Sabit Gider'}</h2>
+          <label>
+            Kalem
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Bütçe
+            <select
+              value={form.budgetType}
+              onChange={(e) => setForm({ ...form, budgetType: e.target.value as BudgetType })}
+            >
+              {BUDGET_TYPES_ORDER.map((bt) => (
+                <option key={bt} value={bt}>
+                  {bt}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Kategori
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Kategori
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.categories.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
+              {settings.categories.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Tutar (EUR, opsiyonel)
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            />
+          </label>
+          <label>
+            Sıklık
+            <select
+              value={form.frequencyMonths}
+              onChange={(e) =>
+                setForm({ ...form, frequencyMonths: Number(e.target.value) as FrequencyMonths })
+              }
+            >
+              {FREQUENCIES.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Hesap (plan)
+            <select
+              value={form.account}
+              onChange={(e) => setForm({ ...form, account: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Tutar (EUR, opsiyonel)
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-          />
-        </label>
-        <label>
-          Sıklık
-          <select
-            value={form.frequencyMonths}
-            onChange={(e) =>
-              setForm({ ...form, frequencyMonths: Number(e.target.value) as FrequencyMonths })
-            }
-          >
-            {FREQUENCIES.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Hesap (plan)
-          <select
-            value={form.account}
-            onChange={(e) => setForm({ ...form, account: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          İlk Ödeme Tarihi
-          <input
-            type="date"
-            value={form.firstPaymentDate}
-            onChange={(e) => setForm({ ...form, firstPaymentDate: e.target.value })}
-            required
-          />
-        </label>
-        <label className="settings-checkbox-label">
-          <input
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => setForm({ ...form, active: e.target.checked })}
-          />
-          Aktif
-        </label>
-        <label>
-          Not
-          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        </label>
-        <div className="expense-form-actions">
-          <button type="submit">{editingId ? 'Güncelle' : 'Kaydet'}</button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit}>
-              İptal
-            </button>
-          )}
-        </div>
-      </form>
+              {settings.accounts.map((a) => (
+                <option key={a.id} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            İlk Ödeme Tarihi
+            <input
+              type="date"
+              value={form.firstPaymentDate}
+              onChange={(e) => setForm({ ...form, firstPaymentDate: e.target.value })}
+              required
+            />
+          </label>
+          <label className="settings-checkbox-label">
+            <input
+              type="checkbox"
+              checked={form.active}
+              onChange={(e) => setForm({ ...form, active: e.target.checked })}
+            />
+            Aktif
+          </label>
+          <label>
+            Not
+            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </label>
+          <div className="expense-form-actions">
+            <button type="submit">{editingId ? 'Güncelle' : 'Kaydet'}</button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit}>
+                İptal
+              </button>
+            )}
+          </div>
+        </form>
       </details>
     </div>
   )

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { computeContributionSummary, contributionCheckEUR, contributionStatus } from './contributions'
+import {
+  computeContributionSummary,
+  contributionCheckEUR,
+  contributionStatus,
+} from './contributions'
 import { DEFAULT_SETTINGS } from './constants'
 import type { Income, Transaction, Transfer } from './types'
 
@@ -7,24 +11,129 @@ import type { Income, Transaction, Transfer } from './types'
 // fixture Faz 3/4/5 testleriyle ayni (Islemler!A4:S10, Gelirler!A4:K5,
 // Transferler!A4:M6).
 const TRANSACTIONS: Transaction[] = [
-  { id: '1', date: '2026-10-01', description: 'Ekim kira', category: 'Kira (Kaltmiete)', amount: 950, currency: 'EUR', account: 'Ortak Kasa' },
-  { id: '2', date: '2026-10-03', description: 'Lidl haftalik market', category: 'Market (Ev)', amount: 62.4, currency: 'EUR', account: 'Can-DE Girokonto' },
-  { id: '3', date: '2026-09-12', description: 'Mike kafes ve tasima cantasi', category: 'Kedi Evrak/Nakil', amount: 2400, currency: 'TRY', account: 'Can-TR Banka', canPct: 1 },
-  { id: '4', date: '2026-10-11', description: 'Stuttgart muze gunu', category: 'Gezi/Müze', amount: 24, currency: 'EUR', account: 'Can-Nakit' },
-  { id: '5', date: '2026-10-15', description: 'Fotoğraf filmi', category: 'Hobi/Fotoğraf', amount: 38.9, currency: 'EUR', account: 'Can-DE Girokonto', canPct: 1 },
-  { id: '6', date: '2026-10-18', description: 'Mama 4 kg', category: 'Mama', amount: 31.5, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
-  { id: '7', date: '2026-10-20', description: 'Kis montu', category: 'Giyim', amount: 89.99, currency: 'EUR', account: 'Tuğçe-DE Girokonto', tugcePct: 1 },
+  {
+    id: '1',
+    date: '2026-10-01',
+    description: 'Ekim kira',
+    category: 'Kira (Kaltmiete)',
+    amount: 950,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
+  {
+    id: '2',
+    date: '2026-10-03',
+    description: 'Lidl haftalik market',
+    category: 'Market (Ev)',
+    amount: 62.4,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
+  {
+    id: '3',
+    date: '2026-09-12',
+    description: 'Mike kafes ve tasima cantasi',
+    category: 'Kedi Evrak/Nakil',
+    amount: 2400,
+    currency: 'TRY',
+    account: 'Can-TR Banka',
+    canPct: 1,
+  },
+  {
+    id: '4',
+    date: '2026-10-11',
+    description: 'Stuttgart muze gunu',
+    category: 'Gezi/Müze',
+    amount: 24,
+    currency: 'EUR',
+    account: 'Can-Nakit',
+  },
+  {
+    id: '5',
+    date: '2026-10-15',
+    description: 'Fotoğraf filmi',
+    category: 'Hobi/Fotoğraf',
+    amount: 38.9,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+    canPct: 1,
+  },
+  {
+    id: '6',
+    date: '2026-10-18',
+    description: 'Mama 4 kg',
+    category: 'Mama',
+    amount: 31.5,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
+  {
+    id: '7',
+    date: '2026-10-20',
+    description: 'Kis montu',
+    category: 'Giyim',
+    amount: 89.99,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+    tugcePct: 1,
+  },
 ]
 
 const INCOMES: Income[] = [
-  { id: '1', date: '2026-10-05', source: 'Sperrkonto', person: 'Can', amount: 992, currency: 'EUR', account: 'Can-DE Girokonto' },
-  { id: '2', date: '2026-10-28', source: 'HiWi', person: 'Tuğçe', amount: 520, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
+  {
+    id: '1',
+    date: '2026-10-05',
+    source: 'Sperrkonto',
+    person: 'Can',
+    amount: 992,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
+  {
+    id: '2',
+    date: '2026-10-28',
+    source: 'HiWi',
+    person: 'Tuğçe',
+    amount: 520,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
 ]
 
 const TRANSFERS: Transfer[] = [
-  { id: '1', date: '2026-09-28', type: 'Ortak Kasa Katkısı', from: 'Can', to: 'Ortak Kasa', amount: 500, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Ortak Kasa' },
-  { id: '2', date: '2026-09-28', type: 'Ortak Kasa Katkısı', from: 'Tuğçe', to: 'Ortak Kasa', amount: 500, currency: 'EUR', fromAccount: 'Tuğçe-DE Girokonto', toAccount: 'Ortak Kasa' },
-  { id: '3', date: '2026-10-30', type: 'Tasarruf', from: 'Can', to: 'Acil Durum Fonu', amount: 100, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Can-Tasarruf' },
+  {
+    id: '1',
+    date: '2026-09-28',
+    type: 'Ortak Kasa Katkısı',
+    from: 'Can',
+    to: 'Ortak Kasa',
+    amount: 500,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Ortak Kasa',
+  },
+  {
+    id: '2',
+    date: '2026-09-28',
+    type: 'Ortak Kasa Katkısı',
+    from: 'Tuğçe',
+    to: 'Ortak Kasa',
+    amount: 500,
+    currency: 'EUR',
+    fromAccount: 'Tuğçe-DE Girokonto',
+    toAccount: 'Ortak Kasa',
+  },
+  {
+    id: '3',
+    date: '2026-10-30',
+    type: 'Tasarruf',
+    from: 'Can',
+    to: 'Acil Durum Fonu',
+    amount: 100,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Can-Tasarruf',
+  },
 ]
 
 describe('computeContributionSummary — Hesaplar!A25:F26 ile karsilastirma', () => {
@@ -91,8 +200,22 @@ describe('computeContributionSummary — Hesaplar!A25:F26 ile karsilastirma', ()
 describe('contributionStatus — esit durumda', () => {
   it('iki fark da sifirsa dengede sayilir', () => {
     const rows = [
-      { person: 'Can' as const, directlyPaidEUR: 0, paidIntoSharedAccountEUR: 0, totalContributionEUR: 0, ownShareEUR: 0, diffEUR: 0 },
-      { person: 'Tuğçe' as const, directlyPaidEUR: 0, paidIntoSharedAccountEUR: 0, totalContributionEUR: 0, ownShareEUR: 0, diffEUR: 0 },
+      {
+        person: 'Can' as const,
+        directlyPaidEUR: 0,
+        paidIntoSharedAccountEUR: 0,
+        totalContributionEUR: 0,
+        ownShareEUR: 0,
+        diffEUR: 0,
+      },
+      {
+        person: 'Tuğçe' as const,
+        directlyPaidEUR: 0,
+        paidIntoSharedAccountEUR: 0,
+        totalContributionEUR: 0,
+        ownShareEUR: 0,
+        diffEUR: 0,
+      },
     ]
     expect(contributionStatus(rows)).toEqual({ balanced: true })
   })

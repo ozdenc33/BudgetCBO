@@ -18,11 +18,15 @@ function row(partial: Partial<BudgetTypeRow>): BudgetTypeRow {
 
 describe('computeBudgetAlerts', () => {
   it('limiti girilmemis satir hic uyarmaz', () => {
-    expect(computeBudgetAlerts([row({ spentEUR: 5000, limitEUR: 0, usagePct: undefined })])).toEqual([])
+    expect(
+      computeBudgetAlerts([row({ spentEUR: 5000, limitEUR: 0, usagePct: undefined })]),
+    ).toEqual([])
   })
 
   it('limitin altinda kalan (%79) uyarmaz', () => {
-    expect(computeBudgetAlerts([row({ spentEUR: 790, limitEUR: 1000, usagePct: 0.79 })])).toEqual([])
+    expect(computeBudgetAlerts([row({ spentEUR: 790, limitEUR: 1000, usagePct: 0.79 })])).toEqual(
+      [],
+    )
   })
 
   it('%80 esiginde "yaklasti" uyarisi verir ve kalani hesaplar', () => {
@@ -54,18 +58,21 @@ describe('computeBudgetAlerts', () => {
 })
 
 describe('findNegativeBalances', () => {
-  const balance = (name: string, balanceEUR: number) =>
-    ({
-      account: { id: name, name, currency: 'EUR' as const, owner: 'Ortak Kasa' as const },
-      incomesEUR: 0,
-      expensesEUR: 0,
-      transfersOutEUR: 0,
-      transfersInEUR: 0,
-      balanceEUR,
-    })
+  const balance = (name: string, balanceEUR: number) => ({
+    account: { id: name, name, currency: 'EUR' as const, owner: 'Ortak Kasa' as const },
+    incomesEUR: 0,
+    expensesEUR: 0,
+    transfersOutEUR: 0,
+    transfersInEUR: 0,
+    balanceEUR,
+  })
 
   it('yalnizca eksideki hesaplari dondurur', () => {
-    const rows = findNegativeBalances([balance('Ortak Kasa', -190.08), balance('Can-Nakit', 0), balance('Can-Tasarruf', 350)])
+    const rows = findNegativeBalances([
+      balance('Ortak Kasa', -190.08),
+      balance('Can-Nakit', 0),
+      balance('Can-Tasarruf', 350),
+    ])
     expect(rows.map((r) => r.account.name)).toEqual(['Ortak Kasa'])
   })
 

@@ -22,7 +22,11 @@ function headerRow(sheet: ExcelJS.Worksheet, rowNumber: number, headers: string[
   row.font = { bold: true }
 }
 
-function dataRow(sheet: ExcelJS.Worksheet, rowNumber: number, values: (string | number | undefined)[]) {
+function dataRow(
+  sheet: ExcelJS.Worksheet,
+  rowNumber: number,
+  values: (string | number | undefined)[],
+) {
   const row = sheet.getRow(rowNumber)
   values.forEach((v, i) => {
     if (v !== undefined && v !== '') row.getCell(i + 1).value = v
@@ -44,53 +48,133 @@ export async function exportWorkbook(data: {
 
   const islemler = workbook.addWorksheet('Islemler')
   headerRow(islemler, 3, [
-    'Tarih', 'Açıklama', 'Kategori', 'Tutar', 'Hesap', 'Para Birimi', 'Can %', 'Tuğçe %',
-    'Kontrol', 'Tutar (EUR)', 'Bütçe', 'Can Payı (EUR)', 'Tuğçe Payı (EUR)', 'Ay', 'Etiket', 'Not',
+    'Tarih',
+    'Açıklama',
+    'Kategori',
+    'Tutar',
+    'Hesap',
+    'Para Birimi',
+    'Can %',
+    'Tuğçe %',
+    'Kontrol',
+    'Tutar (EUR)',
+    'Bütçe',
+    'Can Payı (EUR)',
+    'Tuğçe Payı (EUR)',
+    'Ay',
+    'Etiket',
+    'Not',
   ])
   transactions
     .map((t) => computeTransaction(t, settings))
     .sort((a, b) => a.date.localeCompare(b.date))
     .forEach((t, i) => {
       dataRow(islemler, 4 + i, [
-        t.date, t.description, t.category, t.amount, t.account, t.currency, t.canPct, t.tugcePct,
-        t.validation, t.amountEUR, t.budgetType, t.canShare, t.tugceShare, t.monthKey, t.tag, t.note,
+        t.date,
+        t.description,
+        t.category,
+        t.amount,
+        t.account,
+        t.currency,
+        t.canPct,
+        t.tugcePct,
+        t.validation,
+        t.amountEUR,
+        t.budgetType,
+        t.canShare,
+        t.tugceShare,
+        t.monthKey,
+        t.tag,
+        t.note,
       ])
     })
 
   const gelirler = workbook.addWorksheet('Gelirler')
   headerRow(gelirler, 3, [
-    'Tarih', 'Ay', 'Kaynak', 'Kişi', 'Tutar', 'Para Birimi', 'Kur', 'Tutar (EUR)', 'Hesap', 'Not', 'Kontrol',
+    'Tarih',
+    'Ay',
+    'Kaynak',
+    'Kişi',
+    'Tutar',
+    'Para Birimi',
+    'Kur',
+    'Tutar (EUR)',
+    'Hesap',
+    'Not',
+    'Kontrol',
   ])
   incomes
     .map((i) => computeIncome(i, settings))
     .sort((a, b) => a.date.localeCompare(b.date))
     .forEach((inc, i) => {
       dataRow(gelirler, 4 + i, [
-        inc.date, inc.monthKey, inc.source, inc.person, inc.amount, inc.currency, inc.rate,
-        inc.amountEUR, inc.account, inc.note, inc.validation,
+        inc.date,
+        inc.monthKey,
+        inc.source,
+        inc.person,
+        inc.amount,
+        inc.currency,
+        inc.rate,
+        inc.amountEUR,
+        inc.account,
+        inc.note,
+        inc.validation,
       ])
     })
 
   const transferler = workbook.addWorksheet('Transferler')
   headerRow(transferler, 3, [
-    'Tarih', 'Ay', 'Tip', 'Gönderen', 'Alıcı', 'Tutar', 'Para Birimi', 'Kur', 'Tutar (EUR)',
-    'Kaynak Hesap', 'Hedef Hesap', 'Not', 'Kontrol',
+    'Tarih',
+    'Ay',
+    'Tip',
+    'Gönderen',
+    'Alıcı',
+    'Tutar',
+    'Para Birimi',
+    'Kur',
+    'Tutar (EUR)',
+    'Kaynak Hesap',
+    'Hedef Hesap',
+    'Not',
+    'Kontrol',
   ])
   transfers
     .map((t) => computeTransfer(t, settings))
     .sort((a, b) => a.date.localeCompare(b.date))
     .forEach((t, i) => {
       dataRow(transferler, 4 + i, [
-        t.date, t.monthKey, t.type, t.from, t.to, t.amount, t.currency, t.rate, t.amountEUR,
-        t.fromAccount, t.toAccount, t.note, t.validation,
+        t.date,
+        t.monthKey,
+        t.type,
+        t.from,
+        t.to,
+        t.amount,
+        t.currency,
+        t.rate,
+        t.amountEUR,
+        t.fromAccount,
+        t.toAccount,
+        t.note,
+        t.validation,
       ])
     })
 
   const sabitGiderler = workbook.addWorksheet('Sabit_Giderler')
   headerRow(sabitGiderler, 3, [
-    'Kalem', 'Bütçe', 'Kategori', 'Tutar (EUR)', 'Sıklık (ay)', 'Hesap (plan)',
-    'İlk Ödeme Tarihi', 'Aktif', 'Aylık Eşdeğer', 'Sonraki Ödeme', 'Kalan Gün',
-    'Bu Ay Girilen (EUR)', 'Seçili Ay Durumu', 'Not',
+    'Kalem',
+    'Bütçe',
+    'Kategori',
+    'Tutar (EUR)',
+    'Sıklık (ay)',
+    'Hesap (plan)',
+    'İlk Ödeme Tarihi',
+    'Aktif',
+    'Aylık Eşdeğer',
+    'Sonraki Ödeme',
+    'Kalan Gün',
+    'Bu Ay Girilen (EUR)',
+    'Seçili Ay Durumu',
+    'Not',
   ])
   const monthLabel: Record<string, string> = {
     pasif: '-',
@@ -100,27 +184,58 @@ export async function exportWorkbook(data: {
     eksik: 'EKSIK',
   }
   const selectedMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
-  computeRecurringItems(recurring, selectedMonthKey, transactions, settings, today).forEach((r, i) => {
-    dataRow(sabitGiderler, 4 + i, [
-      r.name, r.budgetType, r.category, r.amount, r.frequencyMonths, r.account,
-      r.firstPaymentDate, r.active ? 'Evet' : 'Hayır', r.monthlyEquivalentEUR,
-      r.nextPaymentDate, r.remainingDays, r.enteredThisMonthEUR, monthLabel[r.monthStatus],
-      r.note,
-    ])
-  })
+  computeRecurringItems(recurring, selectedMonthKey, transactions, settings, today).forEach(
+    (r, i) => {
+      dataRow(sabitGiderler, 4 + i, [
+        r.name,
+        r.budgetType,
+        r.category,
+        r.amount,
+        r.frequencyMonths,
+        r.account,
+        r.firstPaymentDate,
+        r.active ? 'Evet' : 'Hayır',
+        r.monthlyEquivalentEUR,
+        r.nextPaymentDate,
+        r.remainingDays,
+        r.enteredThisMonthEUR,
+        monthLabel[r.monthStatus],
+        r.note,
+      ])
+    },
+  )
 
   const hedefler = workbook.addWorksheet('Hedefler')
   headerRow(hedefler, 3, [
-    'Hedef', 'Sahip', 'Hedef Tutar (EUR)', 'Hedef Tarih', 'Biriken (EUR)', 'Kalan (EUR)',
-    'İlerleme %', 'Kalan Ay', 'Aylık Gereken', 'Can Katkısı', 'Tuğçe Katkısı', 'Not',
+    'Hedef',
+    'Sahip',
+    'Hedef Tutar (EUR)',
+    'Hedef Tarih',
+    'Biriken (EUR)',
+    'Kalan (EUR)',
+    'İlerleme %',
+    'Kalan Ay',
+    'Aylık Gereken',
+    'Can Katkısı',
+    'Tuğçe Katkısı',
+    'Not',
   ])
   goals
     .map((g) => computeGoal(g, transfers, settings, today))
     .forEach((g, i) => {
       dataRow(hedefler, 4 + i, [
-        g.name, g.owner, g.targetAmount, g.targetDate, g.accumulatedEUR, g.remainingEUR,
-        g.progressPct, g.remainingMonths, g.monthlyRequiredEUR, g.canContributionEUR,
-        g.tugceContributionEUR, g.note,
+        g.name,
+        g.owner,
+        g.targetAmount,
+        g.targetDate,
+        g.accumulatedEUR,
+        g.remainingEUR,
+        g.progressPct,
+        g.remainingMonths,
+        g.monthlyRequiredEUR,
+        g.canContributionEUR,
+        g.tugceContributionEUR,
+        g.note,
       ])
     })
 

@@ -15,12 +15,42 @@ import { monthKeyOf, resolveRate } from './rate'
 
 export { monthKeyOf }
 
+/**
+ * Hesap ve kategori aramalari icin ad->kayit indeksi.
+ *
+ * NEDEN: Bu iki arama her islem icin bir kez calisir ve `Array.find`
+ * ile ~45 kategori + 8 hesap uzerinde geziyordu. Ay panosu, bakiyeler,
+ * limit uyarilari gibi hesaplar ayni listeyi bastan sona birkac kez
+ * dolastigi icin maliyet kayit sayisiyla carpiliyordu.
+ *
+ * Indeks WeakMap'te settings nesnesine bagli tutulur: Firestore her
+ * anlik goruntude yeni bir settings nesnesi verdigi icin indeks
+ * kendiliginden tazelenir, eskisi cop toplayiciya birakilir.
+ */
+type SettingsIndex = {
+  accounts: Map<string, Account>
+  categories: Map<string, Category>
+}
+
+const settingsIndexCache = new WeakMap<Settings, SettingsIndex>()
+
+function indexOf(settings: Settings): SettingsIndex {
+  const cached = settingsIndexCache.get(settings)
+  if (cached) return cached
+  const index: SettingsIndex = {
+    accounts: new Map(settings.accounts.map((a) => [a.name, a])),
+    categories: new Map(settings.categories.map((c) => [c.name, c])),
+  }
+  settingsIndexCache.set(settings, index)
+  return index
+}
+
 export function findAccount(name: string, settings: Settings): Account | undefined {
-  return settings.accounts.find((a) => a.name === name)
+  return indexOf(settings).accounts.get(name)
 }
 
 export function findCategory(name: string, settings: Settings): Category | undefined {
-  return settings.categories.find((c) => c.name === name)
+  return indexOf(settings).categories.get(name)
 }
 
 function resolveRatio(

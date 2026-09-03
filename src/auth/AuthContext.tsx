@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -24,7 +18,6 @@ type AuthState = {
 }
 
 const AuthContext = createContext<AuthState | null>(null)
-
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

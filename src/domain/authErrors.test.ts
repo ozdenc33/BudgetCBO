@@ -14,7 +14,9 @@ describe('signInErrorMessage', () => {
   })
 
   it('gercek kimlik hatasinda sifre mesajini verir', () => {
-    expect(signInErrorMessage({ code: 'auth/invalid-credential' })).toBe('E-posta veya şifre hatalı.')
+    expect(signInErrorMessage({ code: 'auth/invalid-credential' })).toBe(
+      'E-posta veya şifre hatalı.',
+    )
     expect(signInErrorMessage({ code: 'auth/wrong-password' })).toBe('E-posta veya şifre hatalı.')
   })
 
@@ -23,7 +25,9 @@ describe('signInErrorMessage', () => {
   })
 
   it('bilinmeyen ve bicimsiz hatalarda genel mesaj verir', () => {
-    expect(signInErrorMessage({ code: 'auth/internal-error' })).toBe('Giriş yapılamadı. Lütfen tekrar deneyin.')
+    expect(signInErrorMessage({ code: 'auth/internal-error' })).toBe(
+      'Giriş yapılamadı. Lütfen tekrar deneyin.',
+    )
     expect(signInErrorMessage(new Error('bum'))).toBe('Giriş yapılamadı. Lütfen tekrar deneyin.')
     expect(signInErrorMessage(null)).toBe('Giriş yapılamadı. Lütfen tekrar deneyin.')
   })

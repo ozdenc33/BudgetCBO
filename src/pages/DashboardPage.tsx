@@ -171,38 +171,40 @@ export function DashboardPage() {
           <p className="expenses-empty">Bu ayda henüz harcama yok.</p>
         ) : (
           <>
-          <CategoryBars
-            rows={categoryRows.slice(0, 8).map((r) => ({
-              key: r.category.id,
-              label: r.category.name,
-              value: r.spentEUR,
-            }))}
-          />
-          {categoryRows.length > 8 && (
-            <p className="chart-note">Grafikte en yüksek 8 kategori var; tamamı aşağıdaki tabloda.</p>
-          )}
-          <div className="table-scroll">
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Kategori</th>
-                  <th>Harcama</th>
-                  <th>Pay</th>
-                  <th>Önceki Ay</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categoryRows.map((r) => (
-                  <tr key={r.category.id}>
-                    <td>{r.category.name}</td>
-                    <td>{fmt(r.spentEUR)} €</td>
-                    <td>{fmtPct(r.sharePct)}</td>
-                    <td>{fmt(r.previousSpentEUR)} €</td>
+            <CategoryBars
+              rows={categoryRows.slice(0, 8).map((r) => ({
+                key: r.category.id,
+                label: r.category.name,
+                value: r.spentEUR,
+              }))}
+            />
+            {categoryRows.length > 8 && (
+              <p className="chart-note">
+                Grafikte en yüksek 8 kategori var; tamamı aşağıdaki tabloda.
+              </p>
+            )}
+            <div className="table-scroll">
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Kategori</th>
+                    <th>Harcama</th>
+                    <th>Pay</th>
+                    <th>Önceki Ay</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {categoryRows.map((r) => (
+                    <tr key={r.category.id}>
+                      <td>{r.category.name}</td>
+                      <td>{fmt(r.spentEUR)} €</td>
+                      <td>{fmtPct(r.sharePct)}</td>
+                      <td>{fmt(r.previousSpentEUR)} €</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </section>
@@ -227,52 +229,52 @@ export function DashboardPage() {
           <p className="expenses-empty">Henüz veri yok.</p>
         ) : (
           <>
-          <MonthlyColumns
-            labelA="Harcama"
-            labelB="Gelir"
-            rows={progress.slice(-12).map((row) => ({
-              key: row.monthKey,
-              label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
-              a: row.totalEUR,
-              b: row.incomeEUR,
-            }))}
-          />
-          <p className="chart-note">Net (gelir − harcama) trendi</p>
-          <NetTrend
-            rows={progress.slice(-12).map((row) => ({
-              key: row.monthKey,
-              label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
-              net: row.netEUR,
-            }))}
-          />
-          <div className="table-scroll">
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Ay</th>
-                  {BUDGET_TYPES_ORDER.map((bt) => (
-                    <th key={bt}>{bt}</th>
-                  ))}
-                  <th>Toplam</th>
-                  <th>Gelir</th>
-                  <th>Net</th>
-                </tr>
-              </thead>
-              <tbody>
-                {progress.map((row) => (
-                  <tr key={row.monthKey} className={row.monthKey === month ? 'row-current' : ''}>
-                    <td>{row.monthKey}</td>
+            <MonthlyColumns
+              labelA="Harcama"
+              labelB="Gelir"
+              rows={progress.slice(-12).map((row) => ({
+                key: row.monthKey,
+                label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
+                a: row.totalEUR,
+                b: row.incomeEUR,
+              }))}
+            />
+            <p className="chart-note">Net (gelir − harcama) trendi</p>
+            <NetTrend
+              rows={progress.slice(-12).map((row) => ({
+                key: row.monthKey,
+                label: row.monthKey.slice(5) + '.' + row.monthKey.slice(2, 4),
+                net: row.netEUR,
+              }))}
+            />
+            <div className="table-scroll">
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Ay</th>
                     {BUDGET_TYPES_ORDER.map((bt) => (
-                      <td key={bt}>{fmt(row.byBudgetType[bt])}</td>
+                      <th key={bt}>{bt}</th>
                     ))}
-                    <td>{fmt(row.totalEUR)}</td>
-                    <td>{fmt(row.incomeEUR)}</td>
-                    <td className={row.netEUR < 0 ? 'cell-negative' : ''}>{fmt(row.netEUR)}</td>
+                    <th>Toplam</th>
+                    <th>Gelir</th>
+                    <th>Net</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {progress.map((row) => (
+                    <tr key={row.monthKey} className={row.monthKey === month ? 'row-current' : ''}>
+                      <td>{row.monthKey}</td>
+                      {BUDGET_TYPES_ORDER.map((bt) => (
+                        <td key={bt}>{fmt(row.byBudgetType[bt])}</td>
+                      ))}
+                      <td>{fmt(row.totalEUR)}</td>
+                      <td>{fmt(row.incomeEUR)}</td>
+                      <td className={row.netEUR < 0 ? 'cell-negative' : ''}>{fmt(row.netEUR)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </section>

@@ -133,11 +133,14 @@ export function GoalsPage() {
             )}
             <div className="goal-card-meta">
               <span>
-                Biriken {fmt(g.accumulatedEUR)} € {g.targetAmount != null ? `/ ${fmt(g.targetAmount)} €` : ''}
+                Biriken {fmt(g.accumulatedEUR)} €{' '}
+                {g.targetAmount != null ? `/ ${fmt(g.targetAmount)} €` : ''}
               </span>
               <span>İlerleme {fmtPct(g.progressPct)}</span>
               {g.remainingMonths != null && <span>Kalan {g.remainingMonths} ay</span>}
-              {g.monthlyRequiredEUR != null && <span>Aylık gereken {fmt(g.monthlyRequiredEUR)} €</span>}
+              {g.monthlyRequiredEUR != null && (
+                <span>Aylık gereken {fmt(g.monthlyRequiredEUR)} €</span>
+              )}
             </div>
             <div className="goal-card-meta">
               <span>Can {fmt(g.canContributionEUR)} €</span>
@@ -154,7 +157,9 @@ export function GoalsPage() {
 
       {computed.length > 0 && (
         <div className="balances-total">
-          <span>Toplam: biriken {fmt(totals.accumulatedEUR)} € / hedef {fmt(totals.targetEUR)} €</span>
+          <span>
+            Toplam: biriken {fmt(totals.accumulatedEUR)} € / hedef {fmt(totals.targetEUR)} €
+          </span>
           <span>Kalan {fmt(totals.remainingEUR)} €</span>
         </div>
       )}
@@ -164,63 +169,61 @@ export function GoalsPage() {
         open={formOpen}
         onToggle={(e) => setFormOpen(e.currentTarget.open)}
       >
-        <summary className="form-summary">
-          {editingId ? 'Hedefi düzenle' : '+ Yeni hedef'}
-        </summary>
+        <summary className="form-summary">{editingId ? 'Hedefi düzenle' : '+ Yeni hedef'}</summary>
         <form className="expense-form" onSubmit={handleSubmit}>
-        <h2>{editingId ? 'Hedefi Düzenle' : 'Yeni Hedef'}</h2>
-        <label>
-          Hedef
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Sahip
-          <select
-            value={form.owner}
-            onChange={(e) => setForm({ ...form, owner: e.target.value as GoalOwner })}
-          >
-            {OWNERS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Hedef Tutar (EUR, opsiyonel)
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.targetAmount}
-            onChange={(e) => setForm({ ...form, targetAmount: e.target.value })}
-          />
-        </label>
-        <label>
-          Hedef Tarih (opsiyonel)
-          <input
-            type="date"
-            value={form.targetDate}
-            onChange={(e) => setForm({ ...form, targetDate: e.target.value })}
-          />
-        </label>
-        <label>
-          Not
-          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        </label>
-        <div className="expense-form-actions">
-          <button type="submit">{editingId ? 'Güncelle' : 'Kaydet'}</button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit}>
-              İptal
-            </button>
-          )}
-        </div>
-      </form>
+          <h2>{editingId ? 'Hedefi Düzenle' : 'Yeni Hedef'}</h2>
+          <label>
+            Hedef
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Sahip
+            <select
+              value={form.owner}
+              onChange={(e) => setForm({ ...form, owner: e.target.value as GoalOwner })}
+            >
+              {OWNERS.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Hedef Tutar (EUR, opsiyonel)
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.targetAmount}
+              onChange={(e) => setForm({ ...form, targetAmount: e.target.value })}
+            />
+          </label>
+          <label>
+            Hedef Tarih (opsiyonel)
+            <input
+              type="date"
+              value={form.targetDate}
+              onChange={(e) => setForm({ ...form, targetDate: e.target.value })}
+            />
+          </label>
+          <label>
+            Not
+            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </label>
+          <div className="expense-form-actions">
+            <button type="submit">{editingId ? 'Güncelle' : 'Kaydet'}</button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit}>
+                İptal
+              </button>
+            )}
+          </div>
+        </form>
       </details>
     </div>
   )

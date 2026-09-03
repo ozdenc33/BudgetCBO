@@ -10,13 +10,31 @@ async function buildWorkbook(): Promise<ArrayBuffer> {
 
   const islemler = wb.addWorksheet('Islemler')
   islemler.getRow(3).values = [
-    'Tarih', 'Açıklama', 'Kategori', 'Tutar', 'Hesap', 'Para Birimi', 'Can %', 'Tuğçe %',
+    'Tarih',
+    'Açıklama',
+    'Kategori',
+    'Tutar',
+    'Hesap',
+    'Para Birimi',
+    'Can %',
+    'Tuğçe %',
   ]
   islemler.getRow(4).values = [
-    new Date(2026, 9, 1), 'Ekim kira', 'Kira (Kaltmiete)', 950, 'Ortak Kasa', 'EUR',
+    new Date(2026, 9, 1),
+    'Ekim kira',
+    'Kira (Kaltmiete)',
+    950,
+    'Ortak Kasa',
+    'EUR',
   ]
   islemler.getRow(5).values = [
-    new Date(2026, 9, 15), 'Fotoğraf filmi', 'Hobi/Fotoğraf', 38.9, 'Can-DE Girokonto', 'EUR', 1,
+    new Date(2026, 9, 15),
+    'Fotoğraf filmi',
+    'Hobi/Fotoğraf',
+    38.9,
+    'Can-DE Girokonto',
+    'EUR',
+    1,
   ]
   // O=15 Etiket, P=16 Not
   islemler.getCell(5, 15).value = 'Stuttgart'
@@ -26,37 +44,84 @@ async function buildWorkbook(): Promise<ArrayBuffer> {
 
   const gelirler = wb.addWorksheet('Gelirler')
   gelirler.getRow(3).values = [
-    'Tarih', 'Ay', 'Kaynak', 'Kişi', 'Tutar', 'Para Birimi', 'Kur', 'Tutar (EUR)', 'Hesap', 'Not',
+    'Tarih',
+    'Ay',
+    'Kaynak',
+    'Kişi',
+    'Tutar',
+    'Para Birimi',
+    'Kur',
+    'Tutar (EUR)',
+    'Hesap',
+    'Not',
   ]
   gelirler.getRow(4).values = [
-    new Date(2026, 9, 5), '2026-10', 'Sperrkonto', 'Can', 992, 'EUR', 1, 992, 'Can-DE Girokonto', 'not',
+    new Date(2026, 9, 5),
+    '2026-10',
+    'Sperrkonto',
+    'Can',
+    992,
+    'EUR',
+    1,
+    992,
+    'Can-DE Girokonto',
+    'not',
   ]
 
   const transferler = wb.addWorksheet('Transferler')
   transferler.getRow(3).values = [
-    'Tarih', 'Ay', 'Tip', 'Gönderen', 'Alıcı', 'Tutar', 'Para Birimi', 'Kur', 'Tutar (EUR)',
-    'Kaynak Hesap', 'Hedef Hesap', 'Not',
+    'Tarih',
+    'Ay',
+    'Tip',
+    'Gönderen',
+    'Alıcı',
+    'Tutar',
+    'Para Birimi',
+    'Kur',
+    'Tutar (EUR)',
+    'Kaynak Hesap',
+    'Hedef Hesap',
+    'Not',
   ]
   transferler.getRow(4).values = [
-    new Date(2026, 8, 28), '2026-09', 'Ortak Kasa Katkısı', 'Can', 'Ortak Kasa', 500, 'EUR', 1, 500,
-    'Can-DE Girokonto', 'Ortak Kasa',
+    new Date(2026, 8, 28),
+    '2026-09',
+    'Ortak Kasa Katkısı',
+    'Can',
+    'Ortak Kasa',
+    500,
+    'EUR',
+    1,
+    500,
+    'Can-DE Girokonto',
+    'Ortak Kasa',
   ]
 
   const sabit = wb.addWorksheet('Sabit_Giderler')
   sabit.getRow(3).values = [
-    'Kalem', 'Bütçe', 'Kategori', 'Tutar (EUR)', 'Sıklık (ay)', 'Hesap (plan)', 'İlk Ödeme Tarihi', 'Aktif',
+    'Kalem',
+    'Bütçe',
+    'Kategori',
+    'Tutar (EUR)',
+    'Sıklık (ay)',
+    'Hesap (plan)',
+    'İlk Ödeme Tarihi',
+    'Aktif',
   ]
   sabit.getRow(4).values = [
-    'Kira (Kaltmiete)', 'Ortak-Ev', 'Kira (Kaltmiete)', 950, 1, 'Ortak Kasa', new Date(2026, 9, 1), 'Evet',
+    'Kira (Kaltmiete)',
+    'Ortak-Ev',
+    'Kira (Kaltmiete)',
+    950,
+    1,
+    'Ortak Kasa',
+    new Date(2026, 9, 1),
+    'Evet',
   ]
 
   const hedefler = wb.addWorksheet('Hedefler')
-  hedefler.getRow(3).values = [
-    'Hedef', 'Sahip', 'Hedef Tutar (EUR)', 'Hedef Tarih',
-  ]
-  hedefler.getRow(4).values = [
-    'Acil Durum Fonu', 'Ortak', 2000, new Date(2027, 5, 30),
-  ]
+  hedefler.getRow(3).values = ['Hedef', 'Sahip', 'Hedef Tutar (EUR)', 'Hedef Tarih']
+  hedefler.getRow(4).values = ['Acil Durum Fonu', 'Ortak', 2000, new Date(2027, 5, 30)]
   // Satir 5-8 bos (gercek dosyada oldugu gibi), sonra bos bir satirla
   // ayrilmis TOPLAM ve not satirlari gelir — bunlar hedef sayilmamali.
   hedefler.getRow(9).values = ['TOPLAM', undefined, 2000]

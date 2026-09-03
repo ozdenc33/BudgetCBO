@@ -8,13 +8,30 @@ import type { Goal, Transfer } from './types'
 const TODAY = new Date(Date.UTC(2026, 8, 2))
 
 const GOALS: Goal[] = [
-  { id: 'acil', name: 'Acil Durum Fonu', owner: 'Ortak', targetAmount: 2000, targetDate: '2027-06-30', note: 'Örnek satır: 3 aylık ortak sabit gider' },
+  {
+    id: 'acil',
+    name: 'Acil Durum Fonu',
+    owner: 'Ortak',
+    targetAmount: 2000,
+    targetDate: '2027-06-30',
+    note: 'Örnek satır: 3 aylık ortak sabit gider',
+  },
   { id: 'turkiye', name: 'Türkiye Ziyareti 2027', owner: 'Ortak' },
   { id: 'kamera', name: 'Kamera Lens', owner: 'Can' },
 ]
 
 const TRANSFERS: Transfer[] = [
-  { id: '1', date: '2026-10-30', type: 'Tasarruf', from: 'Can', to: 'Acil Durum Fonu', amount: 100, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Can-Tasarruf' },
+  {
+    id: '1',
+    date: '2026-10-30',
+    type: 'Tasarruf',
+    from: 'Can',
+    to: 'Acil Durum Fonu',
+    amount: 100,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Can-Tasarruf',
+  },
 ]
 
 describe('computeGoals — Hedefler!A4:L6 (today=2026-09-02) ile karsilastirma', () => {

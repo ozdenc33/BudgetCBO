@@ -39,4 +39,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Firebase SDK'si uygulama kodundan cok daha nadir degisir.
+        // Ayri bir parcada tutulunca her kucuk arayuz degisikliginde
+        // kullanicinin ~200 KB'i yeniden indirmesi gerekmez.
+        manualChunks: {
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          react: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 })

@@ -60,7 +60,10 @@ export function QuickEntryPage() {
   )
 
   const canSubmit =
-    amount !== '' && category !== '' && account !== '' && (preview.validation === 'OK' || preview.validation === '')
+    amount !== '' &&
+    category !== '' &&
+    account !== '' &&
+    (preview.validation === 'OK' || preview.validation === '')
 
   async function commitSave(finalDraft: TransactionDraft) {
     setSaving(true)
@@ -191,11 +194,15 @@ export function QuickEntryPage() {
           </div>
         )}
 
-        {!pendingDuplicate && category && amount && preview.validation !== 'OK' && preview.validation !== '' && (
-          <div className="expense-preview expense-preview--error">
-            <span>{preview.validation}</span>
-          </div>
-        )}
+        {!pendingDuplicate &&
+          category &&
+          amount &&
+          preview.validation !== 'OK' &&
+          preview.validation !== '' && (
+            <div className="expense-preview expense-preview--error">
+              <span>{preview.validation}</span>
+            </div>
+          )}
 
         {!pendingDuplicate && (
           <button type="submit" className="quick-entry-submit" disabled={!canSubmit || saving}>

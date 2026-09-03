@@ -57,28 +57,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((t) => t.id !== id))
   }, [])
 
-  const showToast = useCallback(
-    (options: ToastOptions) => {
-      const id = options.key ?? `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      // Ayni anahtarli eski bildirimin sayaci varsa iptal et.
-      const existing = timers.current.get(id)
-      if (existing) clearTimeout(existing)
+  const showToast = useCallback((options: ToastOptions) => {
+    const id = options.key ?? `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    // Ayni anahtarli eski bildirimin sayaci varsa iptal et.
+    const existing = timers.current.get(id)
+    if (existing) clearTimeout(existing)
 
-      setToasts((current) => [...current.filter((t) => t.id !== id), { ...options, id }])
+    setToasts((current) => [...current.filter((t) => t.id !== id), { ...options, id }])
 
-      const duration = options.durationMs ?? DEFAULT_DURATION_MS
-      if (duration > 0) {
-        timers.current.set(
-          id,
-          setTimeout(() => {
-            timers.current.delete(id)
-            setToasts((current) => current.filter((t) => t.id !== id))
-          }, duration),
-        )
-      }
-    },
-    [],
-  )
+    const duration = options.durationMs ?? DEFAULT_DURATION_MS
+    if (duration > 0) {
+      timers.current.set(
+        id,
+        setTimeout(() => {
+          timers.current.delete(id)
+          setToasts((current) => current.filter((t) => t.id !== id))
+        }, duration),
+      )
+    }
+  }, [])
 
   // Bilesen sokulurse bekleyen sayaclar kalmasin.
   useEffect(() => {

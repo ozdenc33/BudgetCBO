@@ -102,7 +102,8 @@ export function monthStatus(
   }
   const enteredThisMonthEUR = computedTransactions
     .filter(
-      (t) => t.monthKey === monthKey && t.budgetType === item.budgetType && t.category === item.category,
+      (t) =>
+        t.monthKey === monthKey && t.budgetType === item.budgetType && t.category === item.category,
     )
     .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
 

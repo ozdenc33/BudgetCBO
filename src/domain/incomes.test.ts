@@ -47,7 +47,15 @@ describe('computeIncome — Gelirler A4:K5 ile karsilastirma', () => {
 describe('computeIncome — dogrulama', () => {
   it('kaynak/kisi/tutar/hesap eksikse hata verir', () => {
     const c = computeIncome(
-      { id: 'x', date: '2026-10-01', source: '', person: 'Can', amount: 0, currency: 'EUR', account: '' },
+      {
+        id: 'x',
+        date: '2026-10-01',
+        source: '',
+        person: 'Can',
+        amount: 0,
+        currency: 'EUR',
+        account: '',
+      },
       DEFAULT_SETTINGS,
     )
     expect(c.validation).toBe('Eksik alan: kaynak, kişi, tutar veya hesap')

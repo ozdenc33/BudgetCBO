@@ -1,8 +1,8 @@
 name: CI
 
-# Depoda 233 test vardi ama hicbir sey calistirmiyordu. Bu is akisi her
-# push ve pull request'te tip kontrolu, testler ve production build'i
-# calistirir.
+# Depoda 240'tan fazla test vardi ama hicbir sey calistirmiyordu. Bu is
+# akisi her push ve pull request'te lint, bicim, tip kontrolu, birim
+# testleri, Firestore kural testleri ve production build'i calistirir.
 on:
   push:
     branches: ['**']
@@ -19,14 +19,29 @@ jobs:
           node-version: '20'
           cache: npm
 
+      # Firestore emulator Java gerektirir (kural testleri icin).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Bagimliliklari kur
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Bicim kontrolu
+        run: npm run format:check
 
       - name: Tip kontrolu
         run: npm run typecheck
 
-      - name: Testler
+      - name: Birim testleri
         run: npm test
+
+      - name: Firestore kural testleri
+        run: npm run test:rules
 
       - name: Production build
         run: npm run build

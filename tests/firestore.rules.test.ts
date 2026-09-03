@@ -1,0 +1,237 @@
+import { readFileSync } from 'node:fs'
+import {
+  assertFails,
+  assertSucceeds,
+  initializeTestEnvironment,
+  type RulesTestEnvironment,
+} from '@firebase/rules-unit-testing'
+import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
+// firestore.rules dosyasinin gercekten dedigini yaptigini dogrular.
+// Emulator gerektirir; `npm run test:rules` ile calisir.
+
+const CAN_UID = 'Ml3QFPvFMGV9w9SfPWOR97xKxnQ2'
+const TUGCE_UID = 'Zo4l8zyn0TSKyf3ylXqQFELlG2R2'
+const STRANGER_UID = 'yabanci-uid'
+
+let testEnv: RulesTestEnvironment
+
+const validTransaction = {
+  date: '2026-07-15',
+  description: 'Market',
+  category: 'Market (Ev)',
+  amount: 42.5,
+  currency: 'EUR',
+  account: 'Ortak Kasa',
+}
+
+beforeAll(async () => {
+  testEnv = await initializeTestEnvironment({
+    projectId: 'budgetcbo-rules-test',
+    firestore: {
+      rules: readFileSync('firestore.rules', 'utf8'),
+      host: '127.0.0.1',
+      port: 8080,
+    },
+  })
+})
+
+afterAll(async () => {
+  await testEnv?.cleanup()
+})
+
+beforeEach(async () => {
+  await testEnv.clearFirestore()
+})
+
+describe('kimlik kontrolu', () => {
+  it('izinli kullanici yazabilir ve okuyabilir', async () => {
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertSucceeds(setDoc(doc(db, 'transactions/t1'), validTransaction))
+    await assertSucceeds(getDoc(doc(db, 'transactions/t1')))
+  })
+
+  it('ikinci izinli kullanici da yazabilir', async () => {
+    const db = testEnv.authenticatedContext(TUGCE_UID).firestore()
+    await assertSucceeds(setDoc(doc(db, 'transactions/t2'), validTransaction))
+  })
+
+  it('listede olmayan kullanici okuyamaz ve yazamaz', async () => {
+    const db = testEnv.authenticatedContext(STRANGER_UID).firestore()
+    await assertFails(setDoc(doc(db, 'transactions/t3'), validTransaction))
+    await assertFails(getDoc(doc(db, 'transactions/t3')))
+  })
+
+  it('giris yapmamis kullanici okuyamaz ve yazamaz', async () => {
+    const db = testEnv.unauthenticatedContext().firestore()
+    await assertFails(setDoc(doc(db, 'transactions/t4'), validTransaction))
+    await assertFails(getDoc(doc(db, 'transactions/t4')))
+  })
+})
+
+describe('harcama semasi', () => {
+  const db = () => testEnv.authenticatedContext(CAN_UID).firestore()
+
+  it('gecerli kaydi kabul eder', async () => {
+    await assertSucceeds(setDoc(doc(db(), 'transactions/ok'), validTransaction))
+  })
+
+  it('tutar metin ise reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'transactions/bad'), { ...validTransaction, amount: '42.5' }),
+    )
+  })
+
+  it('tarih bicimi yanlissa reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'transactions/bad'), { ...validTransaction, date: '15.07.2026' }),
+    )
+    await assertFails(
+      setDoc(doc(db(), 'transactions/bad'), { ...validTransaction, date: '2026-7-5' }),
+    )
+  })
+
+  it('taninmayan para birimini reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'transactions/bad'), { ...validTransaction, currency: 'USD' }),
+    )
+  })
+
+  it('zorunlu alan eksikse reddeder', async () => {
+    const { amount: _amount, ...withoutAmount } = validTransaction
+    await assertFails(setDoc(doc(db(), 'transactions/bad'), withoutAmount))
+  })
+
+  it('opsiyonel alanlar yoksa kabul eder', async () => {
+    await assertSucceeds(setDoc(doc(db(), 'transactions/ok2'), validTransaction))
+  })
+
+  it('ice aktarma etiketini kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'transactions/ok3'), { ...validTransaction, importBatchId: 'import-1' }),
+    )
+  })
+
+  it('silmeyi sema dogrulamasina takmaz', async () => {
+    await setDoc(doc(db(), 'transactions/del'), validTransaction)
+    await assertSucceeds(deleteDoc(doc(db(), 'transactions/del')))
+  })
+})
+
+describe('gelir ve transfer semasi', () => {
+  const db = () => testEnv.authenticatedContext(CAN_UID).firestore()
+
+  it('taninmayan kisiyi reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'incomes/bad'), {
+        date: '2026-07-01',
+        source: 'Maaş',
+        person: 'Ahmet',
+        amount: 100,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+      }),
+    )
+  })
+
+  it('taninmayan transfer tipini reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'transfers/bad'), {
+        date: '2026-07-01',
+        type: 'Baska',
+        from: 'Can',
+        to: 'Ortak Kasa',
+        amount: 100,
+        currency: 'EUR',
+      }),
+    )
+  })
+
+  it('gecerli transferi kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'transfers/ok'), {
+        date: '2026-07-01',
+        type: 'Ortak Kasa Katkısı',
+        from: 'Can',
+        to: 'Ortak Kasa',
+        amount: 100,
+        currency: 'EUR',
+        fromAccount: 'Can-DE Girokonto',
+        toAccount: 'Ortak Kasa',
+      }),
+    )
+  })
+})
+
+describe('sabit gider semasi', () => {
+  const db = () => testEnv.authenticatedContext(CAN_UID).firestore()
+
+  const validRecurring = {
+    name: 'Kira',
+    budgetType: 'Ortak-Ev',
+    category: 'Kira (Kaltmiete)',
+    amount: 900,
+    frequencyMonths: 1,
+    account: 'Ortak Kasa',
+    firstPaymentDate: '2026-01-01',
+    active: true,
+  }
+
+  it('gecerli kalemi kabul eder', async () => {
+    await assertSucceeds(setDoc(doc(db(), 'recurring/ok'), validRecurring))
+  })
+
+  it('gecersiz sikligi reddeder', async () => {
+    await assertFails(setDoc(doc(db(), 'recurring/bad'), { ...validRecurring, frequencyMonths: 5 }))
+  })
+
+  it('tutari olmayan kalemi kabul eder (plan belirsiz olabilir)', async () => {
+    const { amount: _amount, ...withoutAmount } = validRecurring
+    await assertSucceeds(setDoc(doc(db(), 'recurring/ok2'), withoutAmount))
+  })
+})
+
+describe('ayarlar semasi', () => {
+  const db = () => testEnv.authenticatedContext(CAN_UID).firestore()
+
+  it('gecerli ayarlari kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: 35,
+      }),
+    )
+  })
+
+  it('defaultRate metin ise reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: '35',
+      }),
+    )
+  })
+})
+
+describe('atlanan sabit giderler', () => {
+  it('ay anahtari bicimini dogrular', async () => {
+    const db = testEnv.authenticatedContext(CAN_UID).firestore()
+    await assertSucceeds(
+      setDoc(doc(db, 'recurringSkips/s1'), { recurringId: 'r1', monthKey: '2026-07' }),
+    )
+    await assertFails(
+      setDoc(doc(db, 'recurringSkips/s2'), { recurringId: 'r1', monthKey: '2026-7' }),
+    )
+  })
+})
+
+it('emulator baglantisi kuruldu', () => {
+  expect(testEnv).toBeDefined()
+})

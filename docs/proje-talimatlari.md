@@ -37,26 +37,33 @@ Excel dosyası veri modelinin ve iş kurallarının referansıdır. Uygulama Exc
 Firestore koleksiyonları. Alan adları İngilizce, arayüz Türkçe.
 
 ### transactions (harcamalar)
+
 Kullanıcının girdiği alanlar: `date`, `description`, `category`, `amount`, `currency` (boş ise EUR), `account`, `canPct` (opsiyonel), `tugcePct` (opsiyonel), `tag`, `note`.
 
 Hesaplanan alanlar (saklanmaz): `monthKey` (YYYY-AA), `rate`, `amountEUR`, `budgetType`, `payer`, `ratio`, `canShare`, `tugceShare`, `validation`.
 
 ### incomes (gelirler)
+
 `date`, `source`, `person`, `amount`, `currency`, `account`, `note`. Person zorunlu; kişisel bütçeler buradan beslenir.
 
 ### transfers (transferler)
+
 `date`, `type` (Ortak Kasa Katkısı / Kişiden Kişiye / Tasarruf), `from`, `to`, `amount`, `currency`, `fromAccount`, `toAccount`, `goalId`, `note`. Transfer harcama değildir, harcama toplamlarına girmez.
 
 ### recurring (sabit giderler)
+
 `name`, `budgetType`, `category`, `amount`, `frequencyMonths` (1/3/6/12), `account`, `firstPaymentDate`, `active`, `note`.
 
 ### goals (tasarruf hedefleri)
+
 `name`, `targetAmount`, `targetDate`, `owner`, `note`. Biriken tutar transfers üzerinden hesaplanır.
 
 ### budgets (aylık plan)
+
 Ortak kategori limitleri ve kişisel plan. `monthKey`, `budgetType`, `category`, `limit`, `person`.
 
 ### settings
+
 Hesaplar (ad, para birimi, sahibi), kategoriler (ad, bütçe tipi), gelir kaynakları, aylık EUR/TRY kur tablosu ve varsayılan kur, Sperrkonto takibi (toplam, çekilen, kalan).
 
 ---
@@ -72,6 +79,7 @@ Bunlar uygulamanın çekirdeğidir. Hiçbiri sadeleştirilmez, hepsi test edilir
 **Ödeyen hesaptan gelir.** Her hesabın bir sahibi vardır (Can, Tuğçe veya Ortak Kasa). Kullanıcı ödeyen seçmez.
 
 **Paylaşım oranı çözümü, bu sırayla:**
+
 1. `canPct` doluysa oran budur.
 2. `tugcePct` doluysa oran = 1 - tugcePct.
 3. İkisi de boşsa ve kategori tipi Kişisel veya Taşınma ise, oran hesabın sahibine göre: Can ise 1, Tuğçe ise 0, Ortak Kasa ise 0.5.
