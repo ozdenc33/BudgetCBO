@@ -1,7 +1,9 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useSettings } from '../hooks/useSettings'
 import { useTransfers } from '../hooks/useTransfers'
+import { useGoals } from '../hooks/useGoals'
 import { addTransfer, deleteTransfer, updateTransfer } from '../lib/firestoreTransfers'
 import { computeTransfer } from '../domain/transfers'
 import { monthKeyOf } from '../domain/rate'
@@ -84,6 +86,7 @@ function transferToForm(transfer: Transfer): FormState {
 export function TransfersPage() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transfers, loading: transfersLoading } = useTransfers()
+  const { goals } = useGoals()
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -102,9 +105,23 @@ export function TransfersPage() {
       .sort((a, b) => a.date.localeCompare(b.date))
   }, [transfers, settings, month])
 
+  // Alici secenekleri tipe gore degisir. Onceden serbest metin kutusu
+  // vardi ve yalnizca Ortak Kasa/Can/Tuğçe onerdigi icin "Tasarruf"
+  // seciminde listeden ne secilse "Alıcı bir hedef olmalı" hatasi
+  // aliniyordu; artik Tasarruf'ta hedefler listelenir.
+  const recipientOptions = useMemo(() => {
+    if (form.type === 'Ortak Kasa Katkısı') return ['Ortak Kasa']
+    if (form.type === 'Kişiden Kişiye') return PERSONS.filter((p) => p !== form.from)
+    return goals.map((g) => g.name)
+  }, [form.type, form.from, goals])
+
+  const needsGoal = form.type === 'Tasarruf' && recipientOptions.length === 0
+
   const canSubmit =
     form.to.trim() !== '' &&
     form.amount !== '' &&
+    form.fromAccount !== '' &&
+    form.toAccount !== '' &&
     (preview.validation === 'OK' || preview.validation === '')
 
   async function handleSubmit(e: FormEvent) {
@@ -168,7 +185,13 @@ export function TransfersPage() {
           Tip
           <select
             value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value as TransferType })}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                type: e.target.value as TransferType,
+                to: e.target.value === 'Ortak Kasa Katkısı' ? 'Ortak Kasa' : '',
+              })
+            }
           >
             {TRANSFER_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -189,19 +212,29 @@ export function TransfersPage() {
         </label>
         <label>
           Alıcı
-          <input
-            list="transfer-recipients"
+          <select
             value={form.to}
             onChange={(e) => setForm({ ...form, to: e.target.value })}
-            placeholder="Ortak Kasa, Can, Tuğçe veya hedef adı"
             required
-          />
-          <datalist id="transfer-recipients">
-            <option value="Ortak Kasa" />
-            <option value="Can" />
-            <option value="Tuğçe" />
-          </datalist>
+            disabled={needsGoal}
+          >
+            <option value="" disabled>
+              {needsGoal ? 'Önce bir hedef oluştur' : 'Seçin'}
+            </option>
+            {recipientOptions.map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </select>
         </label>
+        {needsGoal && (
+          <p className="warn-note">
+            Tasarruf transferi bir birikim hedefine yapılır ama henüz hedef yok.{' '}
+            <Link to="/hedefler">Hedefler sayfasından</Link> bir hedef oluştur (örn. "Acil Durum
+            Fonu"), sonra buraya dön.
+          </p>
+        )}
         <label>
           Tutar
           <input
@@ -224,12 +257,15 @@ export function TransfersPage() {
           </select>
         </label>
         <label>
-          Kaynak Hesap
+          Kaynak Hesap (para buradan çıkar)
           <select
             value={form.fromAccount}
             onChange={(e) => setForm({ ...form, fromAccount: e.target.value })}
+            required
           >
-            <option value="">Seçin (opsiyonel)</option>
+            <option value="" disabled>
+              Seçin
+            </option>
             {settings.accounts.map((a) => (
               <option key={a.id} value={a.name}>
                 {a.name}
@@ -238,12 +274,15 @@ export function TransfersPage() {
           </select>
         </label>
         <label>
-          Hedef Hesap
+          Hedef Hesap (para buraya girer)
           <select
             value={form.toAccount}
             onChange={(e) => setForm({ ...form, toAccount: e.target.value })}
+            required
           >
-            <option value="">Seçin (opsiyonel)</option>
+            <option value="" disabled>
+              Seçin
+            </option>
             {settings.accounts.map((a) => (
               <option key={a.id} value={a.name}>
                 {a.name}

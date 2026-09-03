@@ -2582,3 +2582,15 @@ h1, h2, h3 {
 .reminder-more:hover {
   color: var(--accent);
 }
+
+.badge-future {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
+  font-size: 0.66rem;
+  font-weight: 700;
+}

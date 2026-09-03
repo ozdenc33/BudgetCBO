@@ -10,6 +10,7 @@ import {
 import { computeTransaction } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
+import { isFutureDated } from '../domain/futureDated'
 import { TransactionFilters } from '../components/TransactionFilters'
 import type { Currency, Transaction, TransactionDraft } from '../domain/types'
 
@@ -107,6 +108,7 @@ export function ExpensesPage() {
     monthKey: todayIso().slice(0, 7),
   }))
   const [saving, setSaving] = useState(false)
+  const today = useMemo(() => new Date(), [])
 
   const preview = useMemo(
     () => computeTransaction({ id: 'preview', ...formToDraft(form) }, settings),
@@ -352,7 +354,12 @@ export function ExpensesPage() {
           {visibleTransactions.map((t) => (
             <li key={t.id} className="expense-row">
               <div className="expense-row-main">
-                <span className="expense-row-date">{t.date}</span>
+                <span className="expense-row-date">
+                  {t.date}
+                  {isFutureDated(t.date, today) && (
+                    <span className="badge-future">ileri tarihli</span>
+                  )}
+                </span>
                 <span className="expense-row-desc">{t.description || t.category}</span>
                 <span className="expense-row-amount">
                   {t.amount} {t.currency || 'EUR'}

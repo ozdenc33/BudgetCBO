@@ -229,6 +229,31 @@ görünüyor; (2) ana sayfada uyarı/hatırlatma şeritleri özet kartının ön
 yığılıyordu — özet kartı en üste alındı, hatırlatmalar 2 ve limit uyarıları
 3 ile sınırlandı, kalanı "+N daha" satırında toplanıyor.
 
+**Transfer düzeltmesi, ileri tarihli kayıtlar ve arayüz rötuşları:**
+
+- **Tasarruf transferi hatası düzeltildi.** "Alıcı" serbest metin kutusuydu
+  ve yalnızca Ortak Kasa / Can / Tuğçe öneriyordu; oysa Tasarruf tipinde
+  alıcı bir **birikim hedefi** olmak zorunda (`transfers.ts`:
+  "Alıcı bir hedef olmalı"). Listeden ne seçilse hata veriyordu. Artık
+  alıcı alanı tipe göre değişen bir `select`: Ortak Kasa Katkısı → Ortak
+  Kasa, Kişiden Kişiye → diğer kişi, Tasarruf → hedef listesi. Hiç hedef
+  yoksa alan kilitlenir ve Hedefler sayfasına yönlendiren açık bir uyarı
+  çıkar.
+- **Hesap alanları artık zorunlu.** "Kaynak Hesap" ve "Hedef Hesap"
+  "opsiyonel" işaretliydi; oysa parayı hesaplar arasında asıl taşıyan
+  bunlar. Boş bırakılınca transfer kaydediliyor ama hiçbir bakiye
+  değişmiyordu (sessiz veri kaybı). Etiketleri de netleştirildi:
+  "Kaynak Hesap (para buradan çıkar)" / "Hedef Hesap (para buraya girer)".
+- **İleri tarihli kayıtlar** (`src/domain/futureDated.ts`): tarihi bugünden
+  sonra olan kayıtlar listede "ileri tarihli" rozetiyle işaretlenir, Ay
+  Panosu'nda "bu toplamın X €'su henüz hesaptan çıkmadı" notu görünür.
+  **Toplamların anlamı değiştirilmedi** — Excel'de de SUMIFS tarihe
+  bakmadan toplar; yapılan tek şey bunu görünür kılmak.
+- Ayarlar ikonu gerçek dişliyle değiştirildi (eskisi tema düğmesindeki
+  güneş ikonuyla neredeyse aynıydı).
+- Ana sayfa metni: "Bu ay Can payı" yerine "Can bu ay ne harcadı",
+  başlıkta "Eylül 2026 · Can'in payı".
+
 Tema tercihi `localStorage`'da cihaza özel tutulur (`src/lib/localPrefs.ts`,
 `butce.theme` anahtarı — Firestore'a yazılmaz). `index.html` içindeki küçük
 başlangıç script'i, React yüklenmeden önce doğru temayı `<html data-theme>`

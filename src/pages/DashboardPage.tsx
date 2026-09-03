@@ -12,6 +12,8 @@ import {
   computeMonthlyProgress,
 } from '../domain/dashboard'
 import { CategoryBars, MonthlyColumns, NetTrend } from '../components/charts'
+import { summarizeFutureDated } from '../domain/futureDated'
+import { computeTransaction, monthKeyOf } from '../domain/transactions'
 
 function todayMonthKey(): string {
   return new Date().toISOString().slice(0, 7)
@@ -33,6 +35,7 @@ export function DashboardPage() {
   const { incomes, loading: incomesLoading } = useIncomes()
   const { transfers, loading: transfersLoading } = useTransfers()
   const [month, setMonth] = useState(todayMonthKey)
+  const today = useMemo(() => new Date(), [])
 
   const loading = settingsLoading || txLoading || incomesLoading || transfersLoading
 
@@ -56,6 +59,15 @@ export function DashboardPage() {
     () => computeMonthlyProgress(transactions, incomes, settings),
     [transactions, incomes, settings],
   )
+
+  // Ileri tarihli kayitlar toplamdan cikarilmaz (Excel'de de cikarilmaz),
+  // ama kullanici toplamin icinde henuz cikmamis para oldugunu bilsin.
+  const future = useMemo(() => {
+    const monthTx = transactions
+      .map((t) => computeTransaction(t, settings))
+      .filter((t) => monthKeyOf(t.date) === month)
+    return summarizeFutureDated(monthTx, today)
+  }, [transactions, settings, month, today])
 
   if (loading) {
     return <div className="page-loading">Yükleniyor...</div>
@@ -111,6 +123,12 @@ export function DashboardPage() {
             <span className="summary-value">{fmtPct(summary.savingsRatePct)}</span>
           </div>
         </div>
+        {future.count > 0 && (
+          <p className="chart-note">
+            Bu toplamın {fmt(future.totalEUR)} €'su ({future.count} kayıt) ileri tarihli, henüz
+            hesaptan çıkmadı.
+          </p>
+        )}
       </section>
 
       <section className="dashboard-section">

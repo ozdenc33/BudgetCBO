@@ -136,13 +136,15 @@ export function HomePage() {
         <div className="hero-head">
           <span className="hero-month">
             {monthLabel(month)}
-            {scope !== 'Ortak' && ` · ${scope}`}
+            {scope !== 'Ortak' && ` · ${scope}'in payı`}
           </span>
           <span className="hero-count">{summary.transactionCount} kayıt</span>
         </div>
         <div className="hero-main">
           <span className="hero-label">
-            {scope === 'Ortak' ? 'Bu ay harcama' : `Bu ay ${scope} payı`}
+            {scope === 'Ortak'
+              ? 'Bu ay toplam harcama'
+              : `${scope} bu ay ne harcadı`}
           </span>
           <span className="hero-amount">{fmt(summary.expenseEUR)} €</span>
         </div>
