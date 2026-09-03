@@ -20,7 +20,14 @@ export type MonthDelta = {
   currentEUR: number
   previousEUR: number
   deltaEUR: number
-  /** Onceki ay 0 ise tanimsiz (yuzde hesaplanamaz). */
+  /**
+   * Yuzdesel degisim. Onceki ay 0 VEYA NEGATIF ise tanimsizdir.
+   *
+   * NEDEN negatif taban da disarida: Net -60 €'dan -20,40 €'ya
+   * iyilesince fark +39,60 € olur, ama -60'a bolununce -%66 cikar —
+   * yani iyilesme kotulesme gibi gorunur. Boyle bir durumda yalnizca
+   * euro farki gosterilir.
+   */
   deltaPct: number | undefined
 }
 
@@ -50,7 +57,7 @@ function delta(currentEUR: number, previousEUR: number): MonthDelta {
     currentEUR,
     previousEUR,
     deltaEUR,
-    deltaPct: previousEUR === 0 ? undefined : deltaEUR / previousEUR,
+    deltaPct: previousEUR > 0 ? deltaEUR / previousEUR : undefined,
   }
 }
 

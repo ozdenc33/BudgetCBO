@@ -65,6 +65,12 @@ Kod incelemesinde çıkan bulgular üç fazda uygulandı.
 - Sabit giderlerde **tümünü onayla** (tutarı girilmemiş kalemler hariç).
 - README ikiye ayrıldı, `styles.css` parçalara bölündü.
 
+Tarayıcıda (Firebase emülatörleriyle) uçtan uca doğrulandı: Tuğçe'nin
+karşılama notu (5 sn sonra kayboluyor, çarpıyla da kapanıyor), Mike
+harcamasında teşekkür notu ve Mike dışı harcamada çıkmaması, silme +
+geri alma, ay kapanışı karşılaştırması, çevrimdışı kayıt (form 62 ms'de
+serbest kalıyor, bağlantı gelince eşitleniyor).
+
 ---
 
 ## Durum: Faz 8

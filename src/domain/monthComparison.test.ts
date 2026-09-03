@@ -107,4 +107,17 @@ describe('computeMonthComparison', () => {
     expect(empty.expense.previousEUR).toBe(0)
     expect(empty.expense.deltaPct).toBeUndefined()
   })
+
+  // Net -380'den -300'e IYILESIRSE fark +80 olur, ama -380'e bolununce
+  // -%21 cikar ve iyilesme kotulesme gibi gorunur. Bu yuzden negatif
+  // tabanda yuzde gosterilmez, yalnizca euro farki gosterilir.
+  it('onceki ay negatifse yuzde gosterilmez ama euro farki dogru kalir', () => {
+    // Gelirsiz iki ay: Temmuz net -380, Agustos net -300. Fark +80
+    // (iyilesme), ama -380'e bolununce -%21 cikardi.
+    const noIncome = computeMonthComparison('2026-08', transactions, [], [], settings)
+    expect(noIncome.net.previousEUR).toBe(-380)
+    expect(noIncome.net.currentEUR).toBe(-300)
+    expect(noIncome.net.deltaEUR).toBe(80)
+    expect(noIncome.net.deltaPct).toBeUndefined()
+  })
 })
