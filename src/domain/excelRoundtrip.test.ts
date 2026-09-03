@@ -60,6 +60,7 @@ const RECURRING: RecurringItem[] = [
   {
     id: '1',
     name: 'Kira (Kaltmiete)',
+    kind: 'expense',
     budgetType: 'Ortak-Ev',
     category: 'Kira (Kaltmiete)',
     amount: 950,

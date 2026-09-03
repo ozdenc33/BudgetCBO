@@ -113,6 +113,17 @@ describe('harcama semasi', () => {
     )
   })
 
+  it('bolusuk cekilis icin secondAccount kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'transactions/ok4'), {
+        ...validTransaction,
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.5,
+        tugcePct: 0.5,
+      }),
+    )
+  })
+
   it('silmeyi sema dogrulamasina takmaz', async () => {
     await setDoc(doc(db(), 'transactions/del'), validTransaction)
     await assertSucceeds(deleteDoc(doc(db(), 'transactions/del')))
@@ -169,6 +180,7 @@ describe('sabit gider semasi', () => {
 
   const validRecurring = {
     name: 'Kira',
+    kind: 'expense',
     budgetType: 'Ortak-Ev',
     category: 'Kira (Kaltmiete)',
     amount: 900,
@@ -189,6 +201,51 @@ describe('sabit gider semasi', () => {
   it('tutari olmayan kalemi kabul eder (plan belirsiz olabilir)', async () => {
     const { amount: _amount, ...withoutAmount } = validRecurring
     await assertSucceeds(setDoc(doc(db(), 'recurring/ok2'), withoutAmount))
+  })
+
+  it('kind alani eksikse reddeder (eski Excel-donemi kaydi degil, yeni yazma)', async () => {
+    const { kind: _kind, ...withoutKind } = validRecurring
+    await assertFails(setDoc(doc(db(), 'recurring/bad2'), withoutKind))
+  })
+
+  it('kind=expense icin kategori/butce eksikse reddeder', async () => {
+    const { category: _category, ...withoutCategory } = validRecurring
+    await assertFails(setDoc(doc(db(), 'recurring/bad3'), withoutCategory))
+  })
+
+  it('kind=income icin gecerli kalemi (kisi ile, kategorisiz) kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'recurring/income-ok'), {
+        name: 'KYK Kredisi',
+        kind: 'income',
+        person: 'Can',
+        amount: 2500,
+        frequencyMonths: 1,
+        account: 'Can-DE Girokonto',
+        firstPaymentDate: '2026-01-05',
+        active: true,
+        paymentCount: 12,
+      }),
+    )
+  })
+
+  it('kind=income icin gecerli kisi yoksa reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'recurring/income-bad'), {
+        name: 'KYK Kredisi',
+        kind: 'income',
+        frequencyMonths: 1,
+        account: 'Can-DE Girokonto',
+        firstPaymentDate: '2026-01-05',
+        active: true,
+      }),
+    )
+  })
+
+  it('paymentCount metin ise reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'recurring/bad4'), { ...validRecurring, paymentCount: '12' }),
+    )
   })
 })
 
@@ -215,6 +272,29 @@ describe('ayarlar semasi', () => {
         incomeSources: [],
         rates: {},
         defaultRate: '35',
+      }),
+    )
+  })
+
+  it('fxSpreadPct sayi ise kabul eder, metinse reddeder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: 35,
+        fxSpreadPct: 1.5,
+      }),
+    )
+    await assertFails(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: 35,
+        fxSpreadPct: '1.5',
       }),
     )
   })

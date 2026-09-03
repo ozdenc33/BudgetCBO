@@ -3,6 +3,7 @@ import { useSettings } from '../hooks/useSettings'
 import { saveSettings } from '../lib/firestoreSettings'
 import { useWrite } from '../hooks/useWrite'
 import { fetchEurTryRate } from '../lib/fetchRate'
+import { countAccountReferences, mergeAccounts } from '../lib/mergeAccounts'
 import { todayMonthKey } from '../domain/dates'
 import type {
   Account,
@@ -63,6 +64,7 @@ export function SettingsPage() {
   return (
     <div className="settings-page">
       <AccountsSection draft={draft} onSave={persist} />
+      <AccountMergeSection draft={draft} onSave={persist} />
       <CategoriesSection draft={draft} onSave={persist} />
       <IncomeSourcesSection draft={draft} onSave={persist} />
       <RatesSection draft={draft} onSave={persist} />
@@ -142,6 +144,125 @@ function AccountsSection({ draft, onSave }: SectionProps) {
         </select>
         <button type="submit">Ekle</button>
       </form>
+    </section>
+  )
+}
+
+/**
+ * Iki hesabi birlestirir: kaynagin TUM tarihsel kayitlari (harcama,
+ * gelir, transfer, sabit gider) hedef hesabin adina tasinir, sonra
+ * kaynak hesap listeden silinir. NEDEN: hesaplar sadece AD ile
+ * baglaniyor (bkz. src/lib/mergeAccounts.ts) — hesabi listeden
+ * silmek tek basina gecmis kayitlari "yetim" birakirdi.
+ *
+ * Ornek kullanim: Can-TR Banka ve Can-DE Girokonto'yu tek hesapta
+ * birlestirmek (ikisi de zaten TL/EUR karisik kabul edebiliyor).
+ */
+function AccountMergeSection({ draft, onSave }: SectionProps) {
+  const [source, setSource] = useState('')
+  const [target, setTarget] = useState('')
+  const [preview, setPreview] = useState<{ total: number } | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [merging, setMerging] = useState(false)
+  const [resultNote, setResultNote] = useState<string | null>(null)
+
+  if (draft.accounts.length < 2) return null
+
+  async function handlePreview() {
+    if (!source || !target || source === target) return
+    setChecking(true)
+    setResultNote(null)
+    try {
+      const counts = await countAccountReferences(source)
+      setPreview({ total: counts.total })
+    } catch (err) {
+      setResultNote(`Önizleme alınamadı: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  async function handleMerge() {
+    if (!source || !target || source === target) return
+    if (
+      !window.confirm(
+        `"${source}" hesabındaki tüm geçmiş kayıtlar (yaklaşık ${preview?.total ?? '?'} adet) "${target}" hesabına taşınacak, sonra "${source}" hesap listesinden silinecek. Bu işlem geri alınamaz. Devam edilsin mi?`,
+      )
+    ) {
+      return
+    }
+    setMerging(true)
+    setResultNote(null)
+    try {
+      const counts = await mergeAccounts(source, target)
+      onSave({ ...draft, accounts: draft.accounts.filter((a) => a.name !== source) })
+      setResultNote(
+        `Birleştirildi: ${counts.total} kayıt (${counts.transactions} harcama, ${counts.incomes} gelir, ${counts.transfers} transfer, ${counts.recurring} sabit gider) "${target}" hesabına taşındı.`,
+      )
+      setSource('')
+      setTarget('')
+      setPreview(null)
+    } catch (err) {
+      setResultNote(`Birleştirme başarısız: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setMerging(false)
+    }
+  }
+
+  return (
+    <section className="settings-section">
+      <h2>Hesapları Birleştir</h2>
+      <p className="settings-note">
+        İki ayrı hesabı (örn. TR ve DE hesabı) tek hesapta toplar. Her hesap zaten hem EUR hem TL
+        kaydı tutabiliyor; bu araç yalnızca geçmiş kayıtları taşır ve kaynak hesabı listeden
+        kaldırır — geri alınamaz.
+      </p>
+      <div className="settings-add-form">
+        <select
+          value={source}
+          onChange={(e) => {
+            setSource(e.target.value)
+            setPreview(null)
+          }}
+        >
+          <option value="">Kaynak hesap (silinecek)</option>
+          {draft.accounts.map((a) => (
+            <option key={a.id} value={a.name} disabled={a.name === target}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={target}
+          onChange={(e) => {
+            setTarget(e.target.value)
+            setPreview(null)
+          }}
+        >
+          <option value="">Hedef hesap (kalacak)</option>
+          {draft.accounts.map((a) => (
+            <option key={a.id} value={a.name} disabled={a.name === source}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {source && target && (
+        <div className="settings-inline-actions">
+          {preview == null ? (
+            <button type="button" onClick={handlePreview} disabled={checking}>
+              {checking ? 'Kontrol ediliyor...' : 'Önce kaç kayıt etkileneceğini göster'}
+            </button>
+          ) : (
+            <button type="button" onClick={handleMerge} disabled={merging}>
+              {merging
+                ? 'Birleştiriliyor...'
+                : `${preview.total} kaydı "${target}" hesabına taşı ve "${source}"yi sil`}
+            </button>
+          )}
+        </div>
+      )}
+      {resultNote && <p className="settings-note">{resultNote}</p>}
     </section>
   )
 }
@@ -341,6 +462,25 @@ function RatesSection({ draft, onSave }: SectionProps) {
           }}
         />
       </label>
+      <label className="settings-inline-field">
+        Makas farkı (%)
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          defaultValue={draft.fxSpreadPct ?? 0}
+          onBlur={(e) => {
+            const value = Number(e.target.value)
+            if (value >= 0) onSave({ ...draft, fxSpreadPct: value })
+          }}
+        />
+      </label>
+      <p className="settings-note">
+        Gerçek banka/döviz işlemlerinde alış-satış kuru arasında her zaman bir fark vardır. Bu oran
+        girilirse: TL{'→'}EUR gelirlerde kur biraz yüksekten (daha az EUR), TL{'→'}
+        EUR giderlerde kur biraz düşükten (daha çok EUR, yani gerçek maliyet) hesaplanır. 0 = makas
+        yok (varsayılan).
+      </p>
       <ul className="settings-list">
         {Object.entries(draft.rates)
           .sort(([a], [b]) => a.localeCompare(b))

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { computeRecurringItems, draftTransactionsForMonth, nextPaymentDate } from './recurring'
+import {
+  computeRecurringItems,
+  draftIncomesForMonth,
+  draftTransactionsForMonth,
+  nextPaymentDate,
+} from './recurring'
 import { DEFAULT_SETTINGS } from './constants'
-import type { RecurringItem, Transaction } from './types'
+import type { Income, RecurringItem, Transaction } from './types'
 
 // Sabit_Giderler!A4:N19 gercek satirlaridir. Excel dosyasindaki
 // formuller "today" olarak 2026-09-02'yi kullanmisti (bu depoyu
@@ -12,6 +17,7 @@ function item(partial: Partial<RecurringItem>): RecurringItem {
   return {
     id: 'x',
     name: '',
+    kind: 'expense',
     budgetType: 'Ortak-Ev',
     category: '',
     frequencyMonths: 1,
@@ -240,5 +246,189 @@ describe('draftTransactionsForMonth — Sabit_Giderler!Q:X (secili ay: 2026-10)'
       new Set(),
     )
     expect(drafts[0].draft.amount).toBe(0)
+  })
+
+  it('kind=income kalemler icin taslak uretmez (draftIncomesForMonth kullanilir)', () => {
+    const sperrkonto = item({
+      id: 'sperrkonto',
+      name: 'Sperrkonto Serbest Bırakma',
+      kind: 'income',
+      person: 'Can',
+      budgetType: undefined,
+      category: undefined,
+    })
+    const drafts = draftTransactionsForMonth(
+      [sperrkonto],
+      '2026-10',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+      new Set(),
+    )
+    expect(drafts).toHaveLength(0)
+  })
+})
+
+describe('sabit gelirler (kind=income)', () => {
+  const SPERRKONTO = item({
+    id: 'sperrkonto',
+    name: 'Sperrkonto Serbest Bırakma',
+    kind: 'income',
+    person: 'Can',
+    budgetType: undefined,
+    category: undefined,
+    account: 'Can-DE Girokonto',
+    frequencyMonths: 1,
+    firstPaymentDate: '2026-10-05',
+    amount: 992,
+  })
+
+  it('gelir girilmemisse EKSIK, taslak uretir', () => {
+    const [c] = computeRecurringItems([SPERRKONTO], '2026-10', [], DEFAULT_SETTINGS, TODAY, [])
+    expect(c.monthStatus).toBe('eksik')
+
+    const drafts = draftIncomesForMonth(
+      [SPERRKONTO],
+      '2026-10',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+      new Set(),
+      [],
+    )
+    expect(drafts).toHaveLength(1)
+    expect(drafts[0].draft).toMatchObject({
+      source: 'Sperrkonto Serbest Bırakma',
+      person: 'Can',
+      account: 'Can-DE Girokonto',
+      amount: 992,
+      date: '2026-10-05',
+    })
+  })
+
+  it('Kaynak+Kişi eslesen bir Gelirler kaydi varsa GIRILDI sayilir', () => {
+    const incomes: Income[] = [
+      {
+        id: 'i1',
+        date: '2026-10-05',
+        source: 'Sperrkonto Serbest Bırakma',
+        person: 'Can',
+        amount: 992,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+      },
+    ]
+    const [c] = computeRecurringItems([SPERRKONTO], '2026-10', [], DEFAULT_SETTINGS, TODAY, incomes)
+    expect(c.monthStatus).toBe('girildi')
+    expect(c.enteredThisMonthEUR).toBe(992)
+
+    const drafts = draftIncomesForMonth(
+      [SPERRKONTO],
+      '2026-10',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+      new Set(),
+      incomes,
+    )
+    expect(drafts).toHaveLength(0)
+  })
+
+  it('farkli kisiye ait ayni isimli gelir eslesmez', () => {
+    const incomes: Income[] = [
+      {
+        id: 'i1',
+        date: '2026-10-05',
+        source: 'Sperrkonto Serbest Bırakma',
+        person: 'Tuğçe',
+        amount: 500,
+        currency: 'EUR',
+        account: 'Tuğçe-DE Girokonto',
+      },
+    ]
+    const [c] = computeRecurringItems([SPERRKONTO], '2026-10', [], DEFAULT_SETTINGS, TODAY, incomes)
+    expect(c.monthStatus).toBe('eksik')
+  })
+
+  it('TRY kalemin taslak geliri kendi para biriminde uretilir (KYK kredisi senaryosu)', () => {
+    const kyk = item({
+      id: 'kyk',
+      name: 'KYK Kredisi',
+      kind: 'income',
+      person: 'Can',
+      budgetType: undefined,
+      category: undefined,
+      currency: 'TRY',
+      account: 'Can-DE Girokonto',
+      firstPaymentDate: '2026-10-05',
+      amount: 5000,
+    })
+    const drafts = draftIncomesForMonth(
+      [kyk],
+      '2026-10',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+      new Set(),
+      [],
+    )
+    expect(drafts[0].draft.currency).toBe('TRY')
+    expect(drafts[0].draft.amount).toBe(5000)
+  })
+})
+
+describe('paymentCount — sinirli sayida odeme', () => {
+  it('paymentCount asilmadiginda normal calisir', () => {
+    const kyk = item({
+      id: 'kyk',
+      name: 'KYK Kredisi',
+      kind: 'income',
+      person: 'Can',
+      budgetType: undefined,
+      category: undefined,
+      firstPaymentDate: '2026-01-05',
+      frequencyMonths: 1,
+      paymentCount: 12,
+    })
+    // 2026-01 ilk odeme (index 1) .. 2026-10 (index 10): hala <= 12.
+    const [c] = computeRecurringItems([kyk], '2026-10', [], DEFAULT_SETTINGS, TODAY, [])
+    expect(c.paymentIndex).toBe(10)
+    expect(c.monthStatus).toBe('eksik')
+  })
+
+  it('paymentCount asilinca TAMAMLANDI olur, taslak uretmez', () => {
+    const kyk = item({
+      id: 'kyk',
+      name: 'KYK Kredisi',
+      kind: 'income',
+      person: 'Can',
+      budgetType: undefined,
+      category: undefined,
+      firstPaymentDate: '2026-01-05',
+      frequencyMonths: 1,
+      paymentCount: 12,
+    })
+    // 2026-01 ilk odeme (index 1); 2027-02, 13 ay sonrasi -> index 14 -> asildi.
+    const [c] = computeRecurringItems([kyk], '2027-02', [], DEFAULT_SETTINGS, TODAY, [])
+    expect(c.paymentIndex).toBe(14)
+    expect(c.monthStatus).toBe('tamamlandı')
+
+    const drafts = draftIncomesForMonth(
+      [kyk],
+      '2027-02',
+      [],
+      DEFAULT_SETTINGS,
+      TODAY,
+      new Set(),
+      [],
+    )
+    expect(drafts).toHaveLength(0)
+  })
+
+  it('paymentCount yoksa suresiz calisir', () => {
+    const kira = item({ id: 'kira-sinirsiz', category: 'Kira (Kaltmiete)', frequencyMonths: 1 })
+    const [c] = computeRecurringItems([kira], '2030-06', [], DEFAULT_SETTINGS, TODAY, [])
+    expect(c.paymentIndex).toBeGreaterThan(40)
+    expect(c.monthStatus).toBe('eksik')
   })
 })

@@ -267,6 +267,7 @@ describe('computePersonalBudget — ortak sabit gider / kategori limiti oneriler
       {
         id: 'kira',
         name: 'Kira',
+        kind: 'expense' as const,
         budgetType: 'Ortak-Ev',
         category: 'Kira (Kaltmiete)',
         amount: 900,
@@ -278,6 +279,7 @@ describe('computePersonalBudget — ortak sabit gider / kategori limiti oneriler
       {
         id: 'mama',
         name: 'Mama',
+        kind: 'expense' as const,
         budgetType: 'Mike',
         category: 'Mama',
         amount: 60,
@@ -289,6 +291,7 @@ describe('computePersonalBudget — ortak sabit gider / kategori limiti oneriler
       {
         id: 'disari',
         name: 'Bir sey',
+        kind: 'expense' as const,
         budgetType: 'Ortak-Dışarı',
         category: 'Restoran/Kafe',
         amount: 1000,
@@ -300,6 +303,7 @@ describe('computePersonalBudget — ortak sabit gider / kategori limiti oneriler
       {
         id: 'pasif',
         name: 'Pasif kalem',
+        kind: 'expense' as const,
         budgetType: 'Ortak-Ev',
         category: 'Internet',
         amount: 500,

@@ -7,6 +7,7 @@ function item(partial: Partial<RecurringItem>): RecurringItem {
   return {
     id: 'x',
     name: 'Test',
+    kind: 'expense',
     budgetType: 'Ortak-Ev',
     category: 'Internet',
     frequencyMonths: 1,
@@ -106,6 +107,7 @@ describe('computeReminders — gecikmis (odeme gunu gecmis, hala girilmemis)', (
   const kira = (over: Partial<RecurringItem> = {}): RecurringItem => ({
     id: 'r1',
     name: 'Kira',
+    kind: 'expense',
     budgetType: 'Ortak-Ev',
     category: 'Kira (Kaltmiete)',
     amount: 720,

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
+import { useIncomes } from '../hooks/useIncomes'
 import { useRecurring } from '../hooks/useRecurring'
 import { computeReminders } from '../domain/reminders'
 
@@ -11,14 +12,16 @@ const MAX_VISIBLE = 2
 export function RemindersBanner() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
+  const { incomes, loading: incomesLoading } = useIncomes()
   const { items: recurring, loading: recurringLoading } = useRecurring()
 
   const today = useToday()
-  const loading = settingsLoading || txLoading || recurringLoading
+  const loading = settingsLoading || txLoading || incomesLoading || recurringLoading
 
   const reminders = useMemo(
-    () => (loading ? undefined : computeReminders(recurring, transactions, settings, today)),
-    [loading, recurring, transactions, settings, today],
+    () =>
+      loading ? undefined : computeReminders(recurring, transactions, settings, today, incomes),
+    [loading, recurring, transactions, settings, today, incomes],
   )
 
   if (
@@ -42,21 +45,23 @@ export function RemindersBanner() {
         >
           <span>
             <span className="reminder-card-title">{r.name}: </span>
-            ödeme günü geçti, bu ay hâlâ girilmedi
+            {r.kind === 'income'
+              ? 'beklenen gün geçti, bu ay hâlâ girilmedi'
+              : 'ödeme günü geçti, bu ay hâlâ girilmedi'}
           </span>
           <span>→</span>
         </Link>
       ))}
       {reminders.overdue.length > MAX_VISIBLE && (
         <Link to="/sabit-giderler" className="reminder-more">
-          +{reminders.overdue.length - MAX_VISIBLE} gecikmiş sabit gider daha
+          +{reminders.overdue.length - MAX_VISIBLE} gecikmiş kalem daha
         </Link>
       )}
       {reminders.unconfirmedNearMonthEnd.length > 0 && (
         <Link to="/sabit-giderler" className="reminder-card">
           <span>
             <span className="reminder-card-title">Ay sonu yaklaşıyor: </span>
-            {reminders.unconfirmedNearMonthEnd.length} sabit gider bu ay hâlâ onaylanmadı
+            {reminders.unconfirmedNearMonthEnd.length} sabit kalem bu ay hâlâ onaylanmadı
           </span>
           <span>→</span>
         </Link>
@@ -74,7 +79,7 @@ export function RemindersBanner() {
       ))}
       {reminders.upcoming.length > MAX_VISIBLE && (
         <Link to="/sabit-giderler" className="reminder-more">
-          +{reminders.upcoming.length - MAX_VISIBLE} yaklaşan ödeme daha
+          +{reminders.upcoming.length - MAX_VISIBLE} yaklaşan kalem daha
         </Link>
       )}
     </div>

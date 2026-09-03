@@ -53,6 +53,15 @@ export function findCategory(name: string, settings: Settings): Category | undef
   return indexOf(settings).categories.get(name)
 }
 
+/**
+ * Gercekten iki farkli hesaptan bolusuk cekilis mi? `secondAccount`
+ * girilmis olsa da `account`'la ayniysa (orn. ikisi de "Ortak Kasa"
+ * secildiginde) tek hesaptan cekilis demektir — eski/basit davranis.
+ */
+export function isSplitAccountTransaction(tx: Transaction): boolean {
+  return Boolean(tx.secondAccount) && tx.secondAccount !== tx.account
+}
+
 function resolveRatio(
   tx: Transaction,
   category: Category | undefined,
@@ -85,6 +94,7 @@ function validate(
   account: Account | undefined,
   category: Category | undefined,
   budgetType: BudgetType | 'Paylaşım eksik' | '',
+  settings: Settings,
 ): string {
   if (!tx.date) return ''
   if (!tx.category || tx.amount == null || !tx.account) {
@@ -92,6 +102,9 @@ function validate(
   }
   if (!category) return 'Kategori listede yok'
   if (!account) return 'Hesap listede yok'
+  if (isSplitAccountTransaction(tx) && !findAccount(tx.secondAccount!, settings)) {
+    return 'İkinci hesap listede yok'
+  }
   if (tx.canPct != null && tx.tugcePct != null) {
     const sum = Math.round((tx.canPct + tx.tugcePct) * 10000) / 10000
     if (sum !== 1) {
@@ -106,7 +119,9 @@ function validate(
 
 export function computeTransaction(tx: Transaction, settings: Settings): ComputedTransaction {
   const monthKey = tx.date ? monthKeyOf(tx.date) : ''
-  const { rate, rateSource, rateWarning } = resolveRate(tx.currency, monthKey, settings)
+  // 'expense': TRY -> EUR harcamalarda makas farki muhafazakar yonde
+  // uygulanir (bkz. src/domain/rate.ts).
+  const { rate, rateSource, rateWarning } = resolveRate(tx.currency, monthKey, settings, 'expense')
   const amountEUR = tx.amount != null ? tx.amount / rate : undefined
 
   const account = findAccount(tx.account, settings)
@@ -119,7 +134,7 @@ export function computeTransaction(tx: Transaction, settings: Settings): Compute
   const canShare = amountEUR != null && ratio != null ? amountEUR * ratio : undefined
   const tugceShare = amountEUR != null && canShare != null ? amountEUR - canShare : undefined
 
-  const validation = validate(tx, account, category, budgetType)
+  const validation = validate(tx, account, category, budgetType, settings)
 
   return {
     ...tx,

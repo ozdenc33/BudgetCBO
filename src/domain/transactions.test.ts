@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeTransaction } from './transactions'
+import { computeTransaction, isSplitAccountTransaction } from './transactions'
 import { DEFAULT_SETTINGS } from './constants'
 import type { Transaction } from './types'
 
@@ -241,5 +241,84 @@ describe('computeTransaction — para birimi ve kur', () => {
     expect(c.rateSource).toBe('monthly')
     expect(c.rate).toBe(40)
     expect(c.amountEUR).toBe(10)
+  })
+
+  it('TRY harcamada makas farki devredeyse maliyet daha buyuk gorunur', () => {
+    const settings = { ...DEFAULT_SETTINGS, rates: { '2026-10': 40 }, fxSpreadPct: 5 }
+    const withSpread = computeTransaction(
+      tx({
+        date: '2026-10-05',
+        category: 'Market (Ev)',
+        amount: 400,
+        currency: 'TRY',
+        account: 'Can-TR Banka',
+      }),
+      settings,
+    )
+    const noSpread = computeTransaction(
+      tx({
+        date: '2026-10-05',
+        category: 'Market (Ev)',
+        amount: 400,
+        currency: 'TRY',
+        account: 'Can-TR Banka',
+      }),
+      { ...settings, fxSpreadPct: 0 },
+    )
+    expect(withSpread.amountEUR!).toBeGreaterThan(noSpread.amountEUR!)
+  })
+})
+
+describe('isSplitAccountTransaction', () => {
+  it('secondAccount yoksa false', () => {
+    expect(isSplitAccountTransaction(tx({ account: 'Can-DE Girokonto' }))).toBe(false)
+  })
+
+  it('secondAccount, account ile ayniysa false (tek hesap gibi)', () => {
+    expect(
+      isSplitAccountTransaction(tx({ account: 'Ortak Kasa', secondAccount: 'Ortak Kasa' })),
+    ).toBe(false)
+  })
+
+  it('secondAccount farkli bir hesapsa true', () => {
+    expect(
+      isSplitAccountTransaction(
+        tx({ account: 'Can-DE Girokonto', secondAccount: 'Tuğçe-DE Girokonto' }),
+      ),
+    ).toBe(true)
+  })
+})
+
+describe('computeTransaction — ikinci hesap dogrulamasi', () => {
+  it('secondAccount listede yoksa hata verir', () => {
+    const c = computeTransaction(
+      tx({
+        date: '2026-10-01',
+        category: 'Market (Ev)',
+        amount: 100,
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Olmayan Hesap',
+        canPct: 0.5,
+        tugcePct: 0.5,
+      }),
+      DEFAULT_SETTINGS,
+    )
+    expect(c.validation).toBe('İkinci hesap listede yok')
+  })
+
+  it('gecerli secondAccount ile OK doner', () => {
+    const c = computeTransaction(
+      tx({
+        date: '2026-10-01',
+        category: 'Market (Ev)',
+        amount: 100,
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.5,
+        tugcePct: 0.5,
+      }),
+      DEFAULT_SETTINGS,
+    )
+    expect(c.validation).toBe('OK')
   })
 })

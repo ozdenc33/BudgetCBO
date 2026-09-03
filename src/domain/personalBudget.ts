@@ -83,7 +83,8 @@ export function computePersonalBudget(
 
   const activeFixedMonthlyEUR = (types: string[]) =>
     recurring
-      .filter((r) => r.active && (types as string[]).includes(r.budgetType))
+      // kind='income' kalemlerin budgetType'i yok, dogal olarak elenir.
+      .filter((r) => r.active && r.budgetType != null && (types as string[]).includes(r.budgetType))
       .reduce((sum, r) => sum + (monthlyEquivalentEUR(r) ?? 0), 0)
   const sharedFixedMonthlyEUR = activeFixedMonthlyEUR(['Ortak-Ev', 'Mike'])
   const sharedCategoryLimitTotalEUR = settings.categories

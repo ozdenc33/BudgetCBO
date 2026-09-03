@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { computeAccountBalances, netWorth } from './balances'
+import {
+  computeAccountBalances,
+  computeAccountCurrencyBalances,
+  computePersonNetWorth,
+  netWorth,
+} from './balances'
 import { DEFAULT_SETTINGS } from './constants'
 import type { Income, Transaction, Transfer } from './types'
 
@@ -180,5 +185,210 @@ describe('computeAccountBalances — Hesaplar!A4:H13 ile karsilastirma', () => {
 
   it('net varlik (Hesaplar!H13): 265.21', () => {
     expect(netWorth(balances)).toBeCloseTo(265.21)
+  })
+})
+
+describe('computeAccountBalances — bolusuk cekilis (secondAccount)', () => {
+  it('secondAccount yoksa eski davranis: tum tutar tek hesaptan cikar', () => {
+    const tx: Transaction[] = [
+      {
+        id: '1',
+        date: '2026-10-01',
+        description: 'Market',
+        category: 'Market (Ev)',
+        amount: 100,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+      },
+    ]
+    const balances = computeAccountBalances(DEFAULT_SETTINGS.accounts, tx, [], [], DEFAULT_SETTINGS)
+    expect(balances.find((b) => b.account.name === 'Can-DE Girokonto')?.expensesEUR).toBe(100)
+    expect(balances.find((b) => b.account.name === 'Tuğçe-DE Girokonto')?.expensesEUR).toBe(0)
+  })
+
+  it('secondAccount varsa, cekilen oran canPct/tugcePct ile birebir aynidir', () => {
+    const tx: Transaction[] = [
+      {
+        id: '1',
+        date: '2026-10-01',
+        description: 'Ortak market',
+        category: 'Market (Ev)',
+        amount: 100,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.7,
+        tugcePct: 0.3,
+      },
+    ]
+    const balances = computeAccountBalances(DEFAULT_SETTINGS.accounts, tx, [], [], DEFAULT_SETTINGS)
+    expect(balances.find((b) => b.account.name === 'Can-DE Girokonto')?.expensesEUR).toBeCloseTo(70)
+    expect(balances.find((b) => b.account.name === 'Tuğçe-DE Girokonto')?.expensesEUR).toBeCloseTo(
+      30,
+    )
+  })
+
+  it('secondAccount, account ile ayniysa (orn. ikisi de Ortak Kasa) tek hesap gibi davranir', () => {
+    const tx: Transaction[] = [
+      {
+        id: '1',
+        date: '2026-10-01',
+        description: 'Ortak market',
+        category: 'Market (Ev)',
+        amount: 100,
+        currency: 'EUR',
+        account: 'Ortak Kasa',
+        secondAccount: 'Ortak Kasa',
+        canPct: 0.5,
+        tugcePct: 0.5,
+      },
+    ]
+    const balances = computeAccountBalances(DEFAULT_SETTINGS.accounts, tx, [], [], DEFAULT_SETTINGS)
+    expect(balances.find((b) => b.account.name === 'Ortak Kasa')?.expensesEUR).toBe(100)
+  })
+
+  it('toplam iki hesaba dagilan pay, tek hesaptan cekilen orijinal tutara esittir', () => {
+    const tx: Transaction[] = [
+      {
+        id: '1',
+        date: '2026-10-01',
+        description: 'Ortak market',
+        category: 'Market (Ev)',
+        amount: 77.5,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.4,
+        tugcePct: 0.6,
+      },
+    ]
+    const balances = computeAccountBalances(DEFAULT_SETTINGS.accounts, tx, [], [], DEFAULT_SETTINGS)
+    const canExpense = balances.find((b) => b.account.name === 'Can-DE Girokonto')?.expensesEUR ?? 0
+    const tugceExpense =
+      balances.find((b) => b.account.name === 'Tuğçe-DE Girokonto')?.expensesEUR ?? 0
+    expect(canExpense + tugceExpense).toBeCloseTo(77.5)
+  })
+})
+
+describe('computeAccountCurrencyBalances — hesapta kac TL, kac EUR var', () => {
+  it('EUR ve TRY hareketleri ayri ayri toplanir, birbirine cevrilmez', () => {
+    const tx: Transaction[] = [
+      {
+        id: '1',
+        date: '2026-10-01',
+        description: 'EUR harcama',
+        category: 'Market (Ev)',
+        amount: 40,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+      },
+      {
+        id: '2',
+        date: '2026-10-02',
+        description: 'TL harcama',
+        category: 'Market (Ev)',
+        amount: 350,
+        currency: 'TRY',
+        account: 'Can-DE Girokonto',
+      },
+    ]
+    const income: Income[] = [
+      {
+        id: 'i1',
+        date: '2026-10-01',
+        source: 'KYK',
+        person: 'Can',
+        amount: 5000,
+        currency: 'TRY',
+        account: 'Can-DE Girokonto',
+      },
+    ]
+    const [balance] = computeAccountCurrencyBalances(
+      [DEFAULT_SETTINGS.accounts.find((a) => a.name === 'Can-DE Girokonto')!],
+      tx,
+      income,
+      [],
+      DEFAULT_SETTINGS,
+    )
+    expect(balance.nativeByCurrency.EUR).toBeCloseTo(-40)
+    expect(balance.nativeByCurrency.TRY).toBeCloseTo(5000 - 350)
+    // liveEquivalentEUR = -40 + 4650/defaultRate
+    expect(balance.liveEquivalentEUR).toBeCloseTo(-40 + 4650 / DEFAULT_SETTINGS.defaultRate)
+  })
+
+  it('bolusuk cekiliste ham TL/EUR tutari da orana gore bolunur', () => {
+    const tx: Transaction[] = [
+      {
+        id: '1',
+        date: '2026-10-01',
+        description: 'Ortak market TL',
+        category: 'Market (Ev)',
+        amount: 1000,
+        currency: 'TRY',
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.25,
+        tugcePct: 0.75,
+      },
+    ]
+    const balances = computeAccountCurrencyBalances(
+      DEFAULT_SETTINGS.accounts,
+      tx,
+      [],
+      [],
+      DEFAULT_SETTINGS,
+    )
+    const can = balances.find((b) => b.account.name === 'Can-DE Girokonto')!
+    const tugce = balances.find((b) => b.account.name === 'Tuğçe-DE Girokonto')!
+    expect(can.nativeByCurrency.TRY).toBeCloseTo(-250)
+    expect(tugce.nativeByCurrency.TRY).toBeCloseTo(-750)
+  })
+})
+
+describe('computePersonNetWorth — mal varligi', () => {
+  it('kendi hesaplarinin toplami + Ortak Kasa payinin yarisi', () => {
+    const result = computePersonNetWorth(
+      DEFAULT_SETTINGS.accounts,
+      TRANSACTIONS,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
+    const can = result.find((r) => r.person === 'Can')!
+    const balances = computeAccountBalances(
+      DEFAULT_SETTINGS.accounts,
+      TRANSACTIONS,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
+    const ortakKasaEUR = balances.find((b) => b.account.name === 'Ortak Kasa')!.balanceEUR
+    expect(can.ortakKasaShareEUR).toBeCloseTo(ortakKasaEUR / 2)
+    expect(can.ownAccountsTotalEUR).toBeCloseTo(
+      can.ownAccounts.reduce((sum, a) => sum + a.balanceEUR, 0),
+    )
+    expect(can.totalEUR).toBeCloseTo(can.ownAccountsTotalEUR + can.ortakKasaShareEUR)
+  })
+
+  it('Ortak Kasa kendi hesaplari listesinde gorunmez (sahibi kisi degil)', () => {
+    const [can] = computePersonNetWorth(
+      DEFAULT_SETTINGS.accounts,
+      TRANSACTIONS,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
+    expect(can.ownAccounts.some((a) => a.account.name === 'Ortak Kasa')).toBe(false)
+  })
+
+  it('Can ve Tuğçe icin ikisi de doner', () => {
+    const result = computePersonNetWorth(
+      DEFAULT_SETTINGS.accounts,
+      TRANSACTIONS,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
+    expect(result.map((r) => r.person).sort()).toEqual(['Can', 'Tuğçe'])
   })
 })

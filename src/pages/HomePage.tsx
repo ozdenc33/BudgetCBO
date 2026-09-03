@@ -8,11 +8,13 @@ import { useIncomes } from '../hooks/useIncomes'
 import { useTransfers } from '../hooks/useTransfers'
 import { computeBudgetTypeSummary } from '../domain/dashboard'
 import { computeBudgetAlerts, findNegativeBalances } from '../domain/budgetAlerts'
-import { computeAccountBalances } from '../domain/balances'
+import { computeAccountBalances, computePersonNetWorth } from '../domain/balances'
 import { computeScopeSummary, computeWeekSummary, type PersonScope } from '../domain/personSummary'
 import { personForEmail } from '../lib/currentPerson'
 import { useAuth } from '../auth/AuthContext'
+import { useNetWorthHidden } from '../hooks/useNetWorthHidden'
 import { RemindersBanner } from '../components/RemindersBanner'
+import { NetWorthPanel } from '../components/NetWorthPanel'
 import { todayMonthKey } from '../domain/dates'
 import {
   IconChart,
@@ -101,15 +103,20 @@ export function HomePage() {
     [month, transactions, settings],
   )
 
-  // Eksiye dusen hesaplar (ozellikle Ortak Kasa: katkilar harcamayi
-  // karsilamiyorsa burada gorunur).
-  const negativeBalances = useMemo(
-    () =>
-      findNegativeBalances(
-        computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings),
-      ),
+  const balances = useMemo(
+    () => computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings),
     [settings, transactions, incomes, transfers],
   )
+
+  // Eksiye dusen hesaplar (ozellikle Ortak Kasa: katkilar harcamayi
+  // karsilamiyorsa burada gorunur).
+  const negativeBalances = useMemo(() => findNegativeBalances(balances), [balances])
+
+  const netWorths = useMemo(
+    () => computePersonNetWorth(settings.accounts, transactions, incomes, transfers, settings),
+    [settings, transactions, incomes, transfers],
+  )
+  const { hidden: netWorthHidden, toggle: toggleNetWorthHidden } = useNetWorthHidden()
 
   const recent = useMemo(() => {
     const inScope =
@@ -211,6 +218,37 @@ export function HomePage() {
           ))}
         </div>
       )}
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Hesap Bakiyeleri</h2>
+          <Link to="/hesaplar" className="panel-link">
+            Tümü
+          </Link>
+        </div>
+        <ul className="mini-list">
+          {balances.map((b) => (
+            <li key={b.account.id} className="mini-row">
+              <Link to={`/hesaplar/${b.account.id}`} className="mini-row-main">
+                <span className="mini-row-title">{b.account.name}</span>
+                <span className="mini-row-sub">{b.account.owner}</span>
+              </Link>
+              <span
+                className={b.balanceEUR < 0 ? 'mini-row-amount is-negative' : 'mini-row-amount'}
+              >
+                {fmt(b.balanceEUR)} €
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <NetWorthPanel
+        netWorths={netWorths}
+        scope={scope}
+        hidden={netWorthHidden}
+        onToggleHidden={toggleNetWorthHidden}
+      />
 
       <section className="panel">
         <div className="panel-head">

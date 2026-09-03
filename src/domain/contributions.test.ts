@@ -197,6 +197,64 @@ describe('computeContributionSummary — Hesaplar!A25:F26 ile karsilastirma', ()
   })
 })
 
+describe('computeContributionSummary — bolusuk cekilis (secondAccount)', () => {
+  it('bolusuk odemede her kisinin direkt katkisi kendi hesabindan cikan paydir', () => {
+    const tx: Transaction[] = [
+      {
+        id: 's1',
+        date: '2026-10-01',
+        description: 'Ortak market',
+        category: 'Market (Ev)',
+        amount: 100,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.7,
+        tugcePct: 0.3,
+      },
+    ]
+    const rows = computeContributionSummary(DEFAULT_SETTINGS.accounts, tx, [], [], DEFAULT_SETTINGS)
+    const can = rows.find((r) => r.person === 'Can')!
+    const tugce = rows.find((r) => r.person === 'Tuğçe')!
+    expect(can.directlyPaidEUR).toBeCloseTo(70)
+    expect(tugce.directlyPaidEUR).toBeCloseTo(30)
+  })
+
+  it('bolusuk odeme Ortak Kasa tarafi icerirse, o taraf kimseye direkt katki yazilmaz', () => {
+    const tx: Transaction[] = [
+      {
+        id: 's1',
+        date: '2026-10-01',
+        description: 'Yari ortak kasadan',
+        category: 'Market (Ev)',
+        amount: 100,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Ortak Kasa',
+        canPct: 0.5,
+        tugcePct: 0.5,
+      },
+    ]
+    const rows = computeContributionSummary(DEFAULT_SETTINGS.accounts, tx, [], [], DEFAULT_SETTINGS)
+    const can = rows.find((r) => r.person === 'Can')!
+    const tugce = rows.find((r) => r.person === 'Tuğçe')!
+    expect(can.directlyPaidEUR).toBeCloseTo(50)
+    expect(tugce.directlyPaidEUR).toBe(0)
+  })
+
+  it('secondAccount yoksa eski davranistan sapma yok (regresyon)', () => {
+    const rows = computeContributionSummary(
+      DEFAULT_SETTINGS.accounts,
+      TRANSACTIONS,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
+    const can = rows.find((r) => r.person === 'Can')!
+    expect(can.directlyPaidEUR).toBeCloseTo(175.3)
+  })
+})
+
 describe('contributionStatus — esit durumda', () => {
   it('iki fark da sifirsa dengede sayilir', () => {
     const rows = [

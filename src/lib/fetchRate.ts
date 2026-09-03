@@ -33,6 +33,29 @@ export async function fetchEurTryRate(signal?: AbortSignal): Promise<FetchedRate
   return parseRateResponse(body)
 }
 
+/**
+ * Belirli bir GECMIS tarihin kurunu getirir (orn. bir TL harcamayi o
+ * gunun kuruyla EUR'a cevirmek icin — "kur elle girilmemis" durumunda
+ * kullanicinin en cok ihtiyaci olan budur, gunumuzun kuru degil).
+ *
+ * ECB hafta sonu/tatil gunu yayin yapmaz; Frankfurter boyle bir tarih
+ * icin bir ONCEKI is gununun kurunu doner (kendi davranisi), ayrica
+ * islem gerekmez.
+ */
+export async function fetchEurTryRateForDate(
+  dateISO: string,
+  signal?: AbortSignal,
+): Promise<FetchedRate> {
+  const response = await fetch(`https://api.frankfurter.dev/v1/${dateISO}?base=EUR&symbols=TRY`, {
+    signal,
+  })
+  if (!response.ok) {
+    throw new Error(`Kur servisi ${response.status} döndürdü`)
+  }
+  const body: unknown = await response.json()
+  return parseRateResponse(body)
+}
+
 /** Yanit govdesini dogrular. Ayri fonksiyon: aga cikmadan test edilebilir. */
 export function parseRateResponse(body: unknown): FetchedRate {
   if (typeof body !== 'object' || body === null) {

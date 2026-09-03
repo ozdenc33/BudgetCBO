@@ -7,7 +7,7 @@ import type {
   Transaction,
   Transfer,
 } from './types'
-import { computeTransaction } from './transactions'
+import { computeTransaction, isSplitAccountTransaction } from './transactions'
 import { computeTransfer } from './transfers'
 import { computeAccountBalances } from './balances'
 
@@ -30,6 +30,32 @@ function ortakKasaBalanceEUR(
   return balances.find((b) => b.account.name === ORTAK_KASA)?.balanceEUR ?? 0
 }
 
+function ownerPerson(accountName: string, accounts: Account[]): Person | undefined {
+  const owner = accounts.find((a) => a.name === accountName)?.owner
+  return owner === 'Can' || owner === 'Tuğçe' ? owner : undefined
+}
+
+/**
+ * Bir islemde, verilen kisinin KENDI cebinden (kendi hesabindan)
+ * cikan tutar. Bolusuk cekiliste (bkz. isSplitAccountTransaction) her
+ * taraf kendi payini (canShare/tugceShare) kendi hesabindan oder;
+ * Ortak Kasa'dan cikan kisim hic kimseye "direkt odedi" olarak
+ * yazilmaz (bu, "Ortak Kasa'ya katki" transferleriyle ayrica sayilir).
+ */
+function directPaymentEUR(
+  t: ReturnType<typeof computeTransaction>,
+  person: Person,
+  accounts: Account[],
+): number {
+  if (!isSplitAccountTransaction(t)) {
+    return ownerPerson(t.account, accounts) === person ? (t.amountEUR ?? 0) : 0
+  }
+  let sum = 0
+  if (ownerPerson(t.account, accounts) === person) sum += t.canShare ?? 0
+  if (ownerPerson(t.secondAccount!, accounts) === person) sum += t.tugceShare ?? 0
+  return sum
+}
+
 export function computeContributionSummary(
   accounts: Account[],
   transactions: Transaction[],
@@ -48,9 +74,10 @@ export function computeContributionSummary(
   )
 
   return PERSONS.map((person) => {
-    const directlyPaidEUR = computedTx
-      .filter((t) => t.payer === person)
-      .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
+    const directlyPaidEUR = computedTx.reduce(
+      (sum, t) => sum + directPaymentEUR(t, person, accounts),
+      0,
+    )
 
     const paidIntoSharedAccountEUR = computedTransfers
       .filter((t) => t.type === 'Ortak Kasa Katkısı' && t.from === person)

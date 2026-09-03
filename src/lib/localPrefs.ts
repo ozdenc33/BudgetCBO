@@ -101,3 +101,26 @@ export function clearGreetings(): void {
     // yoksay
   }
 }
+
+// --- Mal varligi gizleme (Ana Sayfa) ---
+// Para tutarlarini goz onunde blur'lamak icin, tercih cihazda kalir —
+// bir telefon halka acikken diger kapali olabilir.
+
+const NET_WORTH_HIDDEN_KEY = 'butce.netWorthHidden'
+
+export function getNetWorthHidden(): boolean {
+  try {
+    return localStorage.getItem(NET_WORTH_HIDDEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setNetWorthHidden(hidden: boolean): void {
+  try {
+    if (hidden) localStorage.setItem(NET_WORTH_HIDDEN_KEY, '1')
+    else localStorage.removeItem(NET_WORTH_HIDDEN_KEY)
+  } catch {
+    // yoksay
+  }
+}

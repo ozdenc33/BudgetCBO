@@ -39,6 +39,22 @@
 
 .draft-row-name {
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* "Gelir" etiketi: taslak listesinde gider ve gelir kalemleri birlikte
+   goruntuleniyor (bkz. src/pages/RecurringPage.tsx). */
+.draft-row-badge {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(var(--positive-rgb), 0.15);
+  color: var(--positive);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .draft-row-meta {

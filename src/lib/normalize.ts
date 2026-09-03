@@ -5,6 +5,7 @@ import type {
   Income,
   Person,
   RecurringItem,
+  RecurringKind,
   RecurringSkip,
   Transaction,
   Transfer,
@@ -67,6 +68,7 @@ const BUDGET_TYPES: readonly BudgetType[] = [
   'Taşınma',
 ]
 const FREQUENCIES: readonly FrequencyMonths[] = [1, 3, 6, 12]
+const RECURRING_KINDS: readonly RecurringKind[] = ['expense', 'income']
 
 function currency(value: unknown): Currency | '' {
   return CURRENCIES.includes(value as Currency) ? (value as Currency) : ''
@@ -90,6 +92,8 @@ export function toTransaction(id: string, data: Record<string, unknown>): Transa
   }
   const amount = optNum(data.amount)
   if (amount != null) tx.amount = amount
+  const secondAccount = optStr(data.secondAccount)
+  if (secondAccount) tx.secondAccount = secondAccount
   const canPct = optRatio(data.canPct)
   if (canPct != null) tx.canPct = canPct
   const tugcePct = optRatio(data.tugcePct)
@@ -154,11 +158,15 @@ export function toGoal(id: string, data: Record<string, unknown>): Goal {
 }
 
 export function toRecurringItem(id: string, data: Record<string, unknown>): RecurringItem {
+  // 'kind' bu ozellikten once yoktu; eski kayitlarin hepsi gercek
+  // sabit giderdi, o yuzden yoksa 'expense' varsayilir (davranis
+  // degismez).
+  const kind = oneOf(data.kind, RECURRING_KINDS, 'expense')
+
   const item: RecurringItem = {
     id,
     name: str(data.name),
-    budgetType: oneOf(data.budgetType, BUDGET_TYPES, 'Ortak-Ev'),
-    category: str(data.category),
+    kind,
     frequencyMonths: FREQUENCIES.includes(data.frequencyMonths as FrequencyMonths)
       ? (data.frequencyMonths as FrequencyMonths)
       : 1,
@@ -167,8 +175,19 @@ export function toRecurringItem(id: string, data: Record<string, unknown>): Recu
     // Alan hic yoksa kalem aktif sayilir (eski kayitlarla uyum).
     active: data.active !== false,
   }
+  if (kind === 'expense') {
+    item.budgetType = oneOf(data.budgetType, BUDGET_TYPES, 'Ortak-Ev')
+    item.category = str(data.category)
+  } else {
+    const person = optOneOf(data.person, PERSONS)
+    if (person) item.person = person
+  }
   const amount = optNum(data.amount)
   if (amount != null) item.amount = amount
+  const itemCurrency = currency(data.currency)
+  if (itemCurrency) item.currency = itemCurrency
+  const paymentCount = optNum(data.paymentCount)
+  if (paymentCount != null && paymentCount > 0) item.paymentCount = Math.round(paymentCount)
   const note = optStr(data.note)
   if (note) item.note = note
   return item

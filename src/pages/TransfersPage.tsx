@@ -13,6 +13,7 @@ import { TRANSFER_TYPES, PERSONS } from '../domain/constants'
 import type { Currency, Transfer, TransferDraft, TransferType } from '../domain/types'
 import { todayISO, todayMonthKey } from '../domain/dates'
 import { useWrite } from '../hooks/useWrite'
+import { useEditParam } from '../hooks/useEditParam'
 
 type FormState = {
   date: string
@@ -168,6 +169,9 @@ export function TransfersPage() {
     setFormOpen(true)
     setForm(transferToForm(transfer))
   }
+
+  // Hesap Hareketleri'nden "?edit=<id>" ile gelindiyse formu otomatik ac.
+  useEditParam(transfers, transfersLoading, startEdit)
 
   function cancelEdit() {
     setEditingId(null)

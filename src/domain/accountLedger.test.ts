@@ -137,6 +137,75 @@ describe('computeAccountLedger', () => {
   it('hicbir hareketi olmayan hesap icin bos liste doner', () => {
     expect(computeAccountLedger('Can-Nakit', TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)).toEqual([])
   })
+
+  it("her satirin recordId alani, alttaki gercek kaydin id'sine gider (duzenleme yonlendirmesi icin)", () => {
+    const rows = computeAccountLedger(CAN, TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
+    const byId = Object.fromEntries(rows.map((r) => [r.id, r]))
+    expect(byId['tx-t1'].recordId).toBe('t1')
+    expect(byId['in-i1'].recordId).toBe('i1')
+    expect(byId['tr-out-r1'].recordId).toBe('r1')
+  })
+
+  it('TRY kaydinda ham tutar ve para birimi ayrica tasinir', () => {
+    const tryTx: Transaction[] = [
+      {
+        id: 'tl1',
+        date: '2026-09-09',
+        description: 'TL harcama',
+        category: 'Market (Ev)',
+        amount: 350,
+        currency: 'TRY',
+        account: CAN,
+      },
+    ]
+    const rows = computeAccountLedger(CAN, tryTx, [], [], DEFAULT_SETTINGS)
+    expect(rows[0].originalCurrency).toBe('TRY')
+    expect(rows[0].originalAmount).toBe(350)
+  })
+
+  it('EUR kaydinda originalCurrency/originalAmount hic yok', () => {
+    const rows = computeAccountLedger(CAN, TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
+    expect(rows.every((r) => r.originalCurrency === undefined)).toBe(true)
+  })
+})
+
+describe('computeAccountLedger — bolusuk cekilis (secondAccount)', () => {
+  const split: Transaction[] = [
+    {
+      id: 's1',
+      date: '2026-09-10',
+      description: 'Ortak market',
+      category: 'Market (Ev)',
+      amount: 100,
+      currency: 'EUR',
+      account: CAN,
+      secondAccount: 'Tuğçe-DE Girokonto',
+      canPct: 0.6,
+      tugcePct: 0.4,
+    },
+  ]
+
+  it('iki hesapta da ayri satir olarak gorunur, her biri kendi payiyla', () => {
+    const canRows = computeAccountLedger(CAN, split, [], [], DEFAULT_SETTINGS)
+    const tugceRows = computeAccountLedger('Tuğçe-DE Girokonto', split, [], [], DEFAULT_SETTINGS)
+    expect(canRows).toHaveLength(1)
+    expect(canRows[0].amountEUR).toBeCloseTo(-60)
+    expect(canRows[0].isPartialSplit).toBe(true)
+    expect(tugceRows).toHaveLength(1)
+    expect(tugceRows[0].amountEUR).toBeCloseTo(-40)
+  })
+
+  it("iki satirin recordId'si ayni islemi gosterir (tek kayit, iki hesap)", () => {
+    const canRows = computeAccountLedger(CAN, split, [], [], DEFAULT_SETTINGS)
+    const tugceRows = computeAccountLedger('Tuğçe-DE Girokonto', split, [], [], DEFAULT_SETTINGS)
+    expect(canRows[0].recordId).toBe('s1')
+    expect(tugceRows[0].recordId).toBe('s1')
+  })
+
+  it('ilgisiz bir hesapta hic gorunmez', () => {
+    const rows = computeAccountLedger('Can-Nakit', split, [], [], DEFAULT_SETTINGS)
+    expect(rows).toHaveLength(0)
+  })
 })
 
 describe('computeSavingsBreakdown', () => {

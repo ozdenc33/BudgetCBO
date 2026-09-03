@@ -16,7 +16,14 @@ function validate(income: Income): string {
 
 export function computeIncome(income: Income, settings: Settings): ComputedIncome {
   const monthKey = income.date ? monthKeyOf(income.date) : ''
-  const { rate, rateSource, rateWarning } = resolveRate(income.currency, monthKey, settings)
+  // 'income': TRY -> EUR gelirlerde makas farki muhafazakar yonde
+  // uygulanir (bkz. src/domain/rate.ts).
+  const { rate, rateSource, rateWarning } = resolveRate(
+    income.currency,
+    monthKey,
+    settings,
+    'income',
+  )
   const amountEUR = income.amount != null ? income.amount / rate : undefined
   const validation = validate(income)
 

@@ -44,6 +44,13 @@ describe('toTransaction', () => {
     expect(toTransaction('t5', { amount: Number.NaN }).amount).toBeUndefined()
   })
 
+  it('secondAccount varsa gecirir, yoksa hic yazmaz', () => {
+    expect(toTransaction('t6', { secondAccount: 'Tuğçe-DE Girokonto' }).secondAccount).toBe(
+      'Tuğçe-DE Girokonto',
+    )
+    expect(toTransaction('t7', {}).secondAccount).toBeUndefined()
+  })
+
   it('metin olarak saklanan sayiyi cevirir (virgul dahil)', () => {
     expect(toTransaction('t6', { amount: '42.5' }).amount).toBe(42.5)
     expect(toTransaction('t7', { amount: '42,5' }).amount).toBe(42.5)
@@ -111,6 +118,40 @@ describe('toRecurringItem', () => {
   it('taninmayan butce tipini varsayilana cevirir', () => {
     expect(toRecurringItem('r5', { budgetType: 'Kişisel' }).budgetType).toBe('Ortak-Ev')
     expect(toRecurringItem('r6', { budgetType: 'Mike' }).budgetType).toBe('Mike')
+  })
+
+  it('kind alani yoksa (eski kayit) "expense" varsayilir', () => {
+    const item = toRecurringItem('r7', { budgetType: 'Ortak-Ev', category: 'Kira (Kaltmiete)' })
+    expect(item.kind).toBe('expense')
+    expect(item.budgetType).toBe('Ortak-Ev')
+    expect(item.category).toBe('Kira (Kaltmiete)')
+    expect(item.person).toBeUndefined()
+  })
+
+  it('kind=income icin budgetType/category yazilmaz, person normallesir', () => {
+    const item = toRecurringItem('r8', { kind: 'income', person: 'Tuğçe' })
+    expect(item.kind).toBe('income')
+    expect(item.person).toBe('Tuğçe')
+    expect(item.budgetType).toBeUndefined()
+    expect(item.category).toBeUndefined()
+  })
+
+  it('taninmayan person yok sayilir', () => {
+    const item = toRecurringItem('r9', { kind: 'income', person: 'Ahmet' })
+    expect(item.person).toBeUndefined()
+  })
+
+  it('paymentCount pozitif tam sayiya yuvarlanir, sifir/negatif yok sayilir', () => {
+    expect(toRecurringItem('r10', { paymentCount: 12.7 }).paymentCount).toBe(13)
+    expect(toRecurringItem('r11', { paymentCount: 0 }).paymentCount).toBeUndefined()
+    expect(toRecurringItem('r12', { paymentCount: -5 }).paymentCount).toBeUndefined()
+    expect(toRecurringItem('r13', {}).paymentCount).toBeUndefined()
+  })
+
+  it('currency (KYK kredisi gibi TL sabit gelir) gecerse gecirir, taninmazsa hic yazmaz', () => {
+    expect(toRecurringItem('r14', { currency: 'TRY' }).currency).toBe('TRY')
+    expect(toRecurringItem('r15', { currency: 'USD' }).currency).toBeUndefined()
+    expect(toRecurringItem('r16', {}).currency).toBeUndefined()
   })
 })
 

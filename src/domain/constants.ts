@@ -94,6 +94,9 @@ export const DEFAULT_SETTINGS: Settings = {
   incomeSources: DEFAULT_INCOME_SOURCES,
   rates: {},
   defaultRate: DEFAULT_RATE,
+  // 0: makas farki yok, eski davranisla birebir ayni. Ayarlar'dan
+  // acikca degistirilmedikce mevcut hesaplari geriye donuk degistirmez.
+  fxSpreadPct: 0,
   sperrkonto: { totalEUR: null, monthlyReleaseEUR: 992 },
   personalPlans: {
     Can: emptyPersonalPlan(),

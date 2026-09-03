@@ -1,4 +1,4 @@
-import type { ComputedRecurringItem, RecurringItem, Settings, Transaction } from './types'
+import type { ComputedRecurringItem, Income, RecurringItem, Settings, Transaction } from './types'
 import { computeRecurringItems } from './recurring'
 
 // Proje talimatlari bolum 6.2: yaklasan sabit odemeler ve ay sonunda
@@ -46,9 +46,17 @@ export function computeReminders(
   transactions: Transaction[],
   settings: Settings,
   today: Date,
+  incomes: Income[] = [],
 ): Reminders {
   const monthKey = currentMonthKey(today)
-  const computed = computeRecurringItems(recurring, monthKey, transactions, settings, today)
+  const computed = computeRecurringItems(
+    recurring,
+    monthKey,
+    transactions,
+    settings,
+    today,
+    incomes,
+  )
 
   const upcoming = computed
     .filter(

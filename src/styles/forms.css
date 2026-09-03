@@ -136,11 +136,29 @@
 }
 
 /* Kur eksik uyarisi: hata degil, ama tutarlarin yanlis olabilecegini
-   soyler (bkz. src/domain/rate.ts rateWarning). */
+   soyler (bkz. src/domain/rate.ts rateWarning). Icinde "Kur otomatik
+   cek" dugmesi de olabilir (bkz. src/lib/fetchRate.ts), o yuzden satir
+   duzeni flex. */
 .expense-preview--warning {
   background: var(--warning-bg);
   color: var(--warning-text);
   border: 1px solid var(--warning-border);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.expense-preview--warning button {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--warning-text);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--warning-text);
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .expense-form-actions {

@@ -3,11 +3,14 @@ import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useSettings } from '../hooks/useSettings'
 import { useIncomes } from '../hooks/useIncomes'
 import { addIncome, deleteIncome, updateIncome } from '../lib/firestoreIncomes'
+import { saveSettings } from '../lib/firestoreSettings'
+import { fetchEurTryRateForDate } from '../lib/fetchRate'
 import { computeIncome } from '../domain/incomes'
 import { monthKeyOf } from '../domain/rate'
 import type { Currency, Income, IncomeDraft, Person } from '../domain/types'
 import { todayISO, todayMonthKey } from '../domain/dates'
 import { useWrite } from '../hooks/useWrite'
+import { useEditParam } from '../hooks/useEditParam'
 
 type FormState = {
   date: string
@@ -76,6 +79,8 @@ export function IncomesPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [month, setMonth] = useState(todayMonthKey)
   const [saving, setSaving] = useState(false)
+  const [fetchingRate, setFetchingRate] = useState(false)
+  const [rateFetchNote, setRateFetchNote] = useState<string | null>(null)
   const runWrite = useWrite()
 
   const preview = useMemo(
@@ -120,9 +125,40 @@ export function IncomesPage() {
     setForm(incomeToForm(income))
   }
 
+  // Hesap Hareketleri'nden "?edit=<id>" ile gelindiyse formu otomatik ac.
+  useEditParam(incomes, incomesLoading, startEdit)
+
   function cancelEdit() {
     setEditingId(null)
     setForm(emptyForm())
+  }
+
+  async function handleFetchRateForDate() {
+    if (!form.date) return
+    setFetchingRate(true)
+    setRateFetchNote(null)
+    try {
+      const { rate, date } = await fetchEurTryRateForDate(form.date)
+      const monthKey = form.date.slice(0, 7)
+      const ok = await runWrite(
+        saveSettings({ ...settings, rates: { ...settings.rates, [monthKey]: rate } }),
+        {
+          failureMessage: 'Kur kaydedilemedi',
+          successMessage: `${monthKey} kuru kaydedildi: 1 EUR = ${rate} TRY`,
+        },
+      )
+      if (ok) {
+        setRateFetchNote(
+          `Kaydedildi: 1 EUR = ${rate} TRY${date ? ` (${date} tarihli ECB kuru)` : ''}.`,
+        )
+      }
+    } catch (err) {
+      setRateFetchNote(
+        `Kur getirilemedi: ${err instanceof Error ? err.message : String(err)}. Elle girebilirsiniz (Ayarlar).`,
+      )
+    } finally {
+      setFetchingRate(false)
+    }
   }
 
   async function handleDelete(id: string) {
@@ -243,6 +279,16 @@ export function IncomesPage() {
             </div>
           )}
 
+          {preview.rateWarning && (
+            <div className="expense-preview expense-preview--warning">
+              <span>{preview.rateWarning}</span>
+              <button type="button" onClick={handleFetchRateForDate} disabled={fetchingRate}>
+                {fetchingRate ? 'Getiriliyor...' : 'Kur otomatik çek'}
+              </button>
+            </div>
+          )}
+          {rateFetchNote && <p className="settings-note">{rateFetchNote}</p>}
+
           <div className="expense-form-actions">
             <button type="submit" disabled={!canSubmit || saving}>
               {editingId ? 'Güncelle' : 'Kaydet'}
@@ -288,6 +334,11 @@ export function IncomesPage() {
                 >
                   {i.validation}
                 </span>
+                {i.rateWarning && (
+                  <span className="expense-badge expense-badge--warning" title={i.rateWarning}>
+                    kur eksik
+                  </span>
+                )}
               </div>
               <div className="expense-row-actions">
                 <button onClick={() => startEdit(i)}>Düzenle</button>

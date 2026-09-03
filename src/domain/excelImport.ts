@@ -234,6 +234,9 @@ function parseSabitGiderler(workbook: ExcelJS.Workbook, warnings: string[]): Rec
     }
     const draft: RecurringItemDraft = {
       name,
+      // Excel'in Sabit_Giderler sayfasi hep gider icindi; gelir kavrami
+      // yoktu.
+      kind: 'expense',
       budgetType: budgetType as RecurringItemDraft['budgetType'],
       category,
       frequencyMonths: ([1, 3, 6, 12].includes(frequency)

@@ -60,6 +60,9 @@ service cloud.firestore {
         && data().amount is number
         && isCurrency(data().currency)
         && optionalString('description')
+        // Bolusuk cekilis: gercek para iki farkli hesaptan cikiyorsa
+        // (bkz. src/domain/types.ts Transaction.secondAccount).
+        && optionalString('secondAccount')
         && optionalNumber('canPct')
         && optionalNumber('tugcePct')
         && optionalString('tag')
@@ -98,14 +101,22 @@ service cloud.firestore {
 
     match /recurring/{id} {
       allow read, delete: if isAllowedUser();
+      // 'kind' oncesi tum kayitlar gercek sabit giderdi (kategori +
+      // butce zorunlu). 'income' (sabit gelir) icin bunlarin yerine
+      // kisi (person) zorunlu — bkz. src/domain/types.ts RecurringItem.
       allow create, update: if isAllowedUser()
         && data().name is string
-        && data().category is string
+        && data().kind in ['expense', 'income']
         && data().account is string
         && data().frequencyMonths in [1, 3, 6, 12]
         && isDateString(data().firstPaymentDate)
         && data().active is bool
+        && (data().kind == 'expense'
+              ? (data().category is string && data().budgetType is string)
+              : data().person in ['Can', 'Tuğçe'])
         && optionalNumber('amount')
+        && (!('currency' in data()) || isCurrency(data().currency))
+        && optionalNumber('paymentCount')
         && optionalString('note')
         && optionalString('importBatchId');
     }
@@ -139,7 +150,8 @@ service cloud.firestore {
         && data().categories is list
         && data().incomeSources is list
         && data().rates is map
-        && data().defaultRate is number;
+        && data().defaultRate is number
+        && optionalNumber('fxSpreadPct');
     }
   }
 }
