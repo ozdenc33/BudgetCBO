@@ -1,0 +1,275 @@
+/*
+ * Cevrimdisi seridi, hatirlatmalar, bildirimler ve hata ekrani
+ *
+ * Bu dosya src/styles.css'ten bolundu; ic düzen ve secici
+ * isimleri degismedi. Giris noktasi: src/styles.css
+ */
+
+/* ---------- Cevrimdisi / hatirlatma ---------- */
+
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-bottom: 1px solid var(--warning-border);
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.reminders-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reminder-card {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  font-size: 0.84rem;
+  color: var(--warning-text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.reminder-card-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------
+ * Bildirimler (toast)
+ * Mobilde alt sekme cubugunun ustunde, masaustunde sag altta durur.
+ * z-index 30: sekme cubugunun (20) ustunde, menu perdesinin altinda.
+ * --------------------------------------------------------------- */
+.toast-stack {
+  position: fixed;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem 0.7rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  animation: toast-in 0.22s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toast--success {
+  border-color: rgba(var(--positive-rgb), 0.5);
+  background: var(--surface);
+  color: var(--positive);
+}
+
+.toast--error {
+  border-color: rgba(var(--negative-rgb), 0.5);
+  color: var(--negative);
+}
+
+/* "fun": Tuğçe'nin karsilamasi ve Mike'in tesekkuru. Tek yerde
+   tanimli, boylece iki not da ayni dille konusur. */
+.toast--fun {
+  border: none;
+  color: #ffffff;
+  background: linear-gradient(120deg, #d63384 0%, #e37222 55%, #f2a65a 100%);
+  font-weight: 600;
+}
+
+.toast--fun .toast-action {
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.toast--fun .toast-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+@media (min-width: 900px) {
+  .toast-stack {
+    left: auto;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    width: min(24rem, calc(100vw - 2.5rem));
+  }
+}
+
+/* Hata siniri ekrani (bkz. src/components/ErrorBoundary.tsx) */
+.error-boundary {
+  max-width: 32rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.error-boundary h1 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.error-boundary-detail {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.error-boundary-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.error-boundary-actions button {
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.settings-inline-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+
+/* Ay kapanisi karsilastirmasi (bkz. src/components/MonthComparison.tsx) */
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.compare-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+}
+
+.compare-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.compare-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.compare-delta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.compare-delta--good {
+  color: var(--positive);
+}
+
+.compare-delta--bad {
+  color: var(--negative);
+}
+
+.compare-movers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.compare-movers-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}

@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { saveSettings } from '../lib/firestoreSettings'
 import { useWrite } from '../hooks/useWrite'
+import { fetchEurTryRate } from '../lib/fetchRate'
+import { todayMonthKey } from '../domain/dates'
 import type {
   Account,
   AccountOwner,
@@ -281,6 +283,33 @@ function IncomeSourcesSection({ draft, onSave }: SectionProps) {
 function RatesSection({ draft, onSave }: SectionProps) {
   const [monthKey, setMonthKey] = useState('')
   const [rate, setRate] = useState('')
+  const [fetching, setFetching] = useState(false)
+  const [fetchNote, setFetchNote] = useState<string | null>(null)
+
+  /**
+   * Guncel kuru getirip formu DOLDURUR, kaydetmez. Kullanici degeri
+   * gorup "Ekle" derse kaydedilir — otomatik yazma bilerek yok, cunku
+   * kur bu uygulamada gecmise donuk hesaplari da etkiliyor.
+   */
+  async function suggestCurrentRate() {
+    setFetching(true)
+    setFetchNote(null)
+    try {
+      const { rate: fetched, date } = await fetchEurTryRate()
+      setMonthKey((current) => current || todayMonthKey())
+      setRate(String(fetched))
+      setFetchNote(
+        `Avrupa Merkez Bankası kuru${date ? ` (${date})` : ''}: 1 EUR = ${fetched} TRY. Kaydetmek için "Ekle" deyin.`,
+      )
+    } catch (err) {
+      console.error('Kur getirilemedi', err)
+      setFetchNote(
+        `Kur getirilemedi (${err instanceof Error ? err.message : String(err)}). Elle girebilirsiniz.`,
+      )
+    } finally {
+      setFetching(false)
+    }
+  }
 
   function addRate(e: FormEvent) {
     e.preventDefault()
@@ -325,6 +354,12 @@ function RatesSection({ draft, onSave }: SectionProps) {
             </li>
           ))}
       </ul>
+      <div className="settings-inline-actions">
+        <button type="button" onClick={suggestCurrentRate} disabled={fetching}>
+          {fetching ? 'Getiriliyor...' : 'Güncel kuru getir'}
+        </button>
+      </div>
+      {fetchNote && <p className="settings-note">{fetchNote}</p>}
       <form className="settings-add-form" onSubmit={addRate}>
         <input
           placeholder="YYYY-AA"

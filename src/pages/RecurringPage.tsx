@@ -105,6 +105,7 @@ export function RecurringPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [draftAmounts, setDraftAmounts] = useState<Record<string, string>>({})
+  const [confirmingAll, setConfirmingAll] = useState(false)
 
   const loading = settingsLoading || txLoading || itemsLoading || skipsLoading
   const today = useToday()
@@ -140,6 +141,39 @@ export function RecurringPage() {
     // siparisi); tesekkur notu orada da ciksin.
     if (ok && isMikeExpense(draft, settings)) {
       showToast({ message: MIKE_THANKS_NOTE, tone: 'fun', durationMs: 5000, key: 'mike-thanks' })
+    }
+  }
+
+  /**
+   * Tum taslaklari tek dokunusla onaylar.
+   *
+   * Tutari GIRILMEMIS kalemler bilerek disarida birakilir: onlar icin
+   * ne kadar yazilacagi belirsizdir ve sessizce 0 yazmak butceyi
+   * bozar. Kullanici onlari tek tek onaylar.
+   */
+  async function handleConfirmAll() {
+    const ready = drafts.filter(
+      ({ item }) => (draftAmounts[item.id] ?? '') !== '' || item.amount != null,
+    )
+    if (ready.length === 0) return
+    const totalEUR = ready.reduce((sum, { item }) => {
+      const raw = draftAmounts[item.id]
+      return sum + (raw !== undefined && raw !== '' ? Number(raw) : (item.amount ?? 0))
+    }, 0)
+    if (
+      !window.confirm(
+        `${ready.length} sabit gider ${totalEUR.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} € toplamla kaydedilecek. Devam edilsin mi?`,
+      )
+    ) {
+      return
+    }
+    setConfirmingAll(true)
+    try {
+      for (const { item, draft } of ready) {
+        await handleConfirm(item.id, item.amount ?? 0, draft)
+      }
+    } finally {
+      setConfirmingAll(false)
     }
   }
 
@@ -201,7 +235,19 @@ export function RecurringPage() {
 
       {drafts.length > 0 && (
         <section className="dashboard-section">
-          <h2>Taslak İşlemler ({drafts.length})</h2>
+          <div className="panel-head">
+            <h2>Taslak İşlemler ({drafts.length})</h2>
+            {drafts.filter(
+              ({ item }) => (draftAmounts[item.id] ?? '') !== '' || item.amount != null,
+            ).length > 1 && (
+              <button type="button" onClick={handleConfirmAll} disabled={confirmingAll}>
+                {confirmingAll ? 'Kaydediliyor...' : 'Tümünü onayla'}
+              </button>
+            )}
+          </div>
+          <p className="settings-note">
+            Tutarı girilmemiş kalemler "Tümünü onayla" kapsamına girmez; onları tek tek onaylayın.
+          </p>
           <ul className="draft-list">
             {drafts.map(({ item, draft }) => (
               <li key={item.id} className="draft-row">

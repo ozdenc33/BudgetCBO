@@ -9,7 +9,7 @@ import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
 import { isFutureDated } from '../domain/futureDated'
 import { TransactionFilters } from '../components/TransactionFilters'
-import type { Currency, Transaction, TransactionDraft } from '../domain/types'
+import type { ComputedTransaction, Currency, Transaction, TransactionDraft } from '../domain/types'
 import { todayISO, todayMonthKey } from '../domain/dates'
 import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
 import { useWrite } from '../hooks/useWrite'
@@ -186,9 +186,43 @@ export function ExpensesPage() {
     setForm(emptyForm())
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Bu harcamayı silmek istediğinize emin misiniz?')) return
-    await runWrite(deleteTransaction(id), { failureMessage: 'Harcama silinemedi' })
+  /**
+   * Silme artik onay penceresi sormaz; bunun yerine kaydi silip 6
+   * saniyelik "Geri al" sunar. Mobilde her silmede cikan
+   * window.confirm'den hem daha hizli hem daha affedici — yanlislikla
+   * silinen kayit tek dokunusla geri gelir.
+   */
+  async function handleDelete(tx: ComputedTransaction) {
+    const label = tx.description || tx.category
+    // Kaydin icerigi silinmeden once kopyalanir; geri alma bunu
+    // yeni bir dokuman olarak tekrar yazar (eski id korunmaz).
+    const { id: _id, ...draft } = tx
+    const restore: TransactionDraft = {
+      date: draft.date,
+      description: draft.description,
+      category: draft.category,
+      amount: draft.amount,
+      currency: draft.currency,
+      account: draft.account,
+    }
+    if (draft.canPct != null) restore.canPct = draft.canPct
+    if (draft.tugcePct != null) restore.tugcePct = draft.tugcePct
+    if (draft.tag) restore.tag = draft.tag
+    if (draft.note) restore.note = draft.note
+
+    await runWrite(deleteTransaction(tx.id), {
+      failureMessage: 'Harcama silinemedi',
+      successMessage: `"${label}" silindi`,
+      undo: {
+        label: 'Geri al',
+        onUndo: () => {
+          void runWrite(addTransaction(restore), {
+            failureMessage: 'Harcama geri alınamadı',
+            successMessage: 'Harcama geri alındı',
+          })
+        },
+      },
+    })
   }
 
   if (settingsLoading) {
@@ -404,7 +438,7 @@ export function ExpensesPage() {
               <div className="expense-row-actions">
                 <button onClick={() => startEdit(t)}>Düzenle</button>
                 <button onClick={() => repeat(t)}>Tekrarla</button>
-                <button onClick={() => handleDelete(t.id)}>Sil</button>
+                <button onClick={() => handleDelete(t)}>Sil</button>
               </div>
             </li>
           ))}

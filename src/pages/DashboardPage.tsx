@@ -16,6 +16,8 @@ import { CategoryBars, MonthlyColumns, NetTrend } from '../components/charts'
 import { summarizeFutureDated } from '../domain/futureDated'
 import { computeTransaction, monthKeyOf } from '../domain/transactions'
 import { todayMonthKey } from '../domain/dates'
+import { computeMonthComparison } from '../domain/monthComparison'
+import { MonthComparisonSection } from '../components/MonthComparison'
 
 function fmt(value: number | undefined): string {
   if (value == null) return '—'
@@ -57,6 +59,10 @@ export function DashboardPage() {
     () => computeMonthlyProgress(transactions, incomes, settings),
     [transactions, incomes, settings],
   )
+  const comparison = useMemo(
+    () => computeMonthComparison(month, transactions, incomes, transfers, settings),
+    [month, transactions, incomes, transfers, settings],
+  )
 
   // Ileri tarihli kayitlar toplamdan cikarilmaz (Excel'de de cikarilmaz),
   // ama kullanici toplamin icinde henuz cikmamis para oldugunu bilsin.
@@ -84,6 +90,8 @@ export function DashboardPage() {
       </div>
 
       <p className="print-only print-title">BudgetCBO — Ay Panosu · {month}</p>
+
+      <MonthComparisonSection comparison={comparison} />
 
       <section className="dashboard-section">
         <h2>Ay Özeti</h2>
