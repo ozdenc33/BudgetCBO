@@ -2,6 +2,45 @@
 
 Faz faz geliştirme notları. Kurulum ve mimari için `README.md`'ye bakın.
 
+## Faz 12: bölüşük hesap çekilişi, sabit gelirler, kur makası, mal varlığı
+
+Kullanıcının tek seferde talep ettiği geniş bir özellik seti fazlar
+halinde uygulandı: veri modeli (A), Firestore kuralları (B), formlar
+(C), Ana Sayfa (D). Tüm yeni alanlar opsiyonel ve varsayılanları eski
+davranışla birebir aynı — canlı veriler/hesaplar sessizce değişmedi.
+
+- **Bölüşük hesap çekilişi.** `Transaction.secondAccount`: gerçek bir
+  bölüşük ödemede (örn. %50 Can-DE, %50 Tuğçe-DE) her hesaptan kendi
+  payı kadar çekilir — çekilen oran her zaman Can%/Tuğçe% ile birebir
+  aynı. Harcamalar formunda oran 0/1 dışındaysa "farklı hesaplardan
+  bölüşerek öde" seçeneği çıkar (varsayılan kapalı); biri "Ortak Kasa"
+  seçilince diğeri otomatik "Ortak Kasa" olur. Hesap Bakiyeleri ve
+  Katkı Özeti bölüşük kaydın her tarafını doğru hesaba/kişiye yazar.
+- **Kişisel kategori uyarısı artık engellemiyor.** Can/Tuğçe %100
+  değilse "Emin misin?" onayıyla yine de kaydedilebiliyor.
+- **Sabit gelirler.** `RecurringItem.kind` ('expense'/'income'): aynı
+  motor (taslak/atlama/onaylama/hatırlatma) artık Sperrkonto serbest
+  bırakma, KYK kredisi gibi sabit GELİRLER için de çalışıyor;
+  onaylanınca `incomes` koleksiyonuna yazılıyor. `paymentCount` ile
+  toplam ödeme sayısı sınırlanabiliyor (örn. 12 ay); aşılınca
+  "tamamlandı" durumuna geçiyor. Kalem TL cinsinden olabiliyor.
+- **Kur makası.** `Settings.fxSpreadPct`: gerçek banka/döviz
+  işlemlerindeki alış-satış farkını muhafazakâr yönde hesaba katıyor
+  (gelirlerde kur biraz yüksekten, giderlerde biraz düşükten).
+  Varsayılan 0 (makas yok). "Kur otomatik çek" düğmesi o günün ECB
+  kurunu getirip kaydediyor (`fetchEurTryRateForDate`).
+- **Hesapları birleştirme.** Ayarlar'da yeni bir araç: iki hesabı
+  (örn. TR ve DE hesabı) tek hesapta toplar — tüm tarihsel kayıtları
+  yeniden adlandırır, önizlemeli, geri alınamaz.
+- **Ana Sayfa.** "Hesap Bakiyeleri" paneli öne çıkarıldı. "Mal
+  Varlığı" kartı: kişinin kendi hesapları + Ortak Kasa'daki payı, göz
+  ikonuyla blur'lanıp açılabiliyor (tercih cihazda kalıyor). Hesap
+  Hareketleri'ndeki her satır artık tıklanabilir: ilgili sayfaya
+  yönlendirip düzenleme formunu otomatik açıyor.
+
+331 birim/bileşen testi + 34 Firestore kural testi geçiyor. Tüm akışlar
+gerçek tarayıcıda Firebase emülatörleriyle uçtan uca test edildi.
+
 ## Faz 9-11: proje incelemesi sonrası iyileştirmeler
 
 Kod incelemesinde çıkan bulgular üç fazda uygulandı.
