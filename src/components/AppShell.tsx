@@ -51,7 +51,7 @@ const MENU_GROUPS: {
     items: [
       {
         to: '/sabit-giderler',
-        label: 'Sabit Giderler',
+        label: 'Sabit Ödemeler',
         icon: <IconRepeat />,
         hint: 'Kira, sigorta, abonelik',
       },

@@ -64,7 +64,7 @@ const SHORTCUTS = [
   { to: '/hesaplar', label: 'Hesaplar', icon: <IconWallet size={20} /> },
   { to: '/pano', label: 'Ay Panosu', icon: <IconChart size={20} /> },
   { to: '/harcamalar', label: 'Harcamalar', icon: <IconReceipt size={20} /> },
-  { to: '/sabit-giderler', label: 'Sabit Giderler', icon: <IconRepeat size={20} /> },
+  { to: '/sabit-giderler', label: 'Sabit Ödemeler', icon: <IconRepeat size={20} /> },
   { to: '/hedefler', label: 'Hedefler', icon: <IconTarget size={20} /> },
 ]
 

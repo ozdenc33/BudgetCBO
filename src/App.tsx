@@ -172,7 +172,10 @@ export function App() {
             <Route
               path="/sabit-giderler"
               element={
-                <Shell title="Sabit Giderler" subtitle="Kira, sigorta, abonelikler">
+                <Shell
+                  title="Sabit Ödemeler"
+                  subtitle="Kira, sigorta, abonelikler, Sperrkonto/KYK gibi düzenli gelirler"
+                >
                   <RecurringPage />
                 </Shell>
               }

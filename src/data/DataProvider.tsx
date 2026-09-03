@@ -75,8 +75,8 @@ const COLLECTION_LABELS = {
   incomes: 'Gelirler',
   transfers: 'Transferler',
   goals: 'Hedefler',
-  recurring: 'Sabit giderler',
-  recurringSkips: 'Atlanan sabit giderler',
+  recurring: 'Sabit ödemeler',
+  recurringSkips: 'Atlanan sabit ödemeler',
   settings: 'Ayarlar',
 } as const
 
