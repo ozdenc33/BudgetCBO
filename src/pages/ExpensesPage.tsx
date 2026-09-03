@@ -6,20 +6,22 @@ import { useTransactions } from '../hooks/useTransactions'
 import { addTransaction, deleteTransaction, updateTransaction } from '../lib/firestoreTransactions'
 import { saveSettings } from '../lib/firestoreSettings'
 import { fetchEurTryRateForDate } from '../lib/fetchRate'
-import { computeTransaction } from '../domain/transactions'
+import { computeTransaction, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
 import { isFutureDated } from '../domain/futureDated'
+import { computeAccountBalances } from '../domain/balances'
 import { TransactionFilters } from '../components/TransactionFilters'
+import { AccountOptions } from '../components/AccountOptions'
 import type { ComputedTransaction, Currency, Transaction, TransactionDraft } from '../domain/types'
 import { todayISO, todayMonthKey } from '../domain/dates'
 import { MIKE_THANKS_NOTE, isMikeExpense } from '../domain/personalNotes'
 import { useWrite } from '../hooks/useWrite'
 import { useComputedTransactions } from '../hooks/useComputedTransactions'
 import { useEditParam } from '../hooks/useEditParam'
+import { useIncomes } from '../hooks/useIncomes'
+import { useTransfers } from '../hooks/useTransfers'
 import { useToast } from '../components/ToastProvider'
-
-const PAYLAŞIM_EKSIK_MESSAGE = 'Kişisel harcamada Can % veya Tuğçe % 100 yazın'
 
 type FormState = {
   date: string
@@ -128,6 +130,8 @@ function transactionToForm(tx: Transaction): FormState {
 export function ExpensesPage() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
+  const { incomes } = useIncomes()
+  const { transfers } = useTransfers()
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -141,6 +145,12 @@ export function ExpensesPage() {
   const runWrite = useWrite()
   const { showToast } = useToast()
   const computedTransactions = useComputedTransactions()
+
+  // Hesap secerken o an canlı bakiyeyi de gorebilmek icin.
+  const accountBalances = useMemo(
+    () => computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings),
+    [settings, transactions, incomes, transfers],
+  )
 
   const preview = useMemo(
     () => computeTransaction({ id: 'preview', ...formToDraft(form) }, settings),
@@ -392,11 +402,7 @@ export function ExpensesPage() {
               <option value="" disabled>
                 Seçin
               </option>
-              {settings.accounts.map((a) => (
-                <option key={a.id} value={a.name}>
-                  {a.name}
-                </option>
-              ))}
+              <AccountOptions accounts={settings.accounts} balances={accountBalances} />
             </select>
           </label>
 
@@ -427,11 +433,7 @@ export function ExpensesPage() {
                     <option value="" disabled>
                       Seçin
                     </option>
-                    {settings.accounts.map((a) => (
-                      <option key={a.id} value={a.name}>
-                        {a.name}
-                      </option>
-                    ))}
+                    <AccountOptions accounts={settings.accounts} balances={accountBalances} />
                   </select>
                 </label>
               )}

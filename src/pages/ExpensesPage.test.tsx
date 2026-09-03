@@ -30,6 +30,14 @@ vi.mock('../hooks/useComputedTransactions', () => ({
     mockTransactions.map((t) => computeTransaction(t, DEFAULT_SETTINGS)),
 }))
 
+vi.mock('../hooks/useIncomes', () => ({
+  useIncomes: () => ({ incomes: [], loading: false, error: null }),
+}))
+
+vi.mock('../hooks/useTransfers', () => ({
+  useTransfers: () => ({ transfers: [], loading: false, error: null }),
+}))
+
 // TL kuru otomatik cekme ozelligi firestoreSettings/fetchRate'e bagli;
 // gercek Firebase baglantisi kurulmasin diye ikisi de sahteleniyor.
 vi.mock('../lib/firestoreSettings', () => ({

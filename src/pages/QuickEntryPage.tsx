@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
+import { useIncomes } from '../hooks/useIncomes'
+import { useTransfers } from '../hooks/useTransfers'
 import { addTransaction } from '../lib/firestoreTransactions'
-import { computeTransaction } from '../domain/transactions'
+import { computeTransaction, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
+import { computeAccountBalances } from '../domain/balances'
+import { AccountOptions } from '../components/AccountOptions'
 import {
   getDefaultAccount,
   getRecentCategories,
@@ -16,18 +20,36 @@ import { useToast } from '../components/ToastProvider'
 import type { TransactionDraft } from '../domain/types'
 import { todayISO } from '../domain/dates'
 
+/**
+ * secondAccount yalnizca GERCEK bir bolusuk cekilis varsa yazilir (bkz.
+ * ExpensesPage'deki ayni isimli fonksiyon — davranis burada da birebir
+ * ayni olmali, ikisi de Transaction.secondAccount uzerinden calisir).
+ */
+function effectiveSecondAccount(splitAccounts: boolean, account: string, secondAccount: string) {
+  if (!splitAccounts) return undefined
+  if (!secondAccount || secondAccount === account) return undefined
+  return secondAccount
+}
+
 export function QuickEntryPage() {
   const { settings, loading: settingsLoading } = useSettings()
   const { transactions, loading: txLoading } = useTransactions()
+  const { incomes } = useIncomes()
+  const { transfers } = useTransfers()
 
   const [date, setDate] = useState(todayISO)
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState('')
   const [account, setAccount] = useState('')
+  const [splitAccounts, setSplitAccounts] = useState(false)
+  const [secondAccount, setSecondAccount] = useState('')
+  const [canPct, setCanPct] = useState('')
+  const [tugcePct, setTugcePct] = useState('')
   const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
   const [pendingDuplicate, setPendingDuplicate] = useState<TransactionDraft | null>(null)
+  const [pendingImbalance, setPendingImbalance] = useState<TransactionDraft | null>(null)
   const runWrite = useWrite()
   const { showToast } = useToast()
 
@@ -44,26 +66,61 @@ export function QuickEntryPage() {
     setAccount((current) => current || (valid ? saved! : settings.accounts[0].name))
   }, [settings.accounts])
 
-  const draft: TransactionDraft = {
-    date,
-    description: description.trim(),
-    category,
-    amount: Number(amount),
-    currency: 'EUR',
-    account,
+  // Hesap secerken o an canlı bakiyeyi de gorebilmek icin.
+  const accountBalances = useMemo(
+    () => computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings),
+    [settings, transactions, incomes, transfers],
+  )
+
+  function buildDraft(): TransactionDraft {
+    // Firestore addDoc "undefined" degerli alanlari reddeder; opsiyonel
+    // alanlar bossa nesneye hic eklenmez.
+    const draft: TransactionDraft = {
+      date,
+      description: description.trim(),
+      category,
+      amount: Number(amount),
+      currency: 'EUR',
+      account,
+    }
+    const second = effectiveSecondAccount(splitAccounts, account, secondAccount)
+    if (second) draft.secondAccount = second
+    if (canPct !== '') draft.canPct = Number(canPct) / 100
+    if (tugcePct !== '') draft.tugcePct = Number(tugcePct) / 100
+    return draft
   }
+
+  const draft = buildDraft()
 
   const preview = useMemo(
     () => computeTransaction({ id: 'preview', ...draft }, settings),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [date, amount, category, account, settings],
+    [date, amount, category, account, splitAccounts, secondAccount, canPct, tugcePct, settings],
   )
+
+  // Ratio 0/1 (tek kisi) disinda bir yerdeyse gercek bir bolusum var
+  // demektir — bu durumda "farkli hesaplardan ode" secenegi ve Can%/
+  // Tuğçe% duzenleme alanlari gosterilir. Ratio 0 ya da 1 ise (biri
+  // %100) bunlarin hicbiri gerekmez, hizli giris sade kalir.
+  const isSplitRatio = preview.ratio != null && preview.ratio > 0 && preview.ratio < 1
+  const isPaylaşımEksik = preview.validation === PAYLAŞIM_EKSIK_MESSAGE
 
   const canSubmit =
     amount !== '' &&
     category !== '' &&
     account !== '' &&
-    (preview.validation === 'OK' || preview.validation === '')
+    (preview.validation === 'OK' || preview.validation === '' || isPaylaşımEksik)
+
+  function setCanAccount(name: string) {
+    // "Biri Ortak seçildiğinde diğeri de otomatik Ortak olsun."
+    setAccount(name)
+    if (name === 'Ortak Kasa') setSecondAccount('Ortak Kasa')
+  }
+
+  function setTugceAccount(name: string) {
+    setSecondAccount(name)
+    if (name === 'Ortak Kasa') setAccount('Ortak Kasa')
+  }
 
   async function commitSave(finalDraft: TransactionDraft) {
     setSaving(true)
@@ -76,7 +133,12 @@ export function QuickEntryPage() {
       setDefaultAccount(finalDraft.account)
       setAmount('')
       setDescription('')
+      setSplitAccounts(false)
+      setSecondAccount('')
+      setCanPct('')
+      setTugcePct('')
       setPendingDuplicate(null)
+      setPendingImbalance(null)
       setSavedFlash(true)
       setTimeout(() => setSavedFlash(false), 1500)
       // Mike'in butcesine giren harcamalarda kucuk bir tesekkur
@@ -92,12 +154,17 @@ export function QuickEntryPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
-    const duplicate = findDuplicateTransaction(draft, transactions)
+    const finalDraft = buildDraft()
+    const duplicate = findDuplicateTransaction(finalDraft, transactions)
     if (duplicate) {
-      setPendingDuplicate(draft)
+      setPendingDuplicate(finalDraft)
       return
     }
-    await commitSave(draft)
+    if (isPaylaşımEksik) {
+      setPendingImbalance(finalDraft)
+      return
+    }
+    await commitSave(finalDraft)
   }
 
   if (settingsLoading || txLoading) {
@@ -162,15 +229,73 @@ export function QuickEntryPage() {
         </label>
 
         <label>
-          Hesap
-          <select value={account} onChange={(e) => setAccount(e.target.value)} required>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
-              </option>
-            ))}
+          {isSplitRatio && splitAccounts ? 'Hesap (Can payı)' : 'Hesap'}
+          <select value={account} onChange={(e) => setCanAccount(e.target.value)} required>
+            <AccountOptions accounts={settings.accounts} balances={accountBalances} />
           </select>
         </label>
+
+        {isSplitRatio && (
+          <>
+            <label className="settings-checkbox-label">
+              <input
+                type="checkbox"
+                checked={splitAccounts}
+                onChange={(e) => {
+                  setSplitAccounts(e.target.checked)
+                  setSecondAccount(e.target.checked ? account : '')
+                }}
+              />
+              Farklı hesaplardan bölüşerek öde (örn. %{Math.round((preview.ratio ?? 0) * 100)} Can
+              hesabından, %{Math.round((1 - (preview.ratio ?? 0)) * 100)} Tuğçe hesabından)
+            </label>
+            {splitAccounts && (
+              <label>
+                Hesap (Tuğçe payı)
+                <select
+                  value={secondAccount}
+                  onChange={(e) => setTugceAccount(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>
+                    Seçin
+                  </option>
+                  <AccountOptions accounts={settings.accounts} balances={accountBalances} />
+                </select>
+              </label>
+            )}
+            <div className="expense-form-row">
+              <label>
+                Can %
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="—"
+                  value={canPct}
+                  onChange={(e) => {
+                    setCanPct(e.target.value)
+                    setTugcePct('')
+                  }}
+                />
+              </label>
+              <label>
+                Tuğçe %
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="—"
+                  value={tugcePct}
+                  onChange={(e) => {
+                    setTugcePct(e.target.value)
+                    setCanPct('')
+                  }}
+                />
+              </label>
+            </div>
+          </>
+        )}
 
         <label>
           Açıklama (opsiyonel)
@@ -194,17 +319,43 @@ export function QuickEntryPage() {
           </div>
         )}
 
+        {pendingImbalance && (
+          <div className="expense-preview expense-preview--error">
+            <span>
+              Bu kişisel bir kategori; normalde Can %100 ya da Tuğçe %100 olmalı. Yine de bu şekilde
+              bölüşük kaydedilsin mi?
+            </span>
+            <div className="expense-form-actions">
+              <button type="button" onClick={() => commitSave(pendingImbalance)} disabled={saving}>
+                Yine de kaydet
+              </button>
+              <button type="button" onClick={() => setPendingImbalance(null)}>
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        )}
+
         {!pendingDuplicate &&
+          !pendingImbalance &&
           category &&
           amount &&
-          preview.validation !== 'OK' &&
-          preview.validation !== '' && (
+          account &&
+          (preview.validation === 'OK' || isPaylaşımEksik ? (
+            <div className="expense-preview expense-preview--ok">
+              <span>{preview.budgetType}</span>
+              <span>
+                Can {preview.canShare?.toFixed(2)} / Tuğçe {preview.tugceShare?.toFixed(2)}
+              </span>
+              {isPaylaşımEksik && <span>{PAYLAŞIM_EKSIK_MESSAGE}</span>}
+            </div>
+          ) : (
             <div className="expense-preview expense-preview--error">
               <span>{preview.validation}</span>
             </div>
-          )}
+          ))}
 
-        {!pendingDuplicate && (
+        {!pendingDuplicate && !pendingImbalance && (
           <button type="submit" className="quick-entry-submit" disabled={!canSubmit || saving}>
             {savedFlash ? 'Kaydedildi ✓' : saving ? 'Kaydediliyor...' : 'Kaydet'}
           </button>

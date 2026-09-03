@@ -22,6 +22,14 @@ vi.mock('../hooks/useTransactions', () => ({
   useTransactions: () => ({ transactions: mockTransactions, loading: false, error: null }),
 }))
 
+vi.mock('../hooks/useIncomes', () => ({
+  useIncomes: () => ({ incomes: [], loading: false, error: null }),
+}))
+
+vi.mock('../hooks/useTransfers', () => ({
+  useTransfers: () => ({ transfers: [], loading: false, error: null }),
+}))
+
 import { QuickEntryPage } from './QuickEntryPage'
 import { ToastProvider } from '../components/ToastProvider'
 
@@ -114,5 +122,67 @@ describe('QuickEntryPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('yetkiniz yok')
     expect(screen.getByPlaceholderText('0')).toHaveValue(12.5)
+  })
+
+  it('kategori secilince kaydetmeden Can/Tuğçe payi onizlemede gorunur', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.type(screen.getByPlaceholderText('0'), '30')
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Market (Ev)')
+    await user.selectOptions(screen.getByLabelText(/^Hesap/), 'Can-DE Girokonto')
+
+    expect(screen.getByText(/Can 15\.00 \/ Tuğçe 15\.00/)).toBeInTheDocument()
+    expect(addTransaction).not.toHaveBeenCalled()
+  })
+})
+
+describe('QuickEntryPage — bölüşük hesap seçimi', () => {
+  it('ortak kategoride (varsayilan %50/%50) bolusuk hesap secenegi cikar', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(screen.getByPlaceholderText('0'), '30')
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Market (Ev)')
+    await user.selectOptions(screen.getByLabelText(/^Hesap/), 'Can-DE Girokonto')
+
+    expect(screen.getByText(/Farklı hesaplardan bölüşerek öde/)).toBeInTheDocument()
+  })
+
+  it('toggle acilinca ikinci hesap secilebilir ve secondAccount kaydedilir', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(screen.getByPlaceholderText('0'), '100')
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Market (Ev)')
+    await user.selectOptions(
+      screen.getByLabelText(/^Hesap \(Can payı\)$|^Hesap$/),
+      'Can-DE Girokonto',
+    )
+    await user.click(screen.getByLabelText(/Farklı hesaplardan bölüşerek öde/))
+    await user.selectOptions(screen.getByLabelText('Hesap (Tuğçe payı)'), 'Tuğçe-DE Girokonto')
+    await user.click(screen.getByRole('button', { name: /Kaydet/ }))
+
+    await waitFor(() => expect(addTransaction).toHaveBeenCalledTimes(1))
+    expect(addTransaction.mock.calls[0][0]).toMatchObject({
+      account: 'Can-DE Girokonto',
+      secondAccount: 'Tuğçe-DE Girokonto',
+    })
+  })
+
+  it('Can hesabinda Ortak Kasa secilince Tuğçe hesabi da otomatik Ortak Kasa olur', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(screen.getByPlaceholderText('0'), '100')
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Market (Ev)')
+    await user.selectOptions(
+      screen.getByLabelText(/^Hesap \(Can payı\)$|^Hesap$/),
+      'Can-DE Girokonto',
+    )
+    await user.click(screen.getByLabelText(/Farklı hesaplardan bölüşerek öde/))
+    await user.selectOptions(screen.getByLabelText('Hesap (Tuğçe payı)'), 'Tuğçe-DE Girokonto')
+
+    await user.selectOptions(screen.getByLabelText(/^Hesap \(Can payı\)$/), 'Ortak Kasa')
+    expect(screen.getByLabelText('Hesap (Tuğçe payı)')).toHaveValue('Ortak Kasa')
   })
 })

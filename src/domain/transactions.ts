@@ -78,6 +78,8 @@ function resolveRatio(
   return 0.5
 }
 
+export const PAYLAŞIM_EKSIK_MESSAGE = 'Kişisel harcamada Can % veya Tuğçe % 100 yazın'
+
 function resolveBudgetType(
   category: Category | undefined,
   ratio: number | undefined,
@@ -112,7 +114,7 @@ function validate(
     }
   }
   if (budgetType === 'Paylaşım eksik') {
-    return 'Kişisel harcamada Can % veya Tuğçe % 100 yazın'
+    return PAYLAŞIM_EKSIK_MESSAGE
   }
   return 'OK'
 }
