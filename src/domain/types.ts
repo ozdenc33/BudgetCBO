@@ -101,6 +101,14 @@ export type Transaction = {
   tugcePct?: number
   tag?: string
   note?: string
+  /**
+   * Kaydi GERCEKTEN giren kisi (giris yapan kullanici) — hangi hesaptan
+   * cekildiginden bagimsizdir. Orn. Can giris yapip Tuğçe'nin hesabindan
+   * yapilan bir harcamayi girebilir; bu durumda account Tuğçe'ninkidir
+   * ama enteredBy 'Can' kalir. Yalnizca olusturmada yazilir, duzenlemede
+   * degistirilmez (kim girdiyse o kalir). Eski kayitlarda yoktur.
+   */
+  enteredBy?: Person
 }
 
 export type TransactionDraft = Omit<Transaction, 'id'>

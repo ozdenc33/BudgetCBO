@@ -128,6 +128,18 @@ describe('harcama semasi', () => {
     await setDoc(doc(db(), 'transactions/del'), validTransaction)
     await assertSucceeds(deleteDoc(doc(db(), 'transactions/del')))
   })
+
+  it('gecerli enteredBy kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'transactions/ok5'), { ...validTransaction, enteredBy: 'Tuğçe' }),
+    )
+  })
+
+  it('gecersiz enteredBy reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'transactions/bad2'), { ...validTransaction, enteredBy: 'Baskasi' }),
+    )
+  })
 })
 
 describe('gelir ve transfer semasi', () => {

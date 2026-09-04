@@ -362,35 +362,32 @@ describe('ExpensesPage — kategori seçilince akıllı varsayılanlar', () => {
   })
 })
 
-describe('ExpensesPage — hesap sahibi rozeti', () => {
-  it('bölüşük harcamada her iki hesabın da sahip rozetini gösterir', () => {
+describe('ExpensesPage — kaydı giren kişi rozeti', () => {
+  it('enteredBy Tuğçe ise hesap Can\'in olsa bile "T" rozeti gösterir', () => {
     mockTransactions = [
       {
-        id: 'split-1',
+        id: 'tx-1',
         date: '2026-09-01',
-        description: 'Kedi maması',
+        description: 'Tuğçe adına girildi',
         category: 'Mama',
         amount: 30,
         currency: 'EUR',
         account: 'Can-DE Girokonto',
-        secondAccount: 'Tuğçe-DE Girokonto',
-        canPct: 0.5,
-        tugcePct: 0.5,
+        enteredBy: 'Tuğçe',
       },
     ]
     renderPage()
 
-    const row = screen.getByText('Kedi maması').closest('li')!
-    expect(within(row).getByTitle('Can')).toBeInTheDocument()
-    expect(within(row).getByTitle('Tuğçe')).toBeInTheDocument()
+    const row = screen.getByText('Tuğçe adına girildi').closest('li')!
+    expect(within(row).getByTitle('Tuğçe girdi')).toHaveTextContent('T')
   })
 
-  it('Ortak Kasa harcamasında O rozeti gösterir', () => {
+  it('enteredBy yoksa (eski kayit) rozet hiç görünmez', () => {
     mockTransactions = [
       {
-        id: 'ortak-1',
+        id: 'tx-2',
         date: '2026-09-01',
-        description: 'Kira',
+        description: 'Eski kayıt',
         category: 'Kira (Kaltmiete)',
         amount: 950,
         currency: 'EUR',
@@ -399,7 +396,46 @@ describe('ExpensesPage — hesap sahibi rozeti', () => {
     ]
     renderPage()
 
-    const row = screen.getByText('Kira').closest('li')!
-    expect(within(row).getByTitle('Ortak Kasa')).toBeInTheDocument()
+    const row = screen.getByText('Eski kayıt').closest('li')!
+    expect(within(row).queryByText('C')).not.toBeInTheDocument()
+    expect(within(row).queryByText('T')).not.toBeInTheDocument()
+  })
+
+  it('yeni harcama kaydedilince giriş yapan kişi enteredBy olarak yazılır', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await openForm(user)
+
+    await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Kişisel Market')
+    await user.type(screen.getByLabelText(/^Tutar$/), '10')
+    await user.click(screen.getByRole('button', { name: 'Kaydet' }))
+
+    await waitFor(() => expect(addTransaction).toHaveBeenCalledTimes(1))
+    // Test dosyasinda personForEmail 'Can' donecek sekilde sahtelendi.
+    expect(addTransaction.mock.calls[0][0]).toMatchObject({ enteredBy: 'Can' })
+  })
+
+  it('düzenlemede enteredBy alanına dokunulmaz (kim girdiyse o kalir)', async () => {
+    const user = userEvent.setup()
+    mockTransactions = [
+      {
+        id: 'tx-3',
+        date: '2026-09-01',
+        description: 'Tuğçe girdi, Can düzenliyor',
+        category: 'Kişisel Market',
+        amount: 20,
+        currency: 'EUR',
+        account: 'Tuğçe-DE Girokonto',
+        enteredBy: 'Tuğçe',
+      },
+    ]
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Düzenle' }))
+    await user.clear(screen.getByLabelText(/^Tutar$/))
+    await user.type(screen.getByLabelText(/^Tutar$/), '25')
+    await user.click(screen.getByRole('button', { name: 'Güncelle' }))
+
+    await waitFor(() => expect(updateTransaction).toHaveBeenCalledTimes(1))
+    expect(updateTransaction.mock.calls[0][1]).not.toHaveProperty('enteredBy')
   })
 })

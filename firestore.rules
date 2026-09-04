@@ -85,7 +85,10 @@ service cloud.firestore {
         && optionalNumber('tugcePct')
         && optionalString('tag')
         && optionalString('note')
-        && optionalString('importBatchId');
+        && optionalString('importBatchId')
+        // Kaydi giren kisi (hesabin sahibinden bagimsiz) — bkz.
+        // src/domain/types.ts Transaction.enteredBy.
+        && (!('enteredBy' in data()) || data().enteredBy in ['Can', 'Tuğçe']);
     }
 
     match /incomes/{id} {

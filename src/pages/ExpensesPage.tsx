@@ -8,7 +8,7 @@ import { addTransaction, deleteTransaction, updateTransaction } from '../lib/fir
 import { saveSettings } from '../lib/firestoreSettings'
 import { fetchEurTryRateForDate } from '../lib/fetchRate'
 import { personForEmail } from '../lib/currentPerson'
-import { computeTransaction, findAccount, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
+import { computeTransaction, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
 import { isFutureDated } from '../domain/futureDated'
@@ -84,7 +84,7 @@ function effectiveSecondAccount(form: FormState): string | undefined {
   return form.secondAccount
 }
 
-function formToDraft(form: FormState): TransactionDraft {
+function formToDraft(form: FormState, enteredBy?: Person): TransactionDraft {
   // Firestore addDoc/updateDoc, "undefined" degerli alanlari reddeder;
   // opsiyonel alanlar bossa nesneye hic eklenmez (deger olarak
   // undefined atanmaz).
@@ -102,6 +102,9 @@ function formToDraft(form: FormState): TransactionDraft {
   if (form.tugcePct !== '') draft.tugcePct = Number(form.tugcePct) / 100
   if (form.tag.trim()) draft.tag = form.tag.trim()
   if (form.note.trim()) draft.note = form.note.trim()
+  // Kaydi giren kisi: yalnizca YENI kayitta yazilir (duzenlemede
+  // formToUpdatePayload bu alana hic dokunmaz, kim girdiyse o kalir).
+  if (enteredBy) draft.enteredBy = enteredBy
   return draft
 }
 
@@ -283,7 +286,7 @@ export function ExpensesPage() {
         return
       }
     }
-    const draft = formToDraft(form)
+    const draft = formToDraft(form, currentPerson)
     setSaving(true)
     try {
       const ok = editingId
@@ -357,6 +360,7 @@ export function ExpensesPage() {
     if (draft.tugcePct != null) restore.tugcePct = draft.tugcePct
     if (draft.tag) restore.tag = draft.tag
     if (draft.note) restore.note = draft.note
+    if (draft.enteredBy) restore.enteredBy = draft.enteredBy
 
     await runWrite(deleteTransaction(tx.id), {
       failureMessage: 'Harcama silinemedi',
@@ -607,6 +611,7 @@ export function ExpensesPage() {
           {visibleTransactions.map((t) => (
             <li key={t.id} className="expense-row">
               <div className="expense-row-main">
+                <OwnerBadge owner={t.enteredBy} title={`${t.enteredBy} girdi`} />
                 <span className="expense-row-date">
                   {t.date}
                   {isFutureDated(t.date, today) && (
@@ -621,14 +626,8 @@ export function ExpensesPage() {
               <div className="expense-row-meta">
                 <span>{t.category}</span>
                 <span>
-                  <OwnerBadge owner={t.payer || undefined} /> {t.account}
-                  {t.secondAccount && t.secondAccount !== t.account && (
-                    <>
-                      {' + '}
-                      <OwnerBadge owner={findAccount(t.secondAccount, settings)?.owner} />{' '}
-                      {t.secondAccount}
-                    </>
-                  )}
+                  {t.account}
+                  {t.secondAccount && t.secondAccount !== t.account ? ` + ${t.secondAccount}` : ''}
                 </span>
                 <span>{t.budgetType}</span>
                 <span

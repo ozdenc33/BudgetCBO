@@ -105,6 +105,8 @@ export function toTransaction(id: string, data: Record<string, unknown>): Transa
   if (tag) tx.tag = tag
   const note = optStr(data.note)
   if (note) tx.note = note
+  const enteredBy = optOneOf(data.enteredBy, PERSONS)
+  if (enteredBy) tx.enteredBy = enteredBy
   return tx
 }
 

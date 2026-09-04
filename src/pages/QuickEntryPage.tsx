@@ -92,6 +92,7 @@ export function QuickEntryPage() {
     if (second) draft.secondAccount = second
     if (canPct !== '') draft.canPct = Number(canPct) / 100
     if (tugcePct !== '') draft.tugcePct = Number(tugcePct) / 100
+    if (currentPerson) draft.enteredBy = currentPerson
     return draft
   }
 
