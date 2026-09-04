@@ -51,6 +51,24 @@ service cloud.firestore {
       return value is string && value in ['EUR', 'TRY', ''];
     }
 
+    // Kişisel Bütçe sayfasi settings.personalPlans[kisi]'nin dort alt
+    // alanini da dogrudan okur (bkz. src/domain/personalBudget.ts);
+    // eksik bir alt alan sayfayi cokertiyordu. Alan opsiyonel kalir
+    // (eski/hafif yazimlari bozmasin), ama VARSA dogru sekilli olmali.
+    function isPersonalBudgetPlan(value) {
+      return value is map
+        && value.incomePlan is map
+        && value.sharedContributionPlanEUR is number
+        && value.categoryPlan is map
+        && value.savingsPlanEUR is number;
+    }
+
+    function isPersonalPlans(value) {
+      return value is map
+        && isPersonalBudgetPlan(value['Can'])
+        && isPersonalBudgetPlan(value['Tuğçe']);
+    }
+
     match /transactions/{id} {
       allow read, delete: if isAllowedUser();
       allow create, update: if isAllowedUser()
@@ -151,7 +169,8 @@ service cloud.firestore {
         && data().incomeSources is list
         && data().rates is map
         && data().defaultRate is number
-        && optionalNumber('fxSpreadPct');
+        && optionalNumber('fxSpreadPct')
+        && (!('personalPlans' in data()) || isPersonalPlans(data().personalPlans));
     }
   }
 }

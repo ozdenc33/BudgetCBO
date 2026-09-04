@@ -298,6 +298,60 @@ describe('ayarlar semasi', () => {
       }),
     )
   })
+
+  const validPersonalPlan = {
+    incomePlan: { Maaş: 2000 },
+    sharedContributionPlanEUR: 400,
+    categoryPlan: {},
+    savingsPlanEUR: 200,
+  }
+
+  it('gecerli sekilli personalPlans kabul eder', async () => {
+    await assertSucceeds(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: 35,
+        personalPlans: { Can: validPersonalPlan, Tuğçe: validPersonalPlan },
+      }),
+    )
+  })
+
+  it('personalPlans eksik alt-alanla reddeder (Kişisel Bütçe çökme riski)', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: 35,
+        // incomePlan bilerek eksik birakildi.
+        personalPlans: {
+          Can: {
+            sharedContributionPlanEUR: 400,
+            categoryPlan: {},
+            savingsPlanEUR: 200,
+          },
+          Tuğçe: validPersonalPlan,
+        },
+      }),
+    )
+  })
+
+  it('personalPlans Tuğçe tarafi eksikse reddeder', async () => {
+    await assertFails(
+      setDoc(doc(db(), 'settings/app'), {
+        accounts: [],
+        categories: [],
+        incomeSources: [],
+        rates: {},
+        defaultRate: 35,
+        personalPlans: { Can: validPersonalPlan },
+      }),
+    )
+  })
 })
 
 describe('atlanan sabit giderler', () => {
