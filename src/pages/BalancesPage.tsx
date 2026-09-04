@@ -5,7 +5,11 @@ import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
 import { useTransfers } from '../hooks/useTransfers'
 import { computeAccountBalances, netWorth } from '../domain/balances'
-import { computeContributionSummary, contributionCheckEUR, contributionStatus } from '../domain/contributions'
+import {
+  computeContributionSummary,
+  contributionCheckEUR,
+  contributionStatus,
+} from '../domain/contributions'
 
 function formatEUR(value: number): string {
   return value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -48,24 +52,26 @@ export function BalancesPage() {
         {balances.map((b) => (
           <li key={b.account.id} className="balance-row">
             <Link to={`/hesaplar/${b.account.id}`} className="balance-row-link">
-            <div className="balance-row-main">
-              <span className="balance-row-name">{b.account.name}</span>
-              <span
-                className={
-                  b.balanceEUR < 0 ? 'balance-row-amount balance-row-amount--negative' : 'balance-row-amount'
-                }
-              >
-                {formatEUR(b.balanceEUR)} €
-              </span>
-            </div>
-            <div className="balance-row-meta">
-              <span>{b.account.owner}</span>
-              <span>Gelir +{formatEUR(b.incomesEUR)} €</span>
-              <span>Harcama -{formatEUR(b.expensesEUR)} €</span>
-              <span>Transfer çıkış -{formatEUR(b.transfersOutEUR)} €</span>
-              <span>Transfer giriş +{formatEUR(b.transfersInEUR)} €</span>
-              <span className="balance-row-more">Hareketler →</span>
-            </div>
+              <div className="balance-row-main">
+                <span className="balance-row-name">{b.account.name}</span>
+                <span
+                  className={
+                    b.balanceEUR < 0
+                      ? 'balance-row-amount balance-row-amount--negative'
+                      : 'balance-row-amount'
+                  }
+                >
+                  {formatEUR(b.balanceEUR)} €
+                </span>
+              </div>
+              <div className="balance-row-meta">
+                <span>{b.account.owner}</span>
+                <span>Gelir +{formatEUR(b.incomesEUR)} €</span>
+                <span>Harcama -{formatEUR(b.expensesEUR)} €</span>
+                <span>Transfer çıkış -{formatEUR(b.transfersOutEUR)} €</span>
+                <span>Transfer giriş +{formatEUR(b.transfersInEUR)} €</span>
+                <span className="balance-row-more">Hareketler →</span>
+              </div>
             </Link>
           </li>
         ))}
@@ -79,8 +85,8 @@ export function BalancesPage() {
       <section className="dashboard-section">
         <h2>Katkı Özeti (tüm zamanlar)</h2>
         <p className="settings-note">
-          Fark bilgi amaçlıdır, borç takibi değildir. Eşitlemek isterseniz Transferler sayfasına Tip =
-          Kişiden Kişiye olarak girin.
+          Fark bilgi amaçlıdır, borç takibi değildir. Eşitlemek isterseniz Transferler sayfasına Tip
+          = Kişiden Kişiye olarak girin.
         </p>
         <div className="table-scroll">
           <table className="dashboard-table">

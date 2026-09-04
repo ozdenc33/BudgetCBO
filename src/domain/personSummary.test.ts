@@ -8,23 +8,89 @@ import type { Income, Transaction, Transfer } from './types'
 // sayilari yalnizca kisi kirilimiyla topladigini dogrular.
 const TX: Transaction[] = [
   // Ortak-Ev 600 -> Can 300 / Tugce 300
-  { id: '1', date: '2026-09-02', description: 'Kira', category: 'Kira (Kaltmiete)', amount: 600, currency: 'EUR', account: 'Ortak Kasa' },
+  {
+    id: '1',
+    date: '2026-09-02',
+    description: 'Kira',
+    category: 'Kira (Kaltmiete)',
+    amount: 600,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
   // Kisisel, Can'in hesabi -> tamami Can
-  { id: '2', date: '2026-09-03', description: 'D-Ticket', category: 'Ulaşım (D-Ticket)', amount: 58, currency: 'EUR', account: 'Can-DE Girokonto' },
+  {
+    id: '2',
+    date: '2026-09-03',
+    description: 'D-Ticket',
+    category: 'Ulaşım (D-Ticket)',
+    amount: 58,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
   // Kisisel, Tugce'nin hesabi -> tamami Tugce
-  { id: '3', date: '2026-09-04', description: 'Kuaför', category: 'Kuaför/Bakım', amount: 40, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
+  {
+    id: '3',
+    date: '2026-09-04',
+    description: 'Kuaför',
+    category: 'Kuaför/Bakım',
+    amount: 40,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
   // Onceki ay, bu ayin ozetine girmemeli
-  { id: '4', date: '2026-08-20', description: 'Market', category: 'Market (Ev)', amount: 100, currency: 'EUR', account: 'Ortak Kasa' },
+  {
+    id: '4',
+    date: '2026-08-20',
+    description: 'Market',
+    category: 'Market (Ev)',
+    amount: 100,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
 ]
 
 const INCOMES: Income[] = [
-  { id: 'i1', date: '2026-09-01', source: 'Werkstudent', person: 'Can', amount: 1050, currency: 'EUR', account: 'Can-DE Girokonto' },
-  { id: 'i2', date: '2026-09-01', source: 'Maaş', person: 'Tuğçe', amount: 1400, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
-  { id: 'i3', date: '2026-08-01', source: 'Maaş', person: 'Tuğçe', amount: 1400, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
+  {
+    id: 'i1',
+    date: '2026-09-01',
+    source: 'Werkstudent',
+    person: 'Can',
+    amount: 1050,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
+  {
+    id: 'i2',
+    date: '2026-09-01',
+    source: 'Maaş',
+    person: 'Tuğçe',
+    amount: 1400,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
+  {
+    id: 'i3',
+    date: '2026-08-01',
+    source: 'Maaş',
+    person: 'Tuğçe',
+    amount: 1400,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
 ]
 
 const TRANSFERS: Transfer[] = [
-  { id: 't1', date: '2026-09-05', type: 'Tasarruf', from: 'Can-DE Girokonto', to: 'Can-Tasarruf', amount: 200, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Can-Tasarruf' },
+  {
+    id: 't1',
+    date: '2026-09-05',
+    type: 'Tasarruf',
+    from: 'Can-DE Girokonto',
+    to: 'Can-Tasarruf',
+    amount: 200,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Can-Tasarruf',
+  },
 ]
 
 describe('computeScopeSummary', () => {

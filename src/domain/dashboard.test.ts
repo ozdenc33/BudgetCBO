@@ -15,24 +15,129 @@ import type { Income, Transaction, Transfer } from './types'
 // Transferler!A4:M6 (Faz 3 testleriyle ayni satirlar).
 
 const TRANSACTIONS: Transaction[] = [
-  { id: '1', date: '2026-10-01', description: 'Ekim kira', category: 'Kira (Kaltmiete)', amount: 950, currency: 'EUR', account: 'Ortak Kasa' },
-  { id: '2', date: '2026-10-03', description: 'Lidl haftalik market', category: 'Market (Ev)', amount: 62.4, currency: 'EUR', account: 'Can-DE Girokonto' },
-  { id: '3', date: '2026-09-12', description: 'Mike kafes ve tasima cantasi', category: 'Kedi Evrak/Nakil', amount: 2400, currency: 'TRY', account: 'Can-TR Banka', canPct: 1 },
-  { id: '4', date: '2026-10-11', description: 'Stuttgart muze gunu', category: 'Gezi/Müze', amount: 24, currency: 'EUR', account: 'Can-Nakit' },
-  { id: '5', date: '2026-10-15', description: 'Fotoğraf filmi', category: 'Hobi/Fotoğraf', amount: 38.9, currency: 'EUR', account: 'Can-DE Girokonto', canPct: 1 },
-  { id: '6', date: '2026-10-18', description: 'Mama 4 kg', category: 'Mama', amount: 31.5, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
-  { id: '7', date: '2026-10-20', description: 'Kis montu', category: 'Giyim', amount: 89.99, currency: 'EUR', account: 'Tuğçe-DE Girokonto', tugcePct: 1 },
+  {
+    id: '1',
+    date: '2026-10-01',
+    description: 'Ekim kira',
+    category: 'Kira (Kaltmiete)',
+    amount: 950,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
+  {
+    id: '2',
+    date: '2026-10-03',
+    description: 'Lidl haftalik market',
+    category: 'Market (Ev)',
+    amount: 62.4,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
+  {
+    id: '3',
+    date: '2026-09-12',
+    description: 'Mike kafes ve tasima cantasi',
+    category: 'Kedi Evrak/Nakil',
+    amount: 2400,
+    currency: 'TRY',
+    account: 'Can-TR Banka',
+    canPct: 1,
+  },
+  {
+    id: '4',
+    date: '2026-10-11',
+    description: 'Stuttgart muze gunu',
+    category: 'Gezi/Müze',
+    amount: 24,
+    currency: 'EUR',
+    account: 'Can-Nakit',
+  },
+  {
+    id: '5',
+    date: '2026-10-15',
+    description: 'Fotoğraf filmi',
+    category: 'Hobi/Fotoğraf',
+    amount: 38.9,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+    canPct: 1,
+  },
+  {
+    id: '6',
+    date: '2026-10-18',
+    description: 'Mama 4 kg',
+    category: 'Mama',
+    amount: 31.5,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
+  {
+    id: '7',
+    date: '2026-10-20',
+    description: 'Kis montu',
+    category: 'Giyim',
+    amount: 89.99,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+    tugcePct: 1,
+  },
 ]
 
 const INCOMES: Income[] = [
-  { id: '1', date: '2026-10-05', source: 'Sperrkonto', person: 'Can', amount: 992, currency: 'EUR', account: 'Can-DE Girokonto' },
-  { id: '2', date: '2026-10-28', source: 'HiWi', person: 'Tuğçe', amount: 520, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
+  {
+    id: '1',
+    date: '2026-10-05',
+    source: 'Sperrkonto',
+    person: 'Can',
+    amount: 992,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
+  {
+    id: '2',
+    date: '2026-10-28',
+    source: 'HiWi',
+    person: 'Tuğçe',
+    amount: 520,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
 ]
 
 const TRANSFERS: Transfer[] = [
-  { id: '1', date: '2026-09-28', type: 'Ortak Kasa Katkısı', from: 'Can', to: 'Ortak Kasa', amount: 500, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Ortak Kasa' },
-  { id: '2', date: '2026-09-28', type: 'Ortak Kasa Katkısı', from: 'Tuğçe', to: 'Ortak Kasa', amount: 500, currency: 'EUR', fromAccount: 'Tuğçe-DE Girokonto', toAccount: 'Ortak Kasa' },
-  { id: '3', date: '2026-10-30', type: 'Tasarruf', from: 'Can', to: 'Acil Durum Fonu', amount: 100, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Can-Tasarruf' },
+  {
+    id: '1',
+    date: '2026-09-28',
+    type: 'Ortak Kasa Katkısı',
+    from: 'Can',
+    to: 'Ortak Kasa',
+    amount: 500,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Ortak Kasa',
+  },
+  {
+    id: '2',
+    date: '2026-09-28',
+    type: 'Ortak Kasa Katkısı',
+    from: 'Tuğçe',
+    to: 'Ortak Kasa',
+    amount: 500,
+    currency: 'EUR',
+    fromAccount: 'Tuğçe-DE Girokonto',
+    toAccount: 'Ortak Kasa',
+  },
+  {
+    id: '3',
+    date: '2026-10-30',
+    type: 'Tasarruf',
+    from: 'Can',
+    to: 'Acil Durum Fonu',
+    amount: 100,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Can-Tasarruf',
+  },
 ]
 
 describe('previousMonthKey', () => {
@@ -166,13 +271,7 @@ describe('computeControls — Ozet!N7:P13 (uygulanan alt kume)', () => {
 
   it('2026-09 kuru girilince TL kur kontrolu OK olur', () => {
     const settings = { ...DEFAULT_SETTINGS, rates: { '2026-09': 48 } }
-    const controls = computeControls(
-      settings.accounts,
-      TRANSACTIONS,
-      INCOMES,
-      TRANSFERS,
-      settings,
-    )
+    const controls = computeControls(settings.accounts, TRANSACTIONS, INCOMES, TRANSFERS, settings)
     const byLabel = Object.fromEntries(controls.map((c) => [c.label, c]))
     expect(byLabel['TL harcaması olup kuru girilmemiş ay'].ok).toBe(true)
   })
@@ -180,9 +279,23 @@ describe('computeControls — Ozet!N7:P13 (uygulanan alt kume)', () => {
   it('gecersiz bir islem satiri kontrolu kirmiziya cevirir', () => {
     const bad: Transaction[] = [
       ...TRANSACTIONS,
-      { id: '8', date: '2026-10-01', description: 'x', category: 'Olmayan Kategori', amount: 5, currency: 'EUR', account: 'Can-Nakit' },
+      {
+        id: '8',
+        date: '2026-10-01',
+        description: 'x',
+        category: 'Olmayan Kategori',
+        amount: 5,
+        currency: 'EUR',
+        account: 'Can-Nakit',
+      },
     ]
-    const controls = computeControls(DEFAULT_SETTINGS.accounts, bad, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
+    const controls = computeControls(
+      DEFAULT_SETTINGS.accounts,
+      bad,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
     const byLabel = Object.fromEntries(controls.map((c) => [c.label, c]))
     expect(byLabel['Hatalı işlem satırı'].ok).toBe(false)
   })
@@ -190,9 +303,25 @@ describe('computeControls — Ozet!N7:P13 (uygulanan alt kume)', () => {
   it('Ortak Kasa transferi yanlis hedef hesaba giderse fark kontrolu kirmiziya cevirir', () => {
     const badTransfers: Transfer[] = [
       ...TRANSFERS,
-      { id: '4', date: '2026-10-01', type: 'Ortak Kasa Katkısı', from: 'Can', to: 'Ortak Kasa', amount: 200, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Can-Tasarruf' },
+      {
+        id: '4',
+        date: '2026-10-01',
+        type: 'Ortak Kasa Katkısı',
+        from: 'Can',
+        to: 'Ortak Kasa',
+        amount: 200,
+        currency: 'EUR',
+        fromAccount: 'Can-DE Girokonto',
+        toAccount: 'Can-Tasarruf',
+      },
     ]
-    const controls = computeControls(DEFAULT_SETTINGS.accounts, TRANSACTIONS, INCOMES, badTransfers, DEFAULT_SETTINGS)
+    const controls = computeControls(
+      DEFAULT_SETTINGS.accounts,
+      TRANSACTIONS,
+      INCOMES,
+      badTransfers,
+      DEFAULT_SETTINGS,
+    )
     const byLabel = Object.fromEntries(controls.map((c) => [c.label, c]))
     expect(byLabel['Ortak Kasa bakiye farkı'].ok).toBe(false)
   })

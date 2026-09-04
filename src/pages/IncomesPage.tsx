@@ -3,13 +3,14 @@ import { deleteField, type UpdateData } from 'firebase/firestore'
 import { useSettings } from '../hooks/useSettings'
 import { useIncomes } from '../hooks/useIncomes'
 import { addIncome, deleteIncome, updateIncome } from '../lib/firestoreIncomes'
+import { saveSettings } from '../lib/firestoreSettings'
+import { fetchEurTryRateForDate } from '../lib/fetchRate'
 import { computeIncome } from '../domain/incomes'
 import { monthKeyOf } from '../domain/rate'
 import type { Currency, Income, IncomeDraft, Person } from '../domain/types'
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayISO, todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
+import { useEditParam } from '../hooks/useEditParam'
 
 type FormState = {
   date: string
@@ -23,7 +24,7 @@ type FormState = {
 
 function emptyForm(): FormState {
   return {
-    date: todayIso(),
+    date: todayISO(),
     source: '',
     person: 'Can',
     amount: '',
@@ -76,8 +77,11 @@ export function IncomesPage() {
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [month, setMonth] = useState(() => todayIso().slice(0, 7))
+  const [month, setMonth] = useState(todayMonthKey)
   const [saving, setSaving] = useState(false)
+  const [fetchingRate, setFetchingRate] = useState(false)
+  const [rateFetchNote, setRateFetchNote] = useState<string | null>(null)
+  const runWrite = useWrite()
 
   const preview = useMemo(
     () => computeIncome({ id: 'preview', ...formToDraft(form) }, settings),
@@ -102,11 +106,12 @@ export function IncomesPage() {
     if (!canSubmit) return
     setSaving(true)
     try {
-      if (editingId) {
-        await updateIncome(editingId, formToUpdatePayload(form))
-      } else {
-        await addIncome(formToDraft(form))
-      }
+      const ok = editingId
+        ? await runWrite(updateIncome(editingId, formToUpdatePayload(form)), {
+            failureMessage: 'Gelir güncellenemedi',
+          })
+        : await runWrite(addIncome(formToDraft(form)), { failureMessage: 'Gelir kaydedilemedi' })
+      if (!ok) return
       setForm(emptyForm())
       setEditingId(null)
     } finally {
@@ -120,14 +125,45 @@ export function IncomesPage() {
     setForm(incomeToForm(income))
   }
 
+  // Hesap Hareketleri'nden "?edit=<id>" ile gelindiyse formu otomatik ac.
+  useEditParam(incomes, incomesLoading, startEdit)
+
   function cancelEdit() {
     setEditingId(null)
     setForm(emptyForm())
   }
 
+  async function handleFetchRateForDate() {
+    if (!form.date) return
+    setFetchingRate(true)
+    setRateFetchNote(null)
+    try {
+      const { rate, date } = await fetchEurTryRateForDate(form.date)
+      const monthKey = form.date.slice(0, 7)
+      const ok = await runWrite(
+        saveSettings({ ...settings, rates: { ...settings.rates, [monthKey]: rate } }),
+        {
+          failureMessage: 'Kur kaydedilemedi',
+          successMessage: `${monthKey} kuru kaydedildi: 1 EUR = ${rate} TRY`,
+        },
+      )
+      if (ok) {
+        setRateFetchNote(
+          `Kaydedildi: 1 EUR = ${rate} TRY${date ? ` (${date} tarihli ECB kuru)` : ''}.`,
+        )
+      }
+    } catch (err) {
+      setRateFetchNote(
+        `Kur getirilemedi: ${err instanceof Error ? err.message : String(err)}. Elle girebilirsiniz (Ayarlar).`,
+      )
+    } finally {
+      setFetchingRate(false)
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!window.confirm('Bu geliri silmek istediğinize emin misiniz?')) return
-    await deleteIncome(id)
+    await runWrite(deleteIncome(id), { failureMessage: 'Gelir silinemedi' })
   }
 
   if (settingsLoading) {
@@ -141,121 +177,129 @@ export function IncomesPage() {
         open={formOpen}
         onToggle={(e) => setFormOpen(e.currentTarget.open)}
       >
-        <summary className="form-summary">
-          {editingId ? 'Geliri düzenle' : '+ Yeni gelir'}
-        </summary>
+        <summary className="form-summary">{editingId ? 'Geliri düzenle' : '+ Yeni gelir'}</summary>
         <form className="expense-form" onSubmit={handleSubmit}>
-        <label>
-          Tarih
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Kaynak
-          <select
-            value={form.source}
-            onChange={(e) => setForm({ ...form, source: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.incomeSources.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
+          <label>
+            Tarih
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Kaynak
+            <select
+              value={form.source}
+              onChange={(e) => setForm({ ...form, source: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Kişi
-          <select
-            value={form.person}
-            onChange={(e) => setForm({ ...form, person: e.target.value as Person })}
-          >
-            <option value="Can">Can</option>
-            <option value="Tuğçe">Tuğçe</option>
-          </select>
-        </label>
-        <label>
-          Tutar
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Hesap
-          <select
-            value={form.account}
-            onChange={(e) => setForm({ ...form, account: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
+              {settings.incomeSources.map((s) => (
+                <option key={s.id} value={s.name}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Kişi
+            <select
+              value={form.person}
+              onChange={(e) => setForm({ ...form, person: e.target.value as Person })}
+            >
+              <option value="Can">Can</option>
+              <option value="Tuğçe">Tuğçe</option>
+            </select>
+          </label>
+          <label>
+            Tutar
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Hesap
+            <select
+              value={form.account}
+              onChange={(e) => setForm({ ...form, account: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Para Birimi
-          <select
-            value={form.currency}
-            onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
-          >
-            <option value="EUR">EUR</option>
-            <option value="TRY">TRY</option>
-          </select>
-        </label>
-        <label>
-          Not
-          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        </label>
+              {settings.accounts.map((a) => (
+                <option key={a.id} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Para Birimi
+            <select
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
+            >
+              <option value="EUR">EUR</option>
+              <option value="TRY">TRY</option>
+            </select>
+          </label>
+          <label>
+            Not
+            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </label>
 
-        {form.source && form.amount && form.account && (
-          <div
-            className={
-              preview.validation === 'OK'
-                ? 'expense-preview expense-preview--ok'
-                : 'expense-preview expense-preview--error'
-            }
-          >
-            {preview.validation === 'OK' ? (
-              <span>
-                {preview.amountEUR?.toFixed(2)} EUR
-                {preview.rateSource === 'default' && form.currency === 'TRY'
-                  ? ' (varsayılan kur ile)'
-                  : ''}
-              </span>
-            ) : (
-              <span>{preview.validation}</span>
+          {form.source && form.amount && form.account && (
+            <div
+              className={
+                preview.validation === 'OK'
+                  ? 'expense-preview expense-preview--ok'
+                  : 'expense-preview expense-preview--error'
+              }
+            >
+              {preview.validation === 'OK' ? (
+                <span>
+                  {preview.amountEUR?.toFixed(2)} EUR
+                  {preview.rateSource === 'default' && form.currency === 'TRY'
+                    ? ' (varsayılan kur ile)'
+                    : ''}
+                </span>
+              ) : (
+                <span>{preview.validation}</span>
+              )}
+            </div>
+          )}
+
+          {preview.rateWarning && (
+            <div className="expense-preview expense-preview--warning">
+              <span>{preview.rateWarning}</span>
+              <button type="button" onClick={handleFetchRateForDate} disabled={fetchingRate}>
+                {fetchingRate ? 'Getiriliyor...' : 'Kur otomatik çek'}
+              </button>
+            </div>
+          )}
+          {rateFetchNote && <p className="settings-note">{rateFetchNote}</p>}
+
+          <div className="expense-form-actions">
+            <button type="submit" disabled={!canSubmit || saving}>
+              {editingId ? 'Güncelle' : 'Kaydet'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit}>
+                İptal
+              </button>
             )}
           </div>
-        )}
-
-        <div className="expense-form-actions">
-          <button type="submit" disabled={!canSubmit || saving}>
-            {editingId ? 'Güncelle' : 'Kaydet'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit}>
-              İptal
-            </button>
-          )}
-        </div>
-      </form>
+        </form>
       </details>
 
       <div className="expenses-list-header">
@@ -290,6 +334,11 @@ export function IncomesPage() {
                 >
                   {i.validation}
                 </span>
+                {i.rateWarning && (
+                  <span className="expense-badge expense-badge--warning" title={i.rateWarning}>
+                    kur eksik
+                  </span>
+                )}
               </div>
               <div className="expense-row-actions">
                 <button onClick={() => startEdit(i)}>Düzenle</button>

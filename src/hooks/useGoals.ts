@@ -1,17 +1,9 @@
-import { useEffect, useState } from 'react'
-import { subscribeGoals } from '../lib/firestoreGoals'
-import type { Goal } from '../domain/types'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useGoals() {
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    return subscribeGoals((data) => {
-      setGoals(data)
-      setLoading(false)
-    })
-  }, [])
-
-  return { goals, loading }
+  const data = useData()
+  return { goals: data.goals, loading: data.loading.goals, error: data.error }
 }

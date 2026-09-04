@@ -15,12 +15,51 @@ import { monthKeyOf, resolveRate } from './rate'
 
 export { monthKeyOf }
 
+/**
+ * Hesap ve kategori aramalari icin ad->kayit indeksi.
+ *
+ * NEDEN: Bu iki arama her islem icin bir kez calisir ve `Array.find`
+ * ile ~45 kategori + 8 hesap uzerinde geziyordu. Ay panosu, bakiyeler,
+ * limit uyarilari gibi hesaplar ayni listeyi bastan sona birkac kez
+ * dolastigi icin maliyet kayit sayisiyla carpiliyordu.
+ *
+ * Indeks WeakMap'te settings nesnesine bagli tutulur: Firestore her
+ * anlik goruntude yeni bir settings nesnesi verdigi icin indeks
+ * kendiliginden tazelenir, eskisi cop toplayiciya birakilir.
+ */
+type SettingsIndex = {
+  accounts: Map<string, Account>
+  categories: Map<string, Category>
+}
+
+const settingsIndexCache = new WeakMap<Settings, SettingsIndex>()
+
+function indexOf(settings: Settings): SettingsIndex {
+  const cached = settingsIndexCache.get(settings)
+  if (cached) return cached
+  const index: SettingsIndex = {
+    accounts: new Map(settings.accounts.map((a) => [a.name, a])),
+    categories: new Map(settings.categories.map((c) => [c.name, c])),
+  }
+  settingsIndexCache.set(settings, index)
+  return index
+}
+
 export function findAccount(name: string, settings: Settings): Account | undefined {
-  return settings.accounts.find((a) => a.name === name)
+  return indexOf(settings).accounts.get(name)
 }
 
 export function findCategory(name: string, settings: Settings): Category | undefined {
-  return settings.categories.find((c) => c.name === name)
+  return indexOf(settings).categories.get(name)
+}
+
+/**
+ * Gercekten iki farkli hesaptan bolusuk cekilis mi? `secondAccount`
+ * girilmis olsa da `account`'la ayniysa (orn. ikisi de "Ortak Kasa"
+ * secildiginde) tek hesaptan cekilis demektir — eski/basit davranis.
+ */
+export function isSplitAccountTransaction(tx: Transaction): boolean {
+  return Boolean(tx.secondAccount) && tx.secondAccount !== tx.account
 }
 
 function resolveRatio(
@@ -39,6 +78,8 @@ function resolveRatio(
   return 0.5
 }
 
+export const PAYLAŞIM_EKSIK_MESSAGE = 'Kişisel harcamada Can % veya Tuğçe % 100 yazın'
+
 function resolveBudgetType(
   category: Category | undefined,
   ratio: number | undefined,
@@ -55,6 +96,7 @@ function validate(
   account: Account | undefined,
   category: Category | undefined,
   budgetType: BudgetType | 'Paylaşım eksik' | '',
+  settings: Settings,
 ): string {
   if (!tx.date) return ''
   if (!tx.category || tx.amount == null || !tx.account) {
@@ -62,6 +104,9 @@ function validate(
   }
   if (!category) return 'Kategori listede yok'
   if (!account) return 'Hesap listede yok'
+  if (isSplitAccountTransaction(tx) && !findAccount(tx.secondAccount!, settings)) {
+    return 'İkinci hesap listede yok'
+  }
   if (tx.canPct != null && tx.tugcePct != null) {
     const sum = Math.round((tx.canPct + tx.tugcePct) * 10000) / 10000
     if (sum !== 1) {
@@ -69,14 +114,16 @@ function validate(
     }
   }
   if (budgetType === 'Paylaşım eksik') {
-    return 'Kişisel harcamada Can % veya Tuğçe % 100 yazın'
+    return PAYLAŞIM_EKSIK_MESSAGE
   }
   return 'OK'
 }
 
 export function computeTransaction(tx: Transaction, settings: Settings): ComputedTransaction {
   const monthKey = tx.date ? monthKeyOf(tx.date) : ''
-  const { rate, rateSource } = resolveRate(tx.currency, monthKey, settings)
+  // 'expense': TRY -> EUR harcamalarda makas farki muhafazakar yonde
+  // uygulanir (bkz. src/domain/rate.ts).
+  const { rate, rateSource, rateWarning } = resolveRate(tx.currency, monthKey, settings, 'expense')
   const amountEUR = tx.amount != null ? tx.amount / rate : undefined
 
   const account = findAccount(tx.account, settings)
@@ -89,13 +136,14 @@ export function computeTransaction(tx: Transaction, settings: Settings): Compute
   const canShare = amountEUR != null && ratio != null ? amountEUR * ratio : undefined
   const tugceShare = amountEUR != null && canShare != null ? amountEUR - canShare : undefined
 
-  const validation = validate(tx, account, category, budgetType)
+  const validation = validate(tx, account, category, budgetType, settings)
 
   return {
     ...tx,
     monthKey,
     rate,
     rateSource,
+    rateWarning,
     amountEUR,
     payer,
     ratio,

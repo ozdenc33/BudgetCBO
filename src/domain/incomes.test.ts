@@ -47,7 +47,15 @@ describe('computeIncome — Gelirler A4:K5 ile karsilastirma', () => {
 describe('computeIncome — dogrulama', () => {
   it('kaynak/kisi/tutar/hesap eksikse hata verir', () => {
     const c = computeIncome(
-      { id: 'x', date: '2026-10-01', source: '', person: 'Can', amount: 0, currency: 'EUR', account: '' },
+      {
+        id: 'x',
+        date: '2026-10-01',
+        source: '',
+        person: 'Can',
+        amount: 0,
+        currency: 'EUR',
+        account: '',
+      },
       DEFAULT_SETTINGS,
     )
     expect(c.validation).toBe('Eksik alan: kaynak, kişi, tutar veya hesap')
@@ -73,5 +81,21 @@ describe('computeIncome — dogrulama', () => {
     }
     const c = computeIncome(income, DEFAULT_SETTINGS)
     expect(c.validation).toBe('OK')
+  })
+
+  it('TRY gelirde makas farki devredeyse EUR karsiligi daha kucuk cikar', () => {
+    const settings = { ...DEFAULT_SETTINGS, rates: { '2026-10': 40 }, fxSpreadPct: 5 }
+    const income: Income = {
+      id: 'x',
+      date: '2026-10-01',
+      source: 'KYK',
+      person: 'Can',
+      amount: 4000,
+      currency: 'TRY',
+      account: 'Can-DE Girokonto',
+    }
+    const withSpread = computeIncome(income, settings)
+    const noSpread = computeIncome(income, { ...settings, fxSpreadPct: 0 })
+    expect(withSpread.amountEUR!).toBeLessThan(noSpread.amountEUR!)
   })
 })

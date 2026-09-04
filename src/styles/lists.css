@@ -1,0 +1,183 @@
+/*
+ * Listeler ve uyari notlari
+ *
+ * Bu dosya src/styles.css'ten bolundu; ic düzen ve secici
+ * isimleri degismedi. Giris noktasi: src/styles.css
+ */
+
+/* ---------- Listeler ---------- */
+
+.expenses-list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.expenses-list-header label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.expenses-list-header input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.6rem;
+  color: var(--text);
+}
+
+.expenses-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.expenses-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.expense-row {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.expense-row-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.expense-row-date {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-row-desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-row-amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.expense-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.expense-row-meta > span {
+  background: var(--surface-alt);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.expense-row-note {
+  font-style: italic;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.owner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.owner-badge--can {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.owner-badge--tugce {
+  background: var(--person-tugce);
+  color: #ffffff;
+}
+
+.owner-badge--ortak {
+  background: var(--person-ortak);
+  color: #ffffff;
+}
+
+.expense-badge {
+  color: var(--negative) !important;
+  background: rgba(var(--negative-rgb), 0.1) !important;
+  font-weight: 600;
+}
+
+.expense-badge--ok {
+  color: var(--positive) !important;
+  background: rgba(var(--positive-rgb), 0.12) !important;
+}
+
+.expense-badge--warning {
+  color: var(--warning-text) !important;
+  background: var(--warning-bg) !important;
+}
+
+.expense-row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.expense-row-actions button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.expense-row-actions button:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+/* ---------- Uyari notu ---------- */
+
+.warn-note {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  color: var(--warning-text);
+  font-size: 0.84rem;
+  font-weight: 500;
+}

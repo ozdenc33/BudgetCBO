@@ -47,7 +47,12 @@ function cellString(cell: ExcelJS.Cell | undefined): string | undefined {
   if (typeof v === 'string') return v.trim() || undefined
   if (typeof v === 'number') return String(v)
   if (typeof v === 'object' && 'richText' in v) {
-    return (v as { richText: { text: string }[] }).richText.map((r) => r.text).join('').trim() || undefined
+    return (
+      (v as { richText: { text: string }[] }).richText
+        .map((r) => r.text)
+        .join('')
+        .trim() || undefined
+    )
   }
   if (typeof v === 'object' && 'result' in v) {
     const result = (v as { result: unknown }).result
@@ -183,7 +188,13 @@ function parseTransferler(workbook: ExcelJS.Workbook, warnings: string[]): Trans
     const from = cellString(row.getCell(4))
     const to = cellString(row.getCell(5))
     const amount = cellNumber(row.getCell(6))
-    if (!type || !VALID_TRANSFER_TYPES.includes(type as TransferType) || !from || !to || amount == null) {
+    if (
+      !type ||
+      !VALID_TRANSFER_TYPES.includes(type as TransferType) ||
+      !from ||
+      !to ||
+      amount == null
+    ) {
       warnings.push(`Transferler satır ${rowNumber}: eksik/geçersiz alan, atlandı.`)
       return
     }
@@ -223,9 +234,14 @@ function parseSabitGiderler(workbook: ExcelJS.Workbook, warnings: string[]): Rec
     }
     const draft: RecurringItemDraft = {
       name,
+      // Excel'in Sabit_Giderler sayfasi hep gider icindi; gelir kavrami
+      // yoktu.
+      kind: 'expense',
       budgetType: budgetType as RecurringItemDraft['budgetType'],
       category,
-      frequencyMonths: (([1, 3, 6, 12].includes(frequency) ? frequency : 1)) as RecurringItemDraft['frequencyMonths'],
+      frequencyMonths: ([1, 3, 6, 12].includes(frequency)
+        ? frequency
+        : 1) as RecurringItemDraft['frequencyMonths'],
       account,
       firstPaymentDate,
       active: cellString(row.getCell(8)) === 'Evet',

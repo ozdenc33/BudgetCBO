@@ -1,3 +1,4 @@
+import { localISO } from './dates'
 import type { ComputedTransaction } from './types'
 
 // Ileri tarihli kayitlar: tarihi bugunden sonra olanlar. Ornegin ayin
@@ -9,8 +10,10 @@ import type { ComputedTransaction } from './types'
 // Panosu'nda bilgi notu. Boylece "bu ay 1.479 € harcamisiz" derken
 // icinde henuz cikmamis 18,36 € oldugunu kullanici bilir.
 
+// Yerel tarih kullanilir: `toISOString()` UTC dondururdu ve Almanya
+// saatiyle gece 00:00-02:00 arasi her kayit "ileri tarihli" gorunurdu.
 export function todayISO(today: Date): string {
-  return today.toISOString().slice(0, 10)
+  return localISO(today)
 }
 
 export function isFutureDated(dateISO: string, today: Date): boolean {

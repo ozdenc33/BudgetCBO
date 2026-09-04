@@ -1,0 +1,236 @@
+/*
+ * Genis ekran duzeltmeleri
+ *
+ * Bu dosya src/styles.css'ten bolundu; ic düzen ve secici
+ * isimleri degismedi. Giris noktasi: src/styles.css
+ */
+
+/* ---------- Genis ekran ---------- */
+
+@media (min-width: 720px) {
+  .app-bar-title {
+    font-size: 1.3rem;
+  }
+
+  .hero-amount {
+    font-size: 2.4rem;
+  }
+
+  .form-details {
+    max-width: 640px;
+  }
+}
+
+/* Masaustu: alt sekme cubugu yerine kalici kenar cubugu, genis icerik */
+@media (min-width: 1024px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 252px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .tab-bar {
+    display: none;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    padding: 1rem 0.75rem;
+    gap: 1rem;
+    background: var(--surface);
+    border-right: 1px solid var(--border-subtle);
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 0.4rem;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .sidebar-brand-mark {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+  }
+
+  .sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.85rem;
+  }
+
+  .sidebar-group-title {
+    margin: 0 0 0.15rem 0.55rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .side-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
+  }
+
+  .side-link:hover {
+    background: var(--surface-hover);
+  }
+
+  .side-link--active {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+
+  .side-link-icon {
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+  }
+
+  .side-link--active .side-link-icon {
+    color: var(--accent-strong);
+  }
+
+  .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .sidebar-user {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 0.4rem;
+  }
+
+  .sidebar-signout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .sidebar-signout:hover {
+    background: var(--surface-hover);
+  }
+
+  .app-bar {
+    box-shadow: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .app-main {
+    max-width: 1180px;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  /* Uzun-ince gorunumu kir: listeler ve kartlar cok kolonlu aksin */
+  .expenses-list,
+  .balances-list,
+  .goals-list,
+  .draft-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .home-stack {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .home-stack > .reminders-banner,
+  .home-stack > .hero-card {
+    grid-column: 1 / -1;
+  }
+
+  .settings-page {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    align-items: start;
+    gap: 1rem;
+  }
+
+  .shortcut-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+.alert-card--danger {
+  background: rgba(var(--negative-rgb), 0.1);
+  border-color: rgba(var(--negative-rgb), 0.4);
+  color: var(--negative);
+}
+
+.reminder-more {
+  display: block;
+  padding: 0.4rem 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.reminder-more:hover {
+  color: var(--accent);
+}
+
+.badge-future {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
+  font-size: 0.66rem;
+  font-weight: 700;
+}

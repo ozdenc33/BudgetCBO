@@ -1,17 +1,9 @@
-import { useEffect, useState } from 'react'
-import { subscribeTransactions } from '../lib/firestoreTransactions'
-import type { Transaction } from '../domain/types'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useTransactions() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    return subscribeTransactions((items) => {
-      setTransactions(items)
-      setLoading(false)
-    })
-  }, [])
-
-  return { transactions, loading }
+  const data = useData()
+  return { transactions: data.transactions, loading: data.loading.transactions, error: data.error }
 }

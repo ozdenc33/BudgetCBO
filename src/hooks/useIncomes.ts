@@ -1,17 +1,9 @@
-import { useEffect, useState } from 'react'
-import { subscribeIncomes } from '../lib/firestoreIncomes'
-import type { Income } from '../domain/types'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useIncomes() {
-  const [incomes, setIncomes] = useState<Income[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    return subscribeIncomes((items) => {
-      setIncomes(items)
-      setLoading(false)
-    })
-  }, [])
-
-  return { incomes, loading }
+  const data = useData()
+  return { incomes: data.incomes, loading: data.loading.incomes, error: data.error }
 }

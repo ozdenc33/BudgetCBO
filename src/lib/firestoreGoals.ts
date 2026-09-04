@@ -3,21 +3,22 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
   updateDoc,
   type UpdateData,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from '../firebase'
+import { subscribeCollection } from './firestoreCollection'
+import { toGoal } from './normalize'
 import type { Goal, GoalDraft } from '../domain/types'
 
 const GOALS = collection(db, 'goals')
 
-export function subscribeGoals(onChange: (goals: Goal[]) => void): Unsubscribe {
-  return onSnapshot(GOALS, (snap) => {
-    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal)
-    onChange(items)
-  })
+export function subscribeGoals(
+  onChange: (goals: Goal[]) => void,
+  onError?: (err: Error) => void,
+): Unsubscribe {
+  return subscribeCollection(GOALS, toGoal, onChange, onError)
 }
 
 export async function addGoal(draft: GoalDraft): Promise<void> {

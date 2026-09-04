@@ -1,17 +1,9 @@
-import { useEffect, useState } from 'react'
-import { subscribeRecurringSkips } from '../lib/firestoreRecurringSkips'
-import type { RecurringSkip } from '../domain/types'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useRecurringSkips() {
-  const [skips, setSkips] = useState<RecurringSkip[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    return subscribeRecurringSkips((data) => {
-      setSkips(data)
-      setLoading(false)
-    })
-  }, [])
-
-  return { skips, loading }
+  const data = useData()
+  return { skips: data.recurringSkips, loading: data.loading.recurringSkips, error: data.error }
 }

@@ -1,5 +1,6 @@
-import type { BudgetType, ComputedTransaction } from './types'
+import type { BudgetType, ComputedTransaction, Person } from './types'
 import { monthKeyOf } from './transactions'
+import { isNoteVisibleTo } from './notePrivacy'
 
 // Liste filtreleme. Excel'de karsiligi yok (orada AutoFilter kullanilir);
 // kayit sayisi buyudukce listeyi kullanilabilir tutmak icin eklendi.
@@ -23,15 +24,16 @@ function normalize(value: string): string {
   return value.toLocaleLowerCase('tr')
 }
 
-function matchesText(tx: ComputedTransaction, needle: string): boolean {
-  const haystack = [tx.description, tx.category, tx.account, tx.tag ?? '', tx.note ?? '']
-    .join(' ')
+function matchesText(tx: ComputedTransaction, needle: string, viewer: Person | undefined): boolean {
+  const visibleNote = isNoteVisibleTo(tx, viewer) ? (tx.note ?? '') : ''
+  const haystack = [tx.description, tx.category, tx.account, tx.tag ?? '', visibleNote].join(' ')
   return normalize(haystack).includes(normalize(needle))
 }
 
 export function filterTransactions(
   transactions: ComputedTransaction[],
   filter: TransactionFilter,
+  viewer?: Person,
 ): ComputedTransaction[] {
   const text = filter.text?.trim()
   return transactions.filter((tx) => {
@@ -41,7 +43,7 @@ export function filterTransactions(
     if (filter.budgetType && tx.budgetType !== filter.budgetType) return false
     if (filter.minAmountEUR != null && (tx.amountEUR ?? 0) < filter.minAmountEUR) return false
     if (filter.maxAmountEUR != null && (tx.amountEUR ?? 0) > filter.maxAmountEUR) return false
-    if (text && !matchesText(tx, text)) return false
+    if (text && !matchesText(tx, text, viewer)) return false
     return true
   })
 }

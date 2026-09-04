@@ -11,10 +11,9 @@ import { computeTransfer } from '../domain/transfers'
 import { monthKeyOf } from '../domain/rate'
 import { TRANSFER_TYPES, PERSONS } from '../domain/constants'
 import type { Currency, Transfer, TransferDraft, TransferType } from '../domain/types'
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
+import { todayISO, todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
+import { useEditParam } from '../hooks/useEditParam'
 
 type FormState = {
   date: string
@@ -30,7 +29,7 @@ type FormState = {
 
 function emptyForm(): FormState {
   return {
-    date: todayIso(),
+    date: todayISO(),
     type: 'Ortak Kasa Katkısı',
     from: 'Can',
     to: '',
@@ -94,8 +93,9 @@ export function TransfersPage() {
   const [form, setForm] = useState<FormState>(emptyForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
-  const [month, setMonth] = useState(() => todayIso().slice(0, 7))
+  const [month, setMonth] = useState(todayMonthKey)
   const [saving, setSaving] = useState(false)
+  const runWrite = useWrite()
 
   const preview = useMemo(
     () => computeTransfer({ id: 'preview', ...formToDraft(form) }, settings),
@@ -149,11 +149,14 @@ export function TransfersPage() {
 
     setSaving(true)
     try {
-      if (editingId) {
-        await updateTransfer(editingId, formToUpdatePayload(form))
-      } else {
-        await addTransfer(formToDraft(form))
-      }
+      const saved = editingId
+        ? await runWrite(updateTransfer(editingId, formToUpdatePayload(form)), {
+            failureMessage: 'Transfer güncellenemedi',
+          })
+        : await runWrite(addTransfer(formToDraft(form)), {
+            failureMessage: 'Transfer kaydedilemedi',
+          })
+      if (!saved) return
       setForm(emptyForm())
       setEditingId(null)
     } finally {
@@ -167,6 +170,9 @@ export function TransfersPage() {
     setForm(transferToForm(transfer))
   }
 
+  // Hesap Hareketleri'nden "?edit=<id>" ile gelindiyse formu otomatik ac.
+  useEditParam(transfers, transfersLoading, startEdit)
+
   function cancelEdit() {
     setEditingId(null)
     setForm(emptyForm())
@@ -174,7 +180,7 @@ export function TransfersPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Bu transferi silmek istediğinize emin misiniz?')) return
-    await deleteTransfer(id)
+    await runWrite(deleteTransfer(id), { failureMessage: 'Transfer silinemedi' })
   }
 
   if (settingsLoading) {
@@ -192,161 +198,161 @@ export function TransfersPage() {
           {editingId ? 'Transferi düzenle' : '+ Yeni transfer'}
         </summary>
         <form className="expense-form" onSubmit={handleSubmit}>
-        <label>
-          Tarih
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Tip
-          <select
-            value={form.type}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                type: e.target.value as TransferType,
-                to: e.target.value === 'Ortak Kasa Katkısı' ? 'Ortak Kasa' : '',
-              })
-            }
-          >
-            {TRANSFER_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+          <label>
+            Tarih
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Tip
+            <select
+              value={form.type}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  type: e.target.value as TransferType,
+                  to: e.target.value === 'Ortak Kasa Katkısı' ? 'Ortak Kasa' : '',
+                })
+              }
+            >
+              {TRANSFER_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Gönderen
+            <select value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })}>
+              {PERSONS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Alıcı
+            <select
+              value={form.to}
+              onChange={(e) => setForm({ ...form, to: e.target.value })}
+              required
+              disabled={needsGoal}
+            >
+              <option value="" disabled>
+                {needsGoal ? 'Önce bir hedef oluştur' : 'Seçin'}
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Gönderen
-          <select value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })}>
-            {PERSONS.map((p) => (
-              <option key={p} value={p}>
-                {p}
+              {recipientOptions.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </label>
+          {needsGoal && (
+            <p className="warn-note">
+              Tasarruf transferi bir birikim hedefine yapılır ama henüz hedef yok.{' '}
+              <Link to="/hedefler">Hedefler sayfasından</Link> bir hedef oluştur (örn. "Acil Durum
+              Fonu"), sonra buraya dön.
+            </p>
+          )}
+          <label>
+            Tutar
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.amount}
+              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              required
+            />
+          </label>
+          <label>
+            Para Birimi
+            <select
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
+            >
+              <option value="EUR">EUR</option>
+              <option value="TRY">TRY</option>
+            </select>
+          </label>
+          <label>
+            Kaynak Hesap (para buradan çıkar)
+            <select
+              value={form.fromAccount}
+              onChange={(e) => setForm({ ...form, fromAccount: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Alıcı
-          <select
-            value={form.to}
-            onChange={(e) => setForm({ ...form, to: e.target.value })}
-            required
-            disabled={needsGoal}
-          >
-            <option value="" disabled>
-              {needsGoal ? 'Önce bir hedef oluştur' : 'Seçin'}
-            </option>
-            {recipientOptions.map((r) => (
-              <option key={r} value={r}>
-                {r}
+              {settings.accounts.map((a) => (
+                <option key={a.id} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Hedef Hesap (para buraya girer)
+            <select
+              value={form.toAccount}
+              onChange={(e) => setForm({ ...form, toAccount: e.target.value })}
+              required
+            >
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-        </label>
-        {needsGoal && (
-          <p className="warn-note">
-            Tasarruf transferi bir birikim hedefine yapılır ama henüz hedef yok.{' '}
-            <Link to="/hedefler">Hedefler sayfasından</Link> bir hedef oluştur (örn. "Acil Durum
-            Fonu"), sonra buraya dön.
-          </p>
-        )}
-        <label>
-          Tutar
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            required
-          />
-        </label>
-        <label>
-          Para Birimi
-          <select
-            value={form.currency}
-            onChange={(e) => setForm({ ...form, currency: e.target.value as Currency })}
-          >
-            <option value="EUR">EUR</option>
-            <option value="TRY">TRY</option>
-          </select>
-        </label>
-        <label>
-          Kaynak Hesap (para buradan çıkar)
-          <select
-            value={form.fromAccount}
-            onChange={(e) => setForm({ ...form, fromAccount: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Hedef Hesap (para buraya girer)
-          <select
-            value={form.toAccount}
-            onChange={(e) => setForm({ ...form, toAccount: e.target.value })}
-            required
-          >
-            <option value="" disabled>
-              Seçin
-            </option>
-            {settings.accounts.map((a) => (
-              <option key={a.id} value={a.name}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Not
-          <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        </label>
+              {settings.accounts.map((a) => (
+                <option key={a.id} value={a.name}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Not
+            <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </label>
 
-        {form.to && form.amount && (
-          <div
-            className={
-              preview.validation === 'OK'
-                ? 'expense-preview expense-preview--ok'
-                : 'expense-preview expense-preview--error'
-            }
-          >
-            {preview.validation === 'OK' ? (
-              <span>
-                {preview.amountEUR?.toFixed(2)} EUR
-                {preview.rateSource === 'default' && form.currency === 'TRY'
-                  ? ' (varsayılan kur ile)'
-                  : ''}
-              </span>
-            ) : (
-              <span>{preview.validation}</span>
+          {form.to && form.amount && (
+            <div
+              className={
+                preview.validation === 'OK'
+                  ? 'expense-preview expense-preview--ok'
+                  : 'expense-preview expense-preview--error'
+              }
+            >
+              {preview.validation === 'OK' ? (
+                <span>
+                  {preview.amountEUR?.toFixed(2)} EUR
+                  {preview.rateSource === 'default' && form.currency === 'TRY'
+                    ? ' (varsayılan kur ile)'
+                    : ''}
+                </span>
+              ) : (
+                <span>{preview.validation}</span>
+              )}
+            </div>
+          )}
+
+          <div className="expense-form-actions">
+            <button type="submit" disabled={!canSubmit || saving}>
+              {editingId ? 'Güncelle' : 'Kaydet'}
+            </button>
+            {editingId && (
+              <button type="button" onClick={cancelEdit}>
+                İptal
+              </button>
             )}
           </div>
-        )}
-
-        <div className="expense-form-actions">
-          <button type="submit" disabled={!canSubmit || saving}>
-            {editingId ? 'Güncelle' : 'Kaydet'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={cancelEdit}>
-              İptal
-            </button>
-          )}
-        </div>
-      </form>
+        </form>
       </details>
 
       <div className="expenses-list-header">

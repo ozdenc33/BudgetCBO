@@ -9,6 +9,7 @@ import {
   computeAccountLedger,
   computeSavingsBreakdown,
   type LedgerKind,
+  type LedgerRow,
 } from '../domain/accountLedger'
 import { monthKeyOf } from '../domain/transactions'
 
@@ -24,6 +25,17 @@ const KIND_LABEL: Record<LedgerKind, string> = {
   'transfer-cikis': 'Transfer çıkışı',
 }
 
+/**
+ * Bir ekstre satirini duzenleme sayfasina yonlendirir. Ilgili sayfa
+ * ?edit= parametresini okuyup o kaydin duzenleme formunu acar (bkz.
+ * ExpensesPage/IncomesPage/TransfersPage).
+ */
+function editLinkFor(row: LedgerRow): string {
+  if (row.kind === 'harcama') return `/harcamalar?edit=${row.recordId}`
+  if (row.kind === 'gelir') return `/gelirler?edit=${row.recordId}`
+  return `/transferler?edit=${row.recordId}`
+}
+
 export function AccountDetailPage() {
   const { accountId } = useParams<{ accountId: string }>()
   const { settings, loading: settingsLoading } = useSettings()
@@ -37,16 +49,18 @@ export function AccountDetailPage() {
 
   const balance = useMemo(() => {
     if (!account) return undefined
-    return computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings).find(
-      (b) => b.account.id === account.id,
-    )
+    return computeAccountBalances(
+      settings.accounts,
+      transactions,
+      incomes,
+      transfers,
+      settings,
+    ).find((b) => b.account.id === account.id)
   }, [account, settings, transactions, incomes, transfers])
 
   const allRows = useMemo(
     () =>
-      account
-        ? computeAccountLedger(account.name, transactions, incomes, transfers, settings)
-        : [],
+      account ? computeAccountLedger(account.name, transactions, incomes, transfers, settings) : [],
     [account, transactions, incomes, transfers, settings],
   )
 
@@ -173,23 +187,34 @@ export function AccountDetailPage() {
       ) : (
         <ul className="ledger-list">
           {rows.map((r) => (
-            <li key={r.id} className={r.amountEUR < 0 ? 'ledger-row ledger-row--out' : 'ledger-row'}>
-              <span className="ledger-main">
-                <span className="ledger-label">{r.label}</span>
-                <span className="ledger-detail">
-                  {r.date} · {KIND_LABEL[r.kind]}
-                  {r.detail ? ` · ${r.detail}` : ''}
+            <li
+              key={r.id}
+              className={r.amountEUR < 0 ? 'ledger-row ledger-row--out' : 'ledger-row'}
+            >
+              <Link to={editLinkFor(r)} className="ledger-row-link">
+                <span className="ledger-main">
+                  <span className="ledger-label">{r.label}</span>
+                  <span className="ledger-detail">
+                    {r.date} · {KIND_LABEL[r.kind]}
+                    {r.detail ? ` · ${r.detail}` : ''}
+                    {r.originalCurrency && (
+                      <>
+                        {' '}
+                        · <span className="badge-future">{fmt(r.originalAmount)} TL</span>
+                      </>
+                    )}
+                  </span>
                 </span>
-              </span>
-              <span className="ledger-amounts">
-                <span
-                  className={r.amountEUR < 0 ? 'ledger-amount is-out' : 'ledger-amount is-in'}
-                >
-                  {r.amountEUR > 0 ? '+' : ''}
-                  {fmt(r.amountEUR)} €
+                <span className="ledger-amounts">
+                  <span
+                    className={r.amountEUR < 0 ? 'ledger-amount is-out' : 'ledger-amount is-in'}
+                  >
+                    {r.amountEUR > 0 ? '+' : ''}
+                    {fmt(r.amountEUR)} €
+                  </span>
+                  <span className="ledger-running">{fmt(r.balanceAfterEUR)} €</span>
                 </span>
-                <span className="ledger-running">{fmt(r.balanceAfterEUR)} €</span>
-              </span>
+              </Link>
             </li>
           ))}
         </ul>

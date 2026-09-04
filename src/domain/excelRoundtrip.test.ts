@@ -11,20 +11,73 @@ import type { Goal, Income, RecurringItem, Transaction, Transfer } from './types
 const TODAY = new Date(2026, 8, 2)
 
 const TRANSACTIONS: Transaction[] = [
-  { id: '1', date: '2026-10-01', description: 'Ekim kira', category: 'Kira (Kaltmiete)', amount: 950, currency: 'EUR', account: 'Ortak Kasa' },
-  { id: '2', date: '2026-10-15', description: 'Fotoğraf filmi', category: 'Hobi/Fotoğraf', amount: 38.9, currency: 'EUR', account: 'Can-DE Girokonto', canPct: 1, tag: 'Stuttgart' },
+  {
+    id: '1',
+    date: '2026-10-01',
+    description: 'Ekim kira',
+    category: 'Kira (Kaltmiete)',
+    amount: 950,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
+  {
+    id: '2',
+    date: '2026-10-15',
+    description: 'Fotoğraf filmi',
+    category: 'Hobi/Fotoğraf',
+    amount: 38.9,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+    canPct: 1,
+    tag: 'Stuttgart',
+  },
 ]
 const INCOMES: Income[] = [
-  { id: '1', date: '2026-10-05', source: 'Sperrkonto', person: 'Can', amount: 992, currency: 'EUR', account: 'Can-DE Girokonto' },
+  {
+    id: '1',
+    date: '2026-10-05',
+    source: 'Sperrkonto',
+    person: 'Can',
+    amount: 992,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
 ]
 const TRANSFERS: Transfer[] = [
-  { id: '1', date: '2026-09-28', type: 'Ortak Kasa Katkısı', from: 'Can', to: 'Ortak Kasa', amount: 500, currency: 'EUR', fromAccount: 'Can-DE Girokonto', toAccount: 'Ortak Kasa' },
+  {
+    id: '1',
+    date: '2026-09-28',
+    type: 'Ortak Kasa Katkısı',
+    from: 'Can',
+    to: 'Ortak Kasa',
+    amount: 500,
+    currency: 'EUR',
+    fromAccount: 'Can-DE Girokonto',
+    toAccount: 'Ortak Kasa',
+  },
 ]
 const RECURRING: RecurringItem[] = [
-  { id: '1', name: 'Kira (Kaltmiete)', budgetType: 'Ortak-Ev', category: 'Kira (Kaltmiete)', amount: 950, frequencyMonths: 1, account: 'Ortak Kasa', firstPaymentDate: '2026-10-01', active: true },
+  {
+    id: '1',
+    name: 'Kira (Kaltmiete)',
+    kind: 'expense',
+    budgetType: 'Ortak-Ev',
+    category: 'Kira (Kaltmiete)',
+    amount: 950,
+    frequencyMonths: 1,
+    account: 'Ortak Kasa',
+    firstPaymentDate: '2026-10-01',
+    active: true,
+  },
 ]
 const GOALS: Goal[] = [
-  { id: '1', name: 'Acil Durum Fonu', owner: 'Ortak', targetAmount: 2000, targetDate: '2027-06-30' },
+  {
+    id: '1',
+    name: 'Acil Durum Fonu',
+    owner: 'Ortak',
+    targetAmount: 2000,
+    targetDate: '2027-06-30',
+  },
 ]
 
 describe('excelExport -> excelImport round-trip', () => {

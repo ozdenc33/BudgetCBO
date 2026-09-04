@@ -8,19 +8,81 @@ const CAN = 'Can-DE Girokonto'
 const TASARRUF = 'Can-Tasarruf'
 
 const TX: Transaction[] = [
-  { id: 't1', date: '2026-09-02', description: 'Market', category: 'Market (Ev)', amount: 50, currency: 'EUR', account: CAN },
-  { id: 't2', date: '2026-09-05', description: 'Kahve', category: 'Restoran/Kafe', amount: 10, currency: 'EUR', account: CAN },
-  { id: 't3', date: '2026-09-06', description: 'Baska hesap', category: 'Market (Ev)', amount: 99, currency: 'EUR', account: 'Tuğçe-Nakit' },
+  {
+    id: 't1',
+    date: '2026-09-02',
+    description: 'Market',
+    category: 'Market (Ev)',
+    amount: 50,
+    currency: 'EUR',
+    account: CAN,
+  },
+  {
+    id: 't2',
+    date: '2026-09-05',
+    description: 'Kahve',
+    category: 'Restoran/Kafe',
+    amount: 10,
+    currency: 'EUR',
+    account: CAN,
+  },
+  {
+    id: 't3',
+    date: '2026-09-06',
+    description: 'Baska hesap',
+    category: 'Market (Ev)',
+    amount: 99,
+    currency: 'EUR',
+    account: 'Tuğçe-Nakit',
+  },
 ]
 
 const INCOMES: Income[] = [
-  { id: 'i1', date: '2026-09-01', source: 'Werkstudent', person: 'Can', amount: 1000, currency: 'EUR', account: CAN },
+  {
+    id: 'i1',
+    date: '2026-09-01',
+    source: 'Werkstudent',
+    person: 'Can',
+    amount: 1000,
+    currency: 'EUR',
+    account: CAN,
+  },
 ]
 
 const TRANSFERS: Transfer[] = [
-  { id: 'r1', date: '2026-09-03', type: 'Tasarruf', from: 'Can', to: 'Acil Durum Fonu', amount: 200, currency: 'EUR', fromAccount: CAN, toAccount: TASARRUF },
-  { id: 'r2', date: '2026-09-04', type: 'Tasarruf', from: 'Tuğçe', to: 'Acil Durum Fonu', amount: 100, currency: 'EUR', fromAccount: 'Tuğçe-DE Girokonto', toAccount: TASARRUF },
-  { id: 'r3', date: '2026-09-07', type: 'Tasarruf', from: 'Can', to: 'Kamera', amount: 300, currency: 'EUR', fromAccount: CAN, toAccount: TASARRUF },
+  {
+    id: 'r1',
+    date: '2026-09-03',
+    type: 'Tasarruf',
+    from: 'Can',
+    to: 'Acil Durum Fonu',
+    amount: 200,
+    currency: 'EUR',
+    fromAccount: CAN,
+    toAccount: TASARRUF,
+  },
+  {
+    id: 'r2',
+    date: '2026-09-04',
+    type: 'Tasarruf',
+    from: 'Tuğçe',
+    to: 'Acil Durum Fonu',
+    amount: 100,
+    currency: 'EUR',
+    fromAccount: 'Tuğçe-DE Girokonto',
+    toAccount: TASARRUF,
+  },
+  {
+    id: 'r3',
+    date: '2026-09-07',
+    type: 'Tasarruf',
+    from: 'Can',
+    to: 'Kamera',
+    amount: 300,
+    currency: 'EUR',
+    fromAccount: CAN,
+    toAccount: TASARRUF,
+  },
 ]
 
 describe('computeAccountLedger', () => {
@@ -55,7 +117,13 @@ describe('computeAccountLedger', () => {
 
   it('son yurutulen bakiye, Hesap Bakiyeleri sayfasindaki bakiyeyle ayni olur', () => {
     const rows = computeAccountLedger(CAN, TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
-    const balances = computeAccountBalances(DEFAULT_SETTINGS.accounts, TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
+    const balances = computeAccountBalances(
+      DEFAULT_SETTINGS.accounts,
+      TX,
+      INCOMES,
+      TRANSFERS,
+      DEFAULT_SETTINGS,
+    )
     const can = balances.find((b) => b.account.name === CAN)!
     expect(rows[0].balanceAfterEUR).toBeCloseTo(can.balanceEUR)
   })
@@ -68,6 +136,75 @@ describe('computeAccountLedger', () => {
 
   it('hicbir hareketi olmayan hesap icin bos liste doner', () => {
     expect(computeAccountLedger('Can-Nakit', TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)).toEqual([])
+  })
+
+  it("her satirin recordId alani, alttaki gercek kaydin id'sine gider (duzenleme yonlendirmesi icin)", () => {
+    const rows = computeAccountLedger(CAN, TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
+    const byId = Object.fromEntries(rows.map((r) => [r.id, r]))
+    expect(byId['tx-t1'].recordId).toBe('t1')
+    expect(byId['in-i1'].recordId).toBe('i1')
+    expect(byId['tr-out-r1'].recordId).toBe('r1')
+  })
+
+  it('TRY kaydinda ham tutar ve para birimi ayrica tasinir', () => {
+    const tryTx: Transaction[] = [
+      {
+        id: 'tl1',
+        date: '2026-09-09',
+        description: 'TL harcama',
+        category: 'Market (Ev)',
+        amount: 350,
+        currency: 'TRY',
+        account: CAN,
+      },
+    ]
+    const rows = computeAccountLedger(CAN, tryTx, [], [], DEFAULT_SETTINGS)
+    expect(rows[0].originalCurrency).toBe('TRY')
+    expect(rows[0].originalAmount).toBe(350)
+  })
+
+  it('EUR kaydinda originalCurrency/originalAmount hic yok', () => {
+    const rows = computeAccountLedger(CAN, TX, INCOMES, TRANSFERS, DEFAULT_SETTINGS)
+    expect(rows.every((r) => r.originalCurrency === undefined)).toBe(true)
+  })
+})
+
+describe('computeAccountLedger — bolusuk cekilis (secondAccount)', () => {
+  const split: Transaction[] = [
+    {
+      id: 's1',
+      date: '2026-09-10',
+      description: 'Ortak market',
+      category: 'Market (Ev)',
+      amount: 100,
+      currency: 'EUR',
+      account: CAN,
+      secondAccount: 'Tuğçe-DE Girokonto',
+      canPct: 0.6,
+      tugcePct: 0.4,
+    },
+  ]
+
+  it('iki hesapta da ayri satir olarak gorunur, her biri kendi payiyla', () => {
+    const canRows = computeAccountLedger(CAN, split, [], [], DEFAULT_SETTINGS)
+    const tugceRows = computeAccountLedger('Tuğçe-DE Girokonto', split, [], [], DEFAULT_SETTINGS)
+    expect(canRows).toHaveLength(1)
+    expect(canRows[0].amountEUR).toBeCloseTo(-60)
+    expect(canRows[0].isPartialSplit).toBe(true)
+    expect(tugceRows).toHaveLength(1)
+    expect(tugceRows[0].amountEUR).toBeCloseTo(-40)
+  })
+
+  it("iki satirin recordId'si ayni islemi gosterir (tek kayit, iki hesap)", () => {
+    const canRows = computeAccountLedger(CAN, split, [], [], DEFAULT_SETTINGS)
+    const tugceRows = computeAccountLedger('Tuğçe-DE Girokonto', split, [], [], DEFAULT_SETTINGS)
+    expect(canRows[0].recordId).toBe('s1')
+    expect(tugceRows[0].recordId).toBe('s1')
+  })
+
+  it('ilgisiz bir hesapta hic gorunmez', () => {
+    const rows = computeAccountLedger('Can-Nakit', split, [], [], DEFAULT_SETTINGS)
+    expect(rows).toHaveLength(0)
   })
 })
 
@@ -104,7 +241,17 @@ describe('computeSavingsBreakdown', () => {
   it('tasarruf disindaki transferleri saymaz', () => {
     const withKatki: Transfer[] = [
       ...TRANSFERS,
-      { id: 'r4', date: '2026-09-08', type: 'Ortak Kasa Katkısı', from: 'Can', to: 'Ortak Kasa', amount: 500, currency: 'EUR', fromAccount: CAN, toAccount: TASARRUF },
+      {
+        id: 'r4',
+        date: '2026-09-08',
+        type: 'Ortak Kasa Katkısı',
+        from: 'Can',
+        to: 'Ortak Kasa',
+        amount: 500,
+        currency: 'EUR',
+        fromAccount: CAN,
+        toAccount: TASARRUF,
+      },
     ]
     const b = computeSavingsBreakdown(TASARRUF, withKatki, DEFAULT_SETTINGS, 1100)
     expect(b.assignedEUR).toBeCloseTo(600)

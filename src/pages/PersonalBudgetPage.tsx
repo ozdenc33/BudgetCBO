@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -9,6 +10,8 @@ import { computePersonalBudget } from '../domain/personalBudget'
 import { personForEmail } from '../lib/currentPerson'
 import { useAuth } from '../auth/AuthContext'
 import type { Person, PersonalBudgetPlan } from '../domain/types'
+import { todayMonthKey } from '../domain/dates'
+import { useWrite } from '../hooks/useWrite'
 
 const PERSONS: Person[] = ['Can', 'Tuğçe']
 
@@ -16,10 +19,6 @@ const UNASSIGNED_LABEL: Record<string, string> = {
   tamam: 'Sıfır bazlı plan tamam',
   dagitilmadi: 'Plan gelirin tamamı dağıtılmadı, tasarrufa veya kategoriye atayın',
   asildi: 'Plan gelirden fazla harcama planlanmış',
-}
-
-function todayMonthKey(): string {
-  return new Date().toISOString().slice(0, 7)
 }
 
 function fmt(value: number | undefined): string {
@@ -45,8 +44,10 @@ export function PersonalBudgetPage() {
   // Baskasinin butcesinde ilk degisiklikte bir kez onay istenir.
   const [otherPersonConfirmed, setOtherPersonConfirmed] = useState(false)
 
-  const loading = settingsLoading || txLoading || incomesLoading || transfersLoading || recurringLoading
-  const today = useMemo(() => new Date(), [])
+  const loading =
+    settingsLoading || txLoading || incomesLoading || transfersLoading || recurringLoading
+  const today = useToday()
+  const runWrite = useWrite()
 
   const plan = settings.personalPlans[person]
 
@@ -54,7 +55,17 @@ export function PersonalBudgetPage() {
     () =>
       loading
         ? undefined
-        : computePersonalBudget(person, month, plan, transactions, incomes, transfers, recurring, settings, today),
+        : computePersonalBudget(
+            person,
+            month,
+            plan,
+            transactions,
+            incomes,
+            transfers,
+            recurring,
+            settings,
+            today,
+          ),
     [loading, person, month, plan, transactions, incomes, transfers, recurring, settings, today],
   )
 
@@ -68,10 +79,13 @@ export function PersonalBudgetPage() {
       if (!ok) return
       setOtherPersonConfirmed(true)
     }
-    await saveSettings({
-      ...settings,
-      personalPlans: { ...settings.personalPlans, [person]: next },
-    })
+    await runWrite(
+      saveSettings({
+        ...settings,
+        personalPlans: { ...settings.personalPlans, [person]: next },
+      }),
+      { failureMessage: 'Plan kaydedilemedi' },
+    )
   }
 
   function selectPerson(next: Person) {
@@ -98,7 +112,9 @@ export function PersonalBudgetPage() {
           {PERSONS.map((p) => (
             <button
               key={p}
-              className={p === person ? 'person-toggle-btn person-toggle-btn--active' : 'person-toggle-btn'}
+              className={
+                p === person ? 'person-toggle-btn person-toggle-btn--active' : 'person-toggle-btn'
+              }
               onClick={() => selectPerson(p)}
             >
               {p}
@@ -178,7 +194,9 @@ export function PersonalBudgetPage() {
               step="0.01"
               key={`${person}-${plan.sharedContributionPlanEUR}`}
               defaultValue={plan.sharedContributionPlanEUR}
-              onBlur={(e) => setPlan({ ...plan, sharedContributionPlanEUR: Number(e.target.value) || 0 })}
+              onBlur={(e) =>
+                setPlan({ ...plan, sharedContributionPlanEUR: Number(e.target.value) || 0 })
+              }
             />
           </div>
           <div className="summary-tile">
@@ -199,7 +217,9 @@ export function PersonalBudgetPage() {
           </div>
           <div className="summary-tile">
             <span className="summary-label">Öneri A: sabit giderin yarısı</span>
-            <span className="summary-value">{fmt(budget.sharedContribution.suggestionHalfFixedEUR)} €</span>
+            <span className="summary-value">
+              {fmt(budget.sharedContribution.suggestionHalfFixedEUR)} €
+            </span>
           </div>
           <div className="summary-tile">
             <span className="summary-label">Öneri B: kategori limitinin yarısı</span>
@@ -234,7 +254,9 @@ export function PersonalBudgetPage() {
                       step="0.01"
                       key={`${person}-${row.plannedEUR}`}
                       defaultValue={row.plannedEUR}
-                      onBlur={(e) => setCategoryPlanValue(row.category, Number(e.target.value) || 0)}
+                      onBlur={(e) =>
+                        setCategoryPlanValue(row.category, Number(e.target.value) || 0)
+                      }
                     />
                   </td>
                   <td>{fmt(row.actualEUR)} €</td>
@@ -285,7 +307,9 @@ export function PersonalBudgetPage() {
             <span className="summary-label">Fark</span>
             <span
               className={
-                budget.savings.diffEUR < 0 ? 'summary-value summary-value--negative' : 'summary-value'
+                budget.savings.diffEUR < 0
+                  ? 'summary-value summary-value--negative'
+                  : 'summary-value'
               }
             >
               {fmt(budget.savings.diffEUR)} €

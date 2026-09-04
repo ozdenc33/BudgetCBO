@@ -42,7 +42,5 @@ export function computeBudgetAlerts(rows: BudgetTypeRow[]): BudgetAlert[] {
  * katkilar harcamalari karsilamiyorsa buradan gorunur.
  */
 export function findNegativeBalances(balances: AccountBalance[]): AccountBalance[] {
-  return balances
-    .filter((b) => b.balanceEUR < 0)
-    .sort((a, b) => a.balanceEUR - b.balanceEUR)
+  return balances.filter((b) => b.balanceEUR < 0).sort((a, b) => a.balanceEUR - b.balanceEUR)
 }

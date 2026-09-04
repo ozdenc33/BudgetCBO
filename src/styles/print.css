@@ -1,0 +1,80 @@
+/*
+ * Yazdirma / PDF
+ *
+ * Bu dosya src/styles.css'ten bolundu; ic düzen ve secici
+ * isimleri degismedi. Giris noktasi: src/styles.css
+ */
+
+/* ---------- Yazdirma / PDF ---------- */
+
+.btn-quiet {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar,
+  .tab-bar,
+  .app-bar,
+  .offline-banner,
+  .no-print,
+  .reminders-banner {
+    display: none !important;
+  }
+
+  .app-main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .print-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+  }
+
+  .dashboard-section,
+  .panel {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+    margin-bottom: 0.75rem;
+  }
+
+  .table-scroll {
+    overflow: visible;
+  }
+
+  .dashboard-table {
+    white-space: normal;
+    font-size: 9pt;
+  }
+
+  /* Yazdirmada her zaman acik tema renkleri kullanilir */
+  :root,
+  [data-theme='dark'] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-alt: #f2f4f7;
+    --text: #000000;
+    --text-muted: #444444;
+    --border: #999999;
+    --border-subtle: #cccccc;
+    --chart-1: #0065bd;
+    --chart-2: #7c8500;
+    --shadow-sm: none;
+    --shadow-md: none;
+  }
+}

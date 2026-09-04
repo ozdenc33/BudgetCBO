@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -12,6 +6,8 @@ import {
   type User,
 } from 'firebase/auth'
 import { auth, ALLOWED_EMAILS } from '../firebase'
+import { clearGreetings } from '../lib/localPrefs'
+import { signInErrorMessage } from '../domain/authErrors'
 
 type AuthState = {
   user: User | null
@@ -43,12 +39,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       await signInWithEmailAndPassword(auth, email, password)
-    } catch {
-      setError('E-posta veya sifre hatali.')
+    } catch (err) {
+      setError(signInErrorMessage(err))
     }
   }
 
   async function signOut() {
+    // Karsilama notu bir sonraki giriste yeniden cikabilsin.
+    clearGreetings()
     await firebaseSignOut(auth)
   }
 

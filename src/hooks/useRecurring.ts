@@ -1,17 +1,9 @@
-import { useEffect, useState } from 'react'
-import { subscribeRecurring } from '../lib/firestoreRecurring'
-import type { RecurringItem } from '../domain/types'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useRecurring() {
-  const [items, setItems] = useState<RecurringItem[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    return subscribeRecurring((data) => {
-      setItems(data)
-      setLoading(false)
-    })
-  }, [])
-
-  return { items, loading }
+  const data = useData()
+  return { items: data.recurring, loading: data.loading.recurring, error: data.error }
 }

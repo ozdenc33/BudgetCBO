@@ -1,22 +1,9 @@
-import { useEffect, useState } from 'react'
-import { ensureSettingsSeeded, subscribeSettings } from '../lib/firestoreSettings'
-import { DEFAULT_SETTINGS } from '../domain/constants'
-import type { Settings } from '../domain/types'
+import { useData } from '../data/DataProvider'
+
+// Abonelikler artik DataProvider'da tek yerde kuruluyor; bu hook'lar
+// yalnizca o veriyi okur. Sayfalarin arayuzu degismedi.
 
 export function useSettings() {
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    ensureSettingsSeeded().catch((err) => {
-      console.error('Ayarlar tohumlanamadi', err)
-    })
-    const unsub = subscribeSettings((s) => {
-      setSettings(s)
-      setLoading(false)
-    })
-    return unsub
-  }, [])
-
-  return { settings, loading }
+  const data = useData()
+  return { settings: data.settings, loading: data.loading.settings, error: data.error }
 }

@@ -1,17 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useToday } from '../hooks/useToday'
+import { useComputedTransactions } from '../hooks/useComputedTransactions'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
 import { useTransfers } from '../hooks/useTransfers'
 import { computeBudgetTypeSummary } from '../domain/dashboard'
 import { computeBudgetAlerts, findNegativeBalances } from '../domain/budgetAlerts'
-import { computeAccountBalances } from '../domain/balances'
+import { computeAccountBalances, computePersonNetWorth } from '../domain/balances'
 import { computeScopeSummary, computeWeekSummary, type PersonScope } from '../domain/personSummary'
-import { computeTransaction } from '../domain/transactions'
 import { personForEmail } from '../lib/currentPerson'
 import { useAuth } from '../auth/AuthContext'
+import { useNetWorthHidden } from '../hooks/useNetWorthHidden'
 import { RemindersBanner } from '../components/RemindersBanner'
+import { NetWorthPanel } from '../components/NetWorthPanel'
+import { todayMonthKey } from '../domain/dates'
 import {
   IconChart,
   IconPlus,
@@ -26,18 +30,24 @@ const SCOPES: PersonScope[] = ['Ortak', 'Can', 'Tuğçe']
 // Ana sayfa uyari duvarina donmesin: fazlasi tek satirda ozetlenir.
 const MAX_ALERTS = 3
 
-function todayMonthKey(): string {
-  return new Date().toISOString().slice(0, 7)
-}
-
 function fmt(value: number | undefined): string {
   if (value == null) return '—'
   return value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const MONTH_NAMES = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+  'Ocak',
+  'Şubat',
+  'Mart',
+  'Nisan',
+  'Mayıs',
+  'Haziran',
+  'Temmuz',
+  'Ağustos',
+  'Eylül',
+  'Ekim',
+  'Kasım',
+  'Aralık',
 ]
 
 function monthLabel(monthKey: string): string {
@@ -54,7 +64,7 @@ const SHORTCUTS = [
   { to: '/hesaplar', label: 'Hesaplar', icon: <IconWallet size={20} /> },
   { to: '/pano', label: 'Ay Panosu', icon: <IconChart size={20} /> },
   { to: '/harcamalar', label: 'Harcamalar', icon: <IconReceipt size={20} /> },
-  { to: '/sabit-giderler', label: 'Sabit Giderler', icon: <IconRepeat size={20} /> },
+  { to: '/sabit-giderler', label: 'Sabit Ödemeler', icon: <IconRepeat size={20} /> },
   { to: '/hedefler', label: 'Hedefler', icon: <IconTarget size={20} /> },
 ]
 
@@ -64,13 +74,16 @@ export function HomePage() {
   const { incomes, loading: incomesLoading } = useIncomes()
   const { transfers, loading: transfersLoading } = useTransfers()
   const { user } = useAuth()
+  // Tek yerde hesaplanmis islemler (bkz. DataProvider); ana sayfa
+  // bunu eskiden kendi icinde bastan hesapliyordu.
+  const computedTransactions = useComputedTransactions()
 
   // Varsayilan kapsam: giris yapan kisi kendi ozetini gorur, yoksa Ortak.
   const [scope, setScope] = useState<PersonScope>(() => personForEmail(user?.email) ?? 'Ortak')
 
   const month = todayMonthKey()
   const loading = settingsLoading || txLoading || incomesLoading || transfersLoading
-  const today = useMemo(() => new Date(), [])
+  const today = useToday()
 
   const summary = useMemo(
     () => computeScopeSummary(scope, month, transactions, incomes, transfers, settings),
@@ -90,24 +103,30 @@ export function HomePage() {
     [month, transactions, settings],
   )
 
-  // Eksiye dusen hesaplar (ozellikle Ortak Kasa: katkilar harcamayi
-  // karsilamiyorsa burada gorunur).
-  const negativeBalances = useMemo(
-    () =>
-      findNegativeBalances(
-        computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings),
-      ),
+  const balances = useMemo(
+    () => computeAccountBalances(settings.accounts, transactions, incomes, transfers, settings),
     [settings, transactions, incomes, transfers],
   )
 
+  // Eksiye dusen hesaplar (ozellikle Ortak Kasa: katkilar harcamayi
+  // karsilamiyorsa burada gorunur).
+  const negativeBalances = useMemo(() => findNegativeBalances(balances), [balances])
+
+  const netWorths = useMemo(
+    () => computePersonNetWorth(settings.accounts, transactions, incomes, transfers, settings),
+    [settings, transactions, incomes, transfers],
+  )
+  const { hidden: netWorthHidden, toggle: toggleNetWorthHidden } = useNetWorthHidden()
+
   const recent = useMemo(() => {
-    const computed = transactions.map((t) => computeTransaction(t, settings))
     const inScope =
       scope === 'Ortak'
-        ? computed
-        : computed.filter((t) => ((scope === 'Can' ? t.canShare : t.tugceShare) ?? 0) > 0)
-    return inScope.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
-  }, [transactions, settings, scope])
+        ? computedTransactions
+        : computedTransactions.filter(
+            (t) => ((scope === 'Can' ? t.canShare : t.tugceShare) ?? 0) > 0,
+          )
+    return [...inScope].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
+  }, [computedTransactions, scope])
 
   if (loading) {
     return <div className="page-loading">Yükleniyor...</div>
@@ -142,9 +161,7 @@ export function HomePage() {
         </div>
         <div className="hero-main">
           <span className="hero-label">
-            {scope === 'Ortak'
-              ? 'Bu ay toplam harcama'
-              : `${scope} bu ay ne harcadı`}
+            {scope === 'Ortak' ? 'Bu ay toplam harcama' : `${scope} bu ay ne harcadı`}
           </span>
           <span className="hero-amount">{fmt(summary.expenseEUR)} €</span>
         </div>
@@ -202,6 +219,36 @@ export function HomePage() {
         </div>
       )}
 
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Hesap Bakiyeleri</h2>
+          <Link to="/hesaplar" className="panel-link">
+            Tümü
+          </Link>
+        </div>
+        <ul className="mini-list">
+          {balances.map((b) => (
+            <li key={b.account.id} className="mini-row">
+              <Link to={`/hesaplar/${b.account.id}`} className="mini-row-main">
+                <span className="mini-row-title">{b.account.name}</span>
+                <span className="mini-row-sub">{b.account.owner}</span>
+              </Link>
+              <span
+                className={b.balanceEUR < 0 ? 'mini-row-amount is-negative' : 'mini-row-amount'}
+              >
+                {fmt(b.balanceEUR)} €
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <NetWorthPanel
+        netWorths={netWorths}
+        scope={scope}
+        hidden={netWorthHidden}
+        onToggleHidden={toggleNetWorthHidden}
+      />
 
       <section className="panel">
         <div className="panel-head">
@@ -213,9 +260,7 @@ export function HomePage() {
         <div className="week-row">
           <span className="week-amount">{fmt(week.expenseEUR)} €</span>
           <span
-            className={
-              weekDiff > 0 ? 'week-delta week-delta--up' : 'week-delta week-delta--down'
-            }
+            className={weekDiff > 0 ? 'week-delta week-delta--up' : 'week-delta week-delta--down'}
           >
             {weekDiff === 0
               ? 'geçen haftayla aynı'
@@ -250,7 +295,7 @@ export function HomePage() {
                   {fmt(
                     scope === 'Ortak'
                       ? t.amountEUR
-                      : (scope === 'Can' ? t.canShare : t.tugceShare) ?? 0,
+                      : ((scope === 'Can' ? t.canShare : t.tugceShare) ?? 0),
                   )}{' '}
                   €
                 </span>

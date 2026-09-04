@@ -8,7 +8,8 @@ function fmtEUR(value: number): string {
 }
 
 function fmtAxis(value: number): string {
-  if (Math.abs(value) >= 1000) return (value / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + 'k'
+  if (Math.abs(value) >= 1000)
+    return (value / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + 'k'
   return value.toLocaleString('de-DE', { maximumFractionDigits: 0 })
 }
 
@@ -99,7 +100,12 @@ export function NetTrend({ rows }: { rows: { key: string; label: string; net: nu
 
   return (
     <div className="chart-block">
-      <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Aylık net trend grafiği">
+      <svg
+        className="chart-svg"
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label="Aylık net trend grafiği"
+      >
         {/* Sifir cizgisi: artiyi eksiden ayiran esik */}
         <line className="chart-axis" x1={ML} x2={W - MR} y1={y(0)} y2={y(0)} />
         <text className="chart-tick" x={ML - 8} y={y(0) + 4} textAnchor="end">
@@ -199,7 +205,12 @@ export function MonthlyColumns({
           {labelB}
         </span>
       </div>
-      <svg className="chart-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${labelA} ve ${labelB} aylık gelişim grafiği`}>
+      <svg
+        className="chart-svg"
+        viewBox={`0 0 ${W} ${H}`}
+        role="img"
+        aria-label={`${labelA} ve ${labelB} aylık gelişim grafiği`}
+      >
         {ticks.map((t) => (
           <g key={t}>
             <line className="chart-grid" x1={ML} x2={W - MR} y1={y(t)} y2={y(t)} />

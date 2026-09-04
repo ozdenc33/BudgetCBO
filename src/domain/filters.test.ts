@@ -5,11 +5,52 @@ import { DEFAULT_SETTINGS } from './constants'
 import type { Transaction } from './types'
 
 const RAW: Transaction[] = [
-  { id: '1', date: '2026-09-01', description: 'Kira', category: 'Kira (Kaltmiete)', amount: 720, currency: 'EUR', account: 'Ortak Kasa' },
-  { id: '2', date: '2026-09-02', description: 'Market alışverişi', category: 'Market (Ev)', amount: 48.9, currency: 'EUR', account: 'Ortak Kasa' },
-  { id: '3', date: '2026-09-03', description: 'Akşam yemeği', category: 'Restoran/Kafe', amount: 34.5, currency: 'EUR', account: 'Can-DE Girokonto' },
-  { id: '4', date: '2026-08-15', description: 'Kuaför', category: 'Kuaför/Bakım', amount: 40, currency: 'EUR', account: 'Tuğçe-DE Girokonto' },
-  { id: '5', date: '2026-09-04', description: 'İnternet faturası', category: 'Internet', amount: 39.9, currency: 'EUR', account: 'Ortak Kasa', tag: 'fatura' },
+  {
+    id: '1',
+    date: '2026-09-01',
+    description: 'Kira',
+    category: 'Kira (Kaltmiete)',
+    amount: 720,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
+  {
+    id: '2',
+    date: '2026-09-02',
+    description: 'Market alışverişi',
+    category: 'Market (Ev)',
+    amount: 48.9,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+  },
+  {
+    id: '3',
+    date: '2026-09-03',
+    description: 'Akşam yemeği',
+    category: 'Restoran/Kafe',
+    amount: 34.5,
+    currency: 'EUR',
+    account: 'Can-DE Girokonto',
+  },
+  {
+    id: '4',
+    date: '2026-08-15',
+    description: 'Kuaför',
+    category: 'Kuaför/Bakım',
+    amount: 40,
+    currency: 'EUR',
+    account: 'Tuğçe-DE Girokonto',
+  },
+  {
+    id: '5',
+    date: '2026-09-04',
+    description: 'İnternet faturası',
+    category: 'Internet',
+    amount: 39.9,
+    currency: 'EUR',
+    account: 'Ortak Kasa',
+    tag: 'fatura',
+  },
 ]
 
 const TX = RAW.map((t) => computeTransaction(t, DEFAULT_SETTINGS))
@@ -60,8 +101,32 @@ describe('filterTransactions', () => {
   })
 
   it('filtreler birlikte uygulanir (ve baglaci)', () => {
-    const rows = filterTransactions(TX, { monthKey: '2026-09', account: 'Ortak Kasa', maxAmountEUR: 100 })
+    const rows = filterTransactions(TX, {
+      monthKey: '2026-09',
+      account: 'Ortak Kasa',
+      maxAmountEUR: 100,
+    })
     expect(rows.map((r) => r.id)).toEqual(['2', '5'])
+  })
+
+  it('kisisel harcamanin notu sadece odeyen kisiye arama sonucunda gorunur', () => {
+    const withNote = TX.map((t) => (t.id === '4' ? { ...t, note: 'sürpriz saç kremi' } : t))
+    // id 4: Kuaför/Bakım -> Kişisel-Tuğçe (Tuğçe-DE Girokonto'dan odendi).
+    expect(filterTransactions(withNote, { text: 'sürpriz' }, 'Tuğçe').map((r) => r.id)).toEqual([
+      '4',
+    ])
+    expect(filterTransactions(withNote, { text: 'sürpriz' }, 'Can')).toEqual([])
+    expect(filterTransactions(withNote, { text: 'sürpriz' })).toEqual([])
+  })
+
+  it('kisisel disi harcamanin notu herkese arama sonucunda gorunur', () => {
+    const withNote = TX.map((t) => (t.id === '2' ? { ...t, note: 'haftalik market' } : t))
+    expect(filterTransactions(withNote, { text: 'haftalik' }, 'Can').map((r) => r.id)).toEqual([
+      '2',
+    ])
+    expect(filterTransactions(withNote, { text: 'haftalik' }, 'Tuğçe').map((r) => r.id)).toEqual([
+      '2',
+    ])
   })
 
   it('sumFilteredEUR filtrelenmis toplami verir', () => {

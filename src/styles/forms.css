@@ -1,0 +1,344 @@
+/*
+ * Formlar ve filtreler
+ *
+ * Bu dosya src/styles.css'ten bolundu; ic düzen ve secici
+ * isimleri degismedi. Giris noktasi: src/styles.css
+ */
+
+/* ---------- Formlar (harcama, gelir, transfer, hedef, sabit gider) ---------- */
+
+/* Uzun form her zaman acik durmasin: liste hemen gorunsun, form istenince
+   acilsin. Duzenle'ye basilinca (startEdit) otomatik acilir. */
+.form-details {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.form-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.form-summary::-webkit-details-marker {
+  display: none;
+}
+
+.form-summary::after {
+  content: '▾';
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.form-details[open] .form-summary {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.form-details[open] .form-summary::after {
+  transform: rotate(180deg);
+}
+
+.form-summary:hover {
+  background: var(--surface-hover);
+}
+
+/* Form artik details icinde: dis cerceve details'te, form sade kalir */
+.form-details .expense-form {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.expense-form {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.expense-form h2 {
+  font-size: 0.72rem;
+  margin: 0;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.expense-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.expense-form input,
+.expense-form select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.7rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.expense-form input:focus,
+.expense-form select:focus {
+  border-color: var(--accent);
+}
+
+.expense-form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.expense-form-row label {
+  flex: 1;
+}
+
+.expense-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.expense-preview--ok {
+  background: rgba(var(--positive-rgb), 0.12);
+  color: var(--positive);
+  border: 1px solid rgba(var(--positive-rgb), 0.3);
+}
+
+.expense-preview--error {
+  background: rgba(var(--negative-rgb), 0.1);
+  color: var(--negative);
+  border: 1px solid rgba(var(--negative-rgb), 0.3);
+}
+
+/* Kur eksik uyarisi: hata degil, ama tutarlarin yanlis olabilecegini
+   soyler (bkz. src/domain/rate.ts rateWarning). Icinde "Kur otomatik
+   cek" dugmesi de olabilir (bkz. src/lib/fetchRate.ts), o yuzden satir
+   duzeni flex. */
+.expense-preview--warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.expense-preview--warning button {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--warning-text);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--warning-text);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.expense-form-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.expense-form-actions button {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.2rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.expense-form-actions button[type='submit'] {
+  background: var(--accent);
+  color: var(--on-accent);
+  flex: 1;
+}
+
+.expense-form-actions button[type='submit']:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.expense-form-actions button[type='submit']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.expense-form-actions button[type='button'] {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* ---------- Filtreler ---------- */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filters-top {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters-search {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.7rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.filters-search:focus {
+  border-color: var(--accent);
+}
+
+.filters-toggle {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.filters-toggle--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.filters-panel {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.filters-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.filters-panel input,
+.filters-panel select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.filters-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.filters-clear {
+  justify-self: start;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.filters-result {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Ayarlar satiri: etiketli alanlar ---------- */
+
+/* Dar ekranda ad ustte, alan + sil altta; genis ekranda tek satir */
+.settings-list li {
+  flex-wrap: wrap;
+}
+
+.settings-list li > span.settings-row-main {
+  flex: 1 1 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+@media (min-width: 480px) {
+  .settings-list li > span.settings-row-main {
+    flex: 1 1 45%;
+  }
+}
+
+.settings-row-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-field .settings-list-inline-input {
+  width: 100%;
+  max-width: 120px;
+}
+
+.settings-field-label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

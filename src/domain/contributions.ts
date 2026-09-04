@@ -1,5 +1,13 @@
-import type { Account, ContributionRow, Income, Person, Settings, Transaction, Transfer } from './types'
-import { computeTransaction } from './transactions'
+import type {
+  Account,
+  ContributionRow,
+  Income,
+  Person,
+  Settings,
+  Transaction,
+  Transfer,
+} from './types'
+import { computeTransaction, isSplitAccountTransaction } from './transactions'
 import { computeTransfer } from './transfers'
 import { computeAccountBalances } from './balances'
 
@@ -22,6 +30,32 @@ function ortakKasaBalanceEUR(
   return balances.find((b) => b.account.name === ORTAK_KASA)?.balanceEUR ?? 0
 }
 
+function ownerPerson(accountName: string, accounts: Account[]): Person | undefined {
+  const owner = accounts.find((a) => a.name === accountName)?.owner
+  return owner === 'Can' || owner === 'Tuğçe' ? owner : undefined
+}
+
+/**
+ * Bir islemde, verilen kisinin KENDI cebinden (kendi hesabindan)
+ * cikan tutar. Bolusuk cekiliste (bkz. isSplitAccountTransaction) her
+ * taraf kendi payini (canShare/tugceShare) kendi hesabindan oder;
+ * Ortak Kasa'dan cikan kisim hic kimseye "direkt odedi" olarak
+ * yazilmaz (bu, "Ortak Kasa'ya katki" transferleriyle ayrica sayilir).
+ */
+function directPaymentEUR(
+  t: ReturnType<typeof computeTransaction>,
+  person: Person,
+  accounts: Account[],
+): number {
+  if (!isSplitAccountTransaction(t)) {
+    return ownerPerson(t.account, accounts) === person ? (t.amountEUR ?? 0) : 0
+  }
+  let sum = 0
+  if (ownerPerson(t.account, accounts) === person) sum += t.canShare ?? 0
+  if (ownerPerson(t.secondAccount!, accounts) === person) sum += t.tugceShare ?? 0
+  return sum
+}
+
 export function computeContributionSummary(
   accounts: Account[],
   transactions: Transaction[],
@@ -31,12 +65,19 @@ export function computeContributionSummary(
 ): ContributionRow[] {
   const computedTx = transactions.map((t) => computeTransaction(t, settings))
   const computedTransfers = transfers.map((t) => computeTransfer(t, settings))
-  const sharedAccountBalanceEUR = ortakKasaBalanceEUR(accounts, transactions, incomes, transfers, settings)
+  const sharedAccountBalanceEUR = ortakKasaBalanceEUR(
+    accounts,
+    transactions,
+    incomes,
+    transfers,
+    settings,
+  )
 
   return PERSONS.map((person) => {
-    const directlyPaidEUR = computedTx
-      .filter((t) => t.payer === person)
-      .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
+    const directlyPaidEUR = computedTx.reduce(
+      (sum, t) => sum + directPaymentEUR(t, person, accounts),
+      0,
+    )
 
     const paidIntoSharedAccountEUR = computedTransfers
       .filter((t) => t.type === 'Ortak Kasa Katkısı' && t.from === person)
@@ -49,20 +90,27 @@ export function computeContributionSummary(
       .filter((t) => t.type === 'Kişiden Kişiye' && t.to === person)
       .reduce((sum, t) => sum + (t.amountEUR ?? 0), 0)
 
-    const totalContributionEUR = directlyPaidEUR + paidIntoSharedAccountEUR + sentToOther - receivedFromOther
+    const totalContributionEUR =
+      directlyPaidEUR + paidIntoSharedAccountEUR + sentToOther - receivedFromOther
 
     const shareColumn = person === 'Can' ? 'canShare' : 'tugceShare'
     const ownShareEUR = computedTx.reduce((sum, t) => sum + (t[shareColumn] ?? 0), 0)
 
     const diffEUR = totalContributionEUR - ownShareEUR - sharedAccountBalanceEUR / 2
 
-    return { person, directlyPaidEUR, paidIntoSharedAccountEUR, totalContributionEUR, ownShareEUR, diffEUR }
+    return {
+      person,
+      directlyPaidEUR,
+      paidIntoSharedAccountEUR,
+      totalContributionEUR,
+      ownShareEUR,
+      diffEUR,
+    }
   })
 }
 
 export type ContributionStatus =
-  | { balanced: true }
-  | { balanced: false; aheadPerson: Person; amountEUR: number }
+  { balanced: true } | { balanced: false; aheadPerson: Person; amountEUR: number }
 
 /** Hesaplar!B28 (Durum) — "borç" dili kullanmadan sadece kim onde bilgisi. */
 export function contributionStatus(rows: ContributionRow[]): ContributionStatus {

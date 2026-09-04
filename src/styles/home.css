@@ -1,0 +1,368 @@
+/*
+ * Ana sayfa: ozet, kapsam secici, uyarilar, haftalik ozet
+ *
+ * Bu dosya src/styles.css'ten bolundu; ic düzen ve secici
+ * isimleri degismedi. Giris noktasi: src/styles.css
+ */
+
+/* ---------- Ana sayfa ozeti ---------- */
+
+.hero-card {
+  background: linear-gradient(160deg, var(--accent-strong), var(--accent-deep));
+  color: #ffffff;
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme='dark'] .hero-card {
+  background: linear-gradient(160deg, #1e3346, #16202a);
+  border: 1px solid var(--border-subtle);
+}
+
+.hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.hero-month {
+  font-weight: 600;
+}
+
+.hero-count {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.hero-label {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.hero-amount {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.hero-split {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero-split > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.hero-split-label {
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.hero-split-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hero-split-value.is-positive {
+  color: #c8e6a0;
+}
+
+.hero-split-value.is-negative {
+  color: #ffc2bc;
+}
+
+.hero-card .btn-primary {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--accent-deep);
+}
+
+.hero-card .btn-primary:hover {
+  background: #eef4fa;
+  border-color: #eef4fa;
+}
+
+[data-theme='dark'] .hero-card .btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.mini-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mini-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mini-row:last-child {
+  border-bottom: none;
+}
+
+.mini-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.mini-row-main:hover .mini-row-title {
+  text-decoration: underline;
+}
+
+.mini-row-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-row-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.mini-row-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mini-row-amount.is-negative {
+  color: var(--negative);
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 0.5rem;
+}
+
+.shortcut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.shortcut:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+/* ---------- Kapsam secici (Ortak / Can / Tuğçe) ---------- */
+
+.scope-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-alt);
+  border-radius: 999px;
+}
+
+.scope-btn {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.scope-btn--active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* ---------- Butce limiti uyarilari ---------- */
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  color: var(--warning-text);
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+
+.alert-card strong {
+  color: var(--text);
+}
+
+.alert-pct {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Haftalik ozet ---------- */
+
+.panel-note {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.week-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.week-amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.week-delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.week-delta--up {
+  color: var(--negative);
+}
+
+.week-delta--down {
+  color: var(--positive);
+}
+
+/* Mal varligi karti (bkz. src/components/NetWorthPanel.tsx). Tutarlar
+   bir dugmeyle blur'lanabilir — halka acik ortamda ekran gorunse bile
+   rakamlar okunmasin diye. `user-select: none` blur'lu haldeyken metni
+   secip kopyalamayi da engeller. */
+.networth-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.networth-amounts--hidden {
+  filter: blur(7px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.networth-person-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.networth-person-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.networth-person-total {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.networth-account-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.networth-account-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 0.15rem 0;
+}
+
+.networth-account-list a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.networth-account-list a:hover {
+  text-decoration: underline;
+}
+
+.networth-shared-row {
+  border-top: 1px dashed var(--border-subtle);
+  margin-top: 0.15rem;
+  padding-top: 0.35rem !important;
+  color: var(--text-muted);
+}
+
+.networth-household {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-subtle);
+  font-weight: 700;
+}

@@ -1,4 +1,5 @@
-import { useMemo, useState, type ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
+import { useToday } from '../hooks/useToday'
 import { useSettings } from '../hooks/useSettings'
 import { useTransactions } from '../hooks/useTransactions'
 import { useIncomes } from '../hooks/useIncomes'
@@ -6,15 +7,13 @@ import { useTransfers } from '../hooks/useTransfers'
 import { useRecurring } from '../hooks/useRecurring'
 import { useGoals } from '../hooks/useGoals'
 import type { ImportResult } from '../domain/excelImport'
-import { bulkImport } from '../lib/firestoreImport'
+import { bulkImport, undoImport, type ImportCounts } from '../lib/firestoreImport'
+import { todayISO } from '../domain/dates'
+import { firestoreErrorMessage } from '../domain/firestoreErrors'
 
 // exceljs agir bir kutuphane (~1.7MB); mobil-oncelikli ana paketi
 // sismemesi icin yalnizca bu sayfa kullanildiginda dinamik olarak
 // yuklenir (ayri bir Vite chunk'ina boler).
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export function ImportExportPage() {
   const { settings, loading: settingsLoading } = useSettings()
@@ -29,17 +28,36 @@ export function ImportExportPage() {
   const [parsing, setParsing] = useState(false)
   const [importing, setImporting] = useState(false)
   const [importLog, setImportLog] = useState<string | null>(null)
+  // Son ice aktarmanin kimligi; "geri al" bunu kullanir.
+  const [lastImport, setLastImport] = useState<ImportCounts | null>(null)
+  const [undoing, setUndoing] = useState(false)
 
   const loading =
-    settingsLoading || txLoading || incomesLoading || transfersLoading || recurringLoading || goalsLoading
-  const today = useMemo(() => new Date(), [])
+    settingsLoading ||
+    txLoading ||
+    incomesLoading ||
+    transfersLoading ||
+    recurringLoading ||
+    goalsLoading
+  const today = useToday()
 
   async function handleExport() {
     setExporting(true)
     try {
       const { exportWorkbook, downloadBlob } = await import('../domain/excelExport')
-      const blob = await exportWorkbook({ transactions, incomes, transfers, recurring, goals, settings, today })
-      downloadBlob(blob, `ortak-butce-yedek-${todayIso()}.xlsx`)
+      const blob = await exportWorkbook({
+        transactions,
+        incomes,
+        transfers,
+        recurring,
+        goals,
+        settings,
+        today,
+      })
+      downloadBlob(blob, `budgetcbo-yedek-${todayISO()}.xlsx`)
+    } catch (err) {
+      console.error('Disa aktarma basarisiz', err)
+      setImportLog(`Yedek oluşturulamadı: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setExporting(false)
     }
@@ -74,13 +92,42 @@ export function ImportExportPage() {
     }
     setImporting(true)
     try {
+      // Toplu yazma commitWrite'tan gecirilmez: yarim kalmis bir ice
+      // aktarmayi "kaydedildi" gibi gostermek yanlis olur, kullanicinin
+      // gercekten kac satirin gectigini gormesi gerekir.
       const counts = await bulkImport(importResult)
       setImportLog(
         `İçe aktarıldı: ${counts.transactions} harcama, ${counts.incomes} gelir, ${counts.transfers} transfer, ${counts.recurring} sabit gider, ${counts.goals} hedef.`,
       )
+      setLastImport(counts)
       setImportResult(null)
+    } catch (err) {
+      console.error('Ice aktarma basarisiz', err)
+      setImportLog(`İçe aktarma tamamlanamadı: ${firestoreErrorMessage(err)}`)
     } finally {
       setImporting(false)
+    }
+  }
+
+  async function handleUndoImport() {
+    if (!lastImport) return
+    if (
+      !window.confirm(
+        `Son içe aktarmayla eklenen ${lastImport.total} kayıt silinecek. Elle girdiğiniz kayıtlara dokunulmaz. Devam edilsin mi?`,
+      )
+    ) {
+      return
+    }
+    setUndoing(true)
+    try {
+      const deleted = await undoImport(lastImport.batchId)
+      setImportLog(`Son içe aktarma geri alındı: ${deleted} kayıt silindi.`)
+      setLastImport(null)
+    } catch (err) {
+      console.error('Ice aktarma geri alinamadi', err)
+      setImportLog(`Geri alma tamamlanamadı: ${firestoreErrorMessage(err)}`)
+    } finally {
+      setUndoing(false)
     }
   }
 
@@ -105,10 +152,16 @@ export function ImportExportPage() {
           Ortak_Butce_v9.xlsx dosyasını (veya aynı sayfa/kolon düzenindeki bir dosyayı) seçin.
           Islemler, Gelirler, Transferler, Sabit_Giderler ve Hedefler sayfaları okunur; Ayarlar
           sayfası okunmaz (kategoriler, hesaplar ve kurlar zaten uygulamada tanımlı, Ayarlar
-          ekranından düzenlenir). Bu işlem tek seferliktir — aynı dosyayı iki kez içe aktarırsanız
-          kayıtlar tekrarlanır.
+          ekranından düzenlenir). Aynı dosyayı iki kez içe aktarırsanız kayıtlar tekrarlanır;
+          yanlışlıkla olursa aşağıdaki "Son içe aktarmayı geri al" düğmesini kullanabilirsiniz
+          (yalnızca bu oturumdaki son aktarım için).
         </p>
-        <input type="file" accept=".xlsx" onChange={handleFileChange} disabled={parsing || importing} />
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={handleFileChange}
+          disabled={parsing || importing}
+        />
 
         {parsing && <p>Dosya okunuyor...</p>}
 
@@ -151,6 +204,16 @@ export function ImportExportPage() {
         )}
 
         {importLog && <div className="import-log">{importLog}</div>}
+
+        {lastImport && (
+          <div className="import-export-actions">
+            <button type="button" onClick={handleUndoImport} disabled={undoing}>
+              {undoing
+                ? 'Geri alınıyor...'
+                : `Son içe aktarmayı geri al (${lastImport.total} kayıt)`}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )

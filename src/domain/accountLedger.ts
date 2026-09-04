@@ -1,5 +1,5 @@
 import type { Income, Settings, Transaction, Transfer } from './types'
-import { computeTransaction } from './transactions'
+import { computeTransaction, isSplitAccountTransaction } from './transactions'
 import { computeIncome } from './incomes'
 import { computeTransfer } from './transfers'
 
@@ -12,6 +12,8 @@ export type LedgerKind = 'harcama' | 'gelir' | 'transfer-giris' | 'transfer-ciki
 
 export type LedgerRow = {
   id: string
+  /** Duzenleme sayfasina yonlendirmek icin: alttaki kaydin gercek id'si. */
+  recordId: string
   date: string
   kind: LedgerKind
   /** Satirin ana metni (aciklama / gelir kaynagi / transfer hedefi). */
@@ -22,6 +24,11 @@ export type LedgerRow = {
   amountEUR: number
   /** Bu satirdan sonraki bakiye. */
   balanceAfterEUR: number
+  /** Kayit TRY girildiyse ham tutar ("Bu TL olarak girdi" notu icin). */
+  originalAmount?: number
+  originalCurrency?: 'TRY'
+  /** Bolusuk cekiliste bu hesaba dusen pay (tam tutarin bir kismidir). */
+  isPartialSplit?: boolean
 }
 
 export function computeAccountLedger(
@@ -35,14 +42,24 @@ export function computeAccountLedger(
 
   for (const raw of transactions) {
     const t = computeTransaction(raw, settings)
-    if (t.account !== accountName) continue
+    const split = isSplitAccountTransaction(t)
+    const isCanSide = t.account === accountName
+    const isTugceSide = split && t.secondAccount === accountName
+    if (!isCanSide && !isTugceSide) continue
+
+    const shareEUR = !split ? t.amountEUR : isCanSide ? t.canShare : t.tugceShare
+
     rows.push({
-      id: `tx-${t.id}`,
+      id: `tx-${t.id}${isTugceSide ? '-2' : ''}`,
+      recordId: t.id,
       date: t.date,
       kind: 'harcama',
       label: t.description || t.category,
-      detail: t.category,
-      amountEUR: -(t.amountEUR ?? 0),
+      detail: split ? `${t.category} · bölüşük ödeme` : t.category,
+      amountEUR: -(shareEUR ?? 0),
+      originalAmount: t.currency === 'TRY' ? t.amount : undefined,
+      originalCurrency: t.currency === 'TRY' ? 'TRY' : undefined,
+      isPartialSplit: split,
     })
   }
 
@@ -51,11 +68,14 @@ export function computeAccountLedger(
     if (i.account !== accountName) continue
     rows.push({
       id: `in-${i.id}`,
+      recordId: i.id,
       date: i.date,
       kind: 'gelir',
       label: i.source,
       detail: i.person,
       amountEUR: i.amountEUR ?? 0,
+      originalAmount: i.currency === 'TRY' ? i.amount : undefined,
+      originalCurrency: i.currency === 'TRY' ? 'TRY' : undefined,
     })
   }
 
@@ -64,21 +84,27 @@ export function computeAccountLedger(
     if (t.fromAccount === accountName) {
       rows.push({
         id: `tr-out-${t.id}`,
+        recordId: t.id,
         date: t.date,
         kind: 'transfer-cikis',
         label: t.to || t.toAccount,
         detail: t.type,
         amountEUR: -(t.amountEUR ?? 0),
+        originalAmount: t.currency === 'TRY' ? t.amount : undefined,
+        originalCurrency: t.currency === 'TRY' ? 'TRY' : undefined,
       })
     }
     if (t.toAccount === accountName) {
       rows.push({
         id: `tr-in-${t.id}`,
+        recordId: t.id,
         date: t.date,
         kind: 'transfer-giris',
         label: t.from || t.fromAccount,
         detail: t.type,
         amountEUR: t.amountEUR ?? 0,
+        originalAmount: t.currency === 'TRY' ? t.amount : undefined,
+        originalCurrency: t.currency === 'TRY' ? 'TRY' : undefined,
       })
     }
   }
