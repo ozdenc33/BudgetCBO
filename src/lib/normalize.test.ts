@@ -4,6 +4,7 @@ import {
   toIncome,
   toRecurringItem,
   toRecurringSkip,
+  toSettings,
   toTransaction,
   toTransfer,
 } from './normalize'
@@ -162,5 +163,69 @@ describe('toRecurringSkip', () => {
       recurringId: 'r1',
       monthKey: '2026-07',
     })
+  })
+})
+
+describe('toSettings', () => {
+  // Gercek senaryo: firestore.rules personalPlans'i hic dogrulamaz, bu
+  // yuzden bu alt-alanlar eksik bir dokuman kurallardan gecebilir.
+  // Onceden `snap.data() as Settings` bunu yakalamiyordu; Kişisel Bütçe
+  // sayfasi `plan.incomePlan[source.name]` uzerinde
+  // "Cannot read properties of undefined" ile cokuyordu.
+  it('personalPlans hic yoksa cokmeden makul varsayilanlarla doldurur', () => {
+    const s = toSettings({
+      accounts: [],
+      categories: [],
+      incomeSources: [],
+      rates: {},
+      defaultRate: 34,
+    })
+    expect(s.personalPlans.Can).toEqual({
+      incomePlan: {},
+      sharedContributionPlanEUR: 0,
+      categoryPlan: {},
+      savingsPlanEUR: 0,
+    })
+    expect(s.personalPlans['Tuğçe']).toEqual({
+      incomePlan: {},
+      sharedContributionPlanEUR: 0,
+      categoryPlan: {},
+      savingsPlanEUR: 0,
+    })
+  })
+
+  it('personalPlans kismen doluysa eksik alt-alanlari tamamlar', () => {
+    const s = toSettings({
+      personalPlans: { Can: { incomePlan: { Maaş: 2000 } } },
+    })
+    expect(s.personalPlans.Can).toEqual({
+      incomePlan: { Maaş: 2000 },
+      sharedContributionPlanEUR: 0,
+      categoryPlan: {},
+      savingsPlanEUR: 0,
+    })
+  })
+
+  it('incomeSources active alani eksikse true varsayar (kontrolsuz checkbox uyarisini onler)', () => {
+    const s = toSettings({
+      incomeSources: [{ id: 'maas', name: 'Maaş' }],
+    })
+    expect(s.incomeSources).toEqual([{ id: 'maas', name: 'Maaş', active: true }])
+  })
+
+  it('accounts/categories dizi degilse bos dizi kabul eder, cokmez', () => {
+    const s = toSettings({ accounts: null, categories: undefined })
+    expect(s.accounts).toEqual([])
+    expect(s.categories).toEqual([])
+  })
+
+  it('defaultRate eksikse DEFAULT_RATE varsayar, sıfıra bolme (Infinity) olusturmaz', () => {
+    const s = toSettings({})
+    expect(s.defaultRate).toBeGreaterThan(0)
+  })
+
+  it('rates icindeki gecersiz degerleri atlar', () => {
+    const s = toSettings({ rates: { '2026-07': 35.2, '2026-08': 'bozuk' } })
+    expect(s.rates).toEqual({ '2026-07': 35.2 })
   })
 })

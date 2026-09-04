@@ -1,12 +1,15 @@
+import { DEFAULT_RATE } from '../domain/constants'
 import type {
   Currency,
   Goal,
   GoalOwner,
   Income,
   Person,
+  PersonalBudgetPlan,
   RecurringItem,
   RecurringKind,
   RecurringSkip,
+  Settings,
   Transaction,
   Transfer,
   TransferType,
@@ -198,5 +201,70 @@ export function toRecurringSkip(id: string, data: Record<string, unknown>): Recu
     id,
     recurringId: str(data.recurringId),
     monthKey: str(data.monthKey),
+  }
+}
+
+function numRecord(value: unknown): Record<string, number> {
+  if (typeof value !== 'object' || value === null) return {}
+  const out: Record<string, number> = {}
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    const n = optNum(v)
+    if (n != null) out[k] = n
+  }
+  return out
+}
+
+function toPersonalBudgetPlan(value: unknown): PersonalBudgetPlan {
+  const v = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>
+  return {
+    incomePlan: numRecord(v.incomePlan),
+    sharedContributionPlanEUR: optNum(v.sharedContributionPlanEUR) ?? 0,
+    categoryPlan: numRecord(v.categoryPlan),
+    savingsPlanEUR: optNum(v.savingsPlanEUR) ?? 0,
+  }
+}
+
+/**
+ * settings/app onceden `snap.data() as Settings` ile dogrudan cast
+ * ediliyordu — tek koleksiyon bu dosyanin dogrulamasindan gecmiyordu.
+ * firestore.rules yalnizca ust duzey alan TIPLERINI kontrol eder
+ * (orn. personalPlans, incomeSources[].active hic dogrulanmaz); eksik
+ * bir alt alan (orn. Excel'den once var olan bir dokuman, Console'dan
+ * elle duzenleme) Kişisel Bütçe sayfasini `undefined['Maaş']` gibi
+ * hatalarla cokertiyordu. Diger koleksiyonlarla ayni ilke: BOZUK VERIYI
+ * UYDURMA, ama eksik alt-alanlari makul varsayilanlarla doldur ki sayfa
+ * en azindan acilsin.
+ */
+export function toSettings(data: Record<string, unknown>): Settings {
+  const accounts = Array.isArray(data.accounts) ? (data.accounts as Settings['accounts']) : []
+  const categories = Array.isArray(data.categories)
+    ? (data.categories as Settings['categories'])
+    : []
+  const incomeSources = Array.isArray(data.incomeSources)
+    ? (data.incomeSources as Settings['incomeSources']).map((s) => ({
+        ...s,
+        active: typeof s.active === 'boolean' ? s.active : true,
+      }))
+    : []
+  const rawPlans = (
+    typeof data.personalPlans === 'object' && data.personalPlans !== null ? data.personalPlans : {}
+  ) as Record<string, unknown>
+
+  return {
+    accounts,
+    categories,
+    incomeSources,
+    rates: numRecord(data.rates),
+    defaultRate: optNum(data.defaultRate) ?? DEFAULT_RATE,
+    fxSpreadPct: optNum(data.fxSpreadPct),
+    sperrkonto: {
+      totalEUR: optNum((data.sperrkonto as Record<string, unknown> | undefined)?.totalEUR) ?? null,
+      monthlyReleaseEUR:
+        optNum((data.sperrkonto as Record<string, unknown> | undefined)?.monthlyReleaseEUR) ?? null,
+    },
+    personalPlans: {
+      Can: toPersonalBudgetPlan(rawPlans.Can),
+      Tuğçe: toPersonalBudgetPlan(rawPlans['Tuğçe']),
+    },
   }
 }
