@@ -105,6 +105,35 @@
   white-space: normal;
 }
 
+.owner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.owner-badge--can {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.owner-badge--tugce {
+  background: var(--person-tugce);
+  color: #ffffff;
+}
+
+.owner-badge--ortak {
+  background: var(--person-ortak);
+  color: #ffffff;
+}
+
 .expense-badge {
   color: var(--negative) !important;
   background: rgba(var(--negative-rgb), 0.1) !important;

@@ -47,6 +47,13 @@
   --warning-border: #e9a877;
   --warning-text: #9c4a0f; /* TUM Turuncu, metin icin koyulastirilmis */
 
+  /* Kisi rozetleri (C/T/O): hangi hesaptan cekildigini hizli gormek icin.
+     Can zaten --accent (TUM Mavi) ile ozdeslesmis; Tuğçe ve Ortak icin
+     ayirt edici, her iki temada da beyaz metinle kontrasti yeterli sabit
+     renkler secildi (tema degismiyor, bilerek). */
+  --person-tugce: #c2185b;
+  --person-ortak: #6b7280;
+
   --shadow-sm: 0 1px 2px rgba(16, 32, 51, 0.06), 0 1px 3px rgba(16, 32, 51, 0.05);
   --shadow-md: 0 4px 16px rgba(16, 32, 51, 0.08);
 

@@ -8,7 +8,7 @@ import { addTransaction, deleteTransaction, updateTransaction } from '../lib/fir
 import { saveSettings } from '../lib/firestoreSettings'
 import { fetchEurTryRateForDate } from '../lib/fetchRate'
 import { personForEmail } from '../lib/currentPerson'
-import { computeTransaction, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
+import { computeTransaction, findAccount, PAYLAŞIM_EKSIK_MESSAGE } from '../domain/transactions'
 import { findDuplicateTransaction } from '../domain/duplicates'
 import { filterTransactions, sumFilteredEUR, type TransactionFilter } from '../domain/filters'
 import { isFutureDated } from '../domain/futureDated'
@@ -17,6 +17,7 @@ import { isNoteVisibleTo } from '../domain/notePrivacy'
 import { defaultAccountsForCategory } from '../domain/expenseDefaults'
 import { TransactionFilters } from '../components/TransactionFilters'
 import { AccountOptions } from '../components/AccountOptions'
+import { OwnerBadge } from '../components/OwnerBadge'
 import type {
   ComputedTransaction,
   Currency,
@@ -620,8 +621,14 @@ export function ExpensesPage() {
               <div className="expense-row-meta">
                 <span>{t.category}</span>
                 <span>
-                  {t.account}
-                  {t.secondAccount && t.secondAccount !== t.account ? ` + ${t.secondAccount}` : ''}
+                  <OwnerBadge owner={t.payer || undefined} /> {t.account}
+                  {t.secondAccount && t.secondAccount !== t.account && (
+                    <>
+                      {' + '}
+                      <OwnerBadge owner={findAccount(t.secondAccount, settings)?.owner} />{' '}
+                      {t.secondAccount}
+                    </>
+                  )}
                 </span>
                 <span>{t.budgetType}</span>
                 <span

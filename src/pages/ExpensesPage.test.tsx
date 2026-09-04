@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -359,5 +359,47 @@ describe('ExpensesPage — kategori seçilince akıllı varsayılanlar', () => {
     await user.selectOptions(screen.getByLabelText(/^Kategori$/), 'Kira (Kaltmiete)')
 
     expect(screen.getByLabelText(/^Hesap$/)).toHaveValue('Ortak Kasa')
+  })
+})
+
+describe('ExpensesPage — hesap sahibi rozeti', () => {
+  it('bölüşük harcamada her iki hesabın da sahip rozetini gösterir', () => {
+    mockTransactions = [
+      {
+        id: 'split-1',
+        date: '2026-09-01',
+        description: 'Kedi maması',
+        category: 'Mama',
+        amount: 30,
+        currency: 'EUR',
+        account: 'Can-DE Girokonto',
+        secondAccount: 'Tuğçe-DE Girokonto',
+        canPct: 0.5,
+        tugcePct: 0.5,
+      },
+    ]
+    renderPage()
+
+    const row = screen.getByText('Kedi maması').closest('li')!
+    expect(within(row).getByTitle('Can')).toBeInTheDocument()
+    expect(within(row).getByTitle('Tuğçe')).toBeInTheDocument()
+  })
+
+  it('Ortak Kasa harcamasında O rozeti gösterir', () => {
+    mockTransactions = [
+      {
+        id: 'ortak-1',
+        date: '2026-09-01',
+        description: 'Kira',
+        category: 'Kira (Kaltmiete)',
+        amount: 950,
+        currency: 'EUR',
+        account: 'Ortak Kasa',
+      },
+    ]
+    renderPage()
+
+    const row = screen.getByText('Kira').closest('li')!
+    expect(within(row).getByTitle('Ortak Kasa')).toBeInTheDocument()
   })
 })
