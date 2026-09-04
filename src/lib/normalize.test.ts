@@ -228,4 +228,30 @@ describe('toSettings', () => {
     const s = toSettings({ rates: { '2026-07': 35.2, '2026-08': 'bozuk' } })
     expect(s.rates).toEqual({ '2026-07': 35.2 })
   })
+
+  // Gercek senaryo: fxSpreadPct dokumanda hic yoksa (eski kayit, ya da
+  // Ayarlar'dan hic degistirilmemis), onceki halinde
+  // `fxSpreadPct: optNum(...)` DOGRUDAN atanip anahtar `undefined`
+  // degeriyle nesnede KALIYORDU. Firestore setDoc(), degeri undefined
+  // olan bir alani nesnede gormek istemiyor (anahtar hic olmamali) ve
+  // "invalid-argument" ile reddediyor. Kişisel Bütçe sayfasi
+  // `{...settings, personalPlans: {...}}` seklinde TUM settings'i geri
+  // yazdigi icin bu, "Plan kaydedilemedi: Kayıt biçimi geçersiz"
+  // hatasi olarak kullaniciya cikiyordu.
+  it('fxSpreadPct yoksa anahtar hic eklenmez (Firestore undefined degerli alani reddeder)', () => {
+    const s = toSettings({})
+    expect('fxSpreadPct' in s).toBe(false)
+  })
+
+  it('fxSpreadPct sayi ise dogru sekilde eklenir', () => {
+    const s = toSettings({ fxSpreadPct: 1.5 })
+    expect(s.fxSpreadPct).toBe(1.5)
+  })
+
+  it('normalize edilmis settings dogrudan JSON tur uyumludur (undefined degerli alan yok)', () => {
+    const s = toSettings({})
+    for (const [key, value] of Object.entries(s)) {
+      expect(value, `${key} undefined olmamali`).not.toBeUndefined()
+    }
+  })
 })

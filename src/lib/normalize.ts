@@ -252,13 +252,12 @@ export function toSettings(data: Record<string, unknown>): Settings {
     typeof data.personalPlans === 'object' && data.personalPlans !== null ? data.personalPlans : {}
   ) as Record<string, unknown>
 
-  return {
+  const settings: Settings = {
     accounts,
     categories,
     incomeSources,
     rates: numRecord(data.rates),
     defaultRate: optNum(data.defaultRate) ?? DEFAULT_RATE,
-    fxSpreadPct: optNum(data.fxSpreadPct),
     sperrkonto: {
       totalEUR: optNum((data.sperrkonto as Record<string, unknown> | undefined)?.totalEUR) ?? null,
       monthlyReleaseEUR:
@@ -269,4 +268,12 @@ export function toSettings(data: Record<string, unknown>): Settings {
       Tuğçe: toPersonalBudgetPlan(rawPlans['Tuğçe']),
     },
   }
+  // fxSpreadPct opsiyonel: yoksa anahtar HIC eklenmez. `fxSpreadPct:
+  // undefined` yazmak Firestore setDoc()'u "kayit bicimi gecersiz"
+  // (invalid-argument) ile cokertir — bu tam olarak Kişisel Bütçe
+  // sayfasinin `{...settings, personalPlans: {...}}` seklinde tum
+  // settings'i geri yazdigi yerde patlayan hataydi.
+  const fxSpreadPct = optNum(data.fxSpreadPct)
+  if (fxSpreadPct != null) settings.fxSpreadPct = fxSpreadPct
+  return settings
 }
